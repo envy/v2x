@@ -1,38 +1,62 @@
 #include "parser.h"
+#include "proxy.h"
+
+#include "CAM.h"
+#include "StationType.h"
 
 #include <iostream>
 
+void dump_cam(CAM_t *cam)
+{
+	std::cout << "CAM from ";
+	std::cout << cam->header.stationID;
+	std::cout << " (";
+	switch (cam->cam.camParameters.basicContainer.stationType)
+	{
+		case StationType_pedestrian:
+			std::cout << "Pedestrian";
+			break;
+		case StationType_roadSideUnit:
+			std::cout << "RSU";
+			break;
+		case StationType_passengerCar:
+			std::cout << "Car";
+			break;
+		default:
+			std::cout << cam->cam.camParameters.basicContainer.stationType;
+			break;
+	}
+	std::cout << ") @ ";
+	std::cout << cam->cam.generationDeltaTime;
+	std::cout << std::endl;
+	std::cout << "Location: ";
+	double lat = cam->cam.camParameters.basicContainer.referencePosition.latitude / 10000000.0;
+	double lon = cam->cam.camParameters.basicContainer.referencePosition.longitude / 10000000.0;
+	std::cout << lat << ", " << lon;
+	std::cout << std::endl;
+}
+
 int main()
 {
-	uint8_t packet[] = {
-		0x07, 0xd1, 0x00, 0x00, 0x02, 0x02, 0x00, 0x00,
-		0x37, 0x9b, 0xd3, 0x40, 0x00, 0xfa, 0x99, 0xa6,
-		0x09, 0xce, 0x31, 0xfa, 0x21, 0x40, 0x00, 0x00,
-		0x00, 0x00, 0x30, 0xd4, 0x00, 0x80,
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x1e, 0x29,
-		0x37, 0xd2, 0x84, 0x0d, 0x89, 0x47,
-		0x11, 0x00, 0x1a, 0x01, 0x20, 0x50, 0x00, 0x00,
-		0x00, 0x1e, 0x01, 0x00, 0x80, 0x00, 0x1e, 0x29,
-		0x37, 0xd2, 0x84, 0x0d, 0xb5, 0x7f, 0xbb, 0xe3,
-		0x1f, 0x28, 0x44, 0x49, 0x06, 0x46, 0x07, 0x53,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x07, 0xd1, 0x00, 0x00, 0x02, 0x02, 0x00, 0x00,
-		0x37, 0x9b, 0x84, 0x78, 0x00, 0xfa, 0x99, 0xa6,
-		0x09, 0xce, 0x31, 0xfa, 0x21, 0x40, 0x00, 0x00,
-		0x00, 0x00, 0x30, 0xd4, 0x00, 0x80
-	};
+	Proxy p;
 
+	p.connect();
 
-	std::cout << "parsing packet" << std::endl; 
-
-	for (uint32_t offset = 0; offset < sizeof(packet); ++offset)
+	uint8_t buf[1024];
+	uint32_t buflen = sizeof(buf);
+	while(p.get_packet((uint8_t *)&buf, &buflen) >= 0)
 	{
-		std::cout << "trying offset " << offset << std::endl;
-		int ret = parse_cam(packet+offset, sizeof(packet)-offset);
+		uint32_t offset = 7; // TODO: figure out why
+		CAM_t *cam = nullptr;
+		int ret = parse_cam(buf+offset, buflen-offset, &cam);
 		if (ret == 0)
 		{
-			break;
+			dump_cam(cam);
+			goto next_iter;
 		}
+		std::cout << "could not parse as CAM" << std::endl;
+next_iter:
+		buflen = sizeof(buf);
 	}
 
 	return 0;

@@ -1,15 +1,12 @@
 #include "parser.h"
-#include "asn_application.h"
-#include "CAM.h"
 
 #include <iostream>
 
-int parse_cam(uint8_t *buf, uint32_t len)
+int parse_cam(uint8_t *buf, uint32_t len, CAM_t **cam)
 {
 	asn_dec_rval_t ret;
-	CAM_t *cam = nullptr;
 
-	ret = uper_decode_complete(0, &asn_DEF_CAM, (void **)&cam, buf, len);
+	ret = uper_decode_complete(0, &asn_DEF_CAM, (void **)cam, buf, len);
 	
 	if (ret.code != RC_OK)
 	{
@@ -35,9 +32,8 @@ int parse_cam(uint8_t *buf, uint32_t len)
 	if (iret != 0)
 	{
 		std::cout << "Contraint error: " << errmsg << std::endl;
-		return -2;
+		//return -2;
 	}
 
-	xer_fprint(stdout, &asn_DEF_CAM, cam);
 	return 0;
 }

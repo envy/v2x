@@ -13,7 +13,8 @@ ASN_FILES := asn1/TS102894-2v131-CDD.asn \
 	asn1/EN302637-3v131-DENM.asn
 
 APP_CXX_FILES := main.cpp \
-	parser.cpp
+	parser.cpp \
+	proxy.cpp
 
 ASN_C_FILES := $(wildcard asn1-src/*.c)
 ASN_H_FILES := $(wildcard asn1-src/*.h)
