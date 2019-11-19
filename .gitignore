@@ -1,0 +1,7 @@
+*.o
+app
+libasn.a
+
+asn1-src/*.c
+asn1-src/*.h
+asn1-src/Makefile.am.libasncodec
