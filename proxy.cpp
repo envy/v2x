@@ -1,4 +1,5 @@
 #include "proxy.h"
+#include "parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,18 +51,69 @@ int Proxy::connect()
 		std::cout << "error connecting: " << strerror(errno) << std::endl;
 		return -2;
 	}
+
+	return 0;
 }
 
-int Proxy::get_packet(uint8_t *buf, uint32_t *buflen)
+int Proxy::reliable_read(uint8_t *buf, uint32_t len)
 {
-	if (read(sock, buf, *buflen) <= 0)
+	int _read = 0, ret = 0;
+	while (_read < len)
 	{
-		return -1;
+		ret = read(sock, buf + _read, len - _read);
+		if (ret <= 0)
+		{
+			return ret;
+		}
+
+		_read += ret;
 	}
-	return 0;
+
+	return _read;
+}
+
+int Proxy::get_packet(uint8_t *buf, uint32_t buflen)
+{
+	static const uint32_t header_size = sizeof(ethernet_t) + sizeof(geonetworking_t);
+
+	int _read = reliable_read(buf, header_size);
+	ethernet_t *e = (ethernet_t *)buf;
+	geonetworking_t *g = (geonetworking_t *)e->data;
+	uint32_t payload_length = ntohs(g->common_header.payload_length);
+	switch (g->common_header.type.raw)
+	{
+		case GEONET_TYPE_SHB:
+			payload_length += sizeof(geonet_shb_t);
+			break;
+		case GEONET_TYPE_BEACON:
+			payload_length += sizeof(geonet_beacon_t);
+			break;
+		default:
+			std::cerr << "FIXME: unknown geonet type 0x" << std::hex << (unsigned int)g->common_header.type.raw << std::dec << std::endl;
+			break;
+	}
+
+	_read += reliable_read(buf + header_size, payload_length);
+
+	return _read;
+}
+
+int Proxy::send_packet(uint8_t *buf, uint32_t len)
+{
+	int written = 0;
+	written = write(sock, buf, len);
+	//while (written < len && (written += write(sock, buf + written, len - written)) > 0)
+
+	if (written <= 0)
+	{
+		std::cerr << "write error: " << strerror(errno) << std::endl;
+	}
+
+	return written;
 }
 
 void Proxy::disconnect()
 {
 	close(sock);
 }
+

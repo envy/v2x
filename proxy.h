@@ -7,11 +7,13 @@ class Proxy
 {
 	private:
 		int sock;
+		int reliable_read(uint8_t *buf, uint32_t buflen);
 	public:
 		Proxy();
 		~Proxy();
 		int connect();
-		int get_packet(uint8_t *buf, uint32_t *buflen);
+		int get_packet(uint8_t *buf, uint32_t buflen);
+		int send_packet(uint8_t *buf, uint32_t len);
 		void disconnect();
 };
 
