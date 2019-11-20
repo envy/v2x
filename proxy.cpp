@@ -21,10 +21,7 @@ Proxy::Proxy()
 
 Proxy::~Proxy()
 {
-	if (sock < 0)
-	{
-		close(sock);
-	}
+	disconnect();
 }
 
 int Proxy::connect(char *caddr, int port)
@@ -40,7 +37,7 @@ int Proxy::connect(char *caddr, int port)
 	struct sockaddr_in server = {};
 	unsigned long addr = inet_addr(caddr);
 	memcpy(&server.sin_addr, &addr, sizeof(addr));
-	server.sin_family = AF_INET;
+	server.sin_family = PF_INET;
 	server.sin_port = htons(port);
 
 	if (::connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0)
@@ -97,20 +94,28 @@ int Proxy::get_packet(uint8_t *buf, uint32_t buflen)
 
 int Proxy::send_packet(uint8_t *buf, uint32_t len)
 {
+    std::lock_guard<std::mutex> lock(send_lock);
 	int written = 0;
-	written = write(sock, buf, len);
-	//while (written < len && (written += write(sock, buf + written, len - written)) > 0)
+	//written = write(sock, buf, len);
+	while (written < len && (written += write(sock, buf + written, len - written)) > 0)
+    {
 
+    }
 	if (written <= 0)
 	{
 		std::cerr << "write error: " << strerror(errno) << std::endl;
 	}
+
+	usleep(100*1000);
 
 	return written;
 }
 
 void Proxy::disconnect()
 {
-	close(sock);
+    if (sock < 0)
+    {
+        close(sock);
+    }
 }
 

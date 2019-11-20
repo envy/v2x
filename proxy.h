@@ -2,12 +2,14 @@
 #define __PROXY_H
 
 #include <cstdint>
+#include <mutex>
 
 class Proxy
 {
 	private:
 		int sock;
 		int reliable_read(uint8_t *buf, uint32_t buflen);
+		std::mutex send_lock;
 	public:
 		Proxy();
 		~Proxy();
