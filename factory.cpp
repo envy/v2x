@@ -9,9 +9,9 @@
 #include "SpeedConfidence.h"
 #include "VehicleLengthValue.h"
 
-CAMFactory::CAMFactory(StationID_t station_id)
+CAMFactory::CAMFactory()
 {
-	buf = (uint8_t *)calloc(1, 1024);
+	buf = (uint8_t *)calloc(1, MAX_BUF_LEN);
 	header_len = sizeof(ethernet_t) + sizeof(geonetworking_t) + sizeof(geonet_shb_t) + sizeof(btp_b_t);
 	buflen = header_len;
 	payload_len = sizeof(btp_b_t);
@@ -45,33 +45,18 @@ CAMFactory::CAMFactory(StationID_t station_id)
 
 	cam = (CAM_t *)calloc(1, sizeof(CAM_t));
 	cam->header.protocolVersion = 2;
-	cam->header.stationID = station_id;
 	cam->header.messageID = 2;
-
-	cam->cam.camParameters.basicContainer.stationType = StationType_pedestrian;
-	cam->cam.camParameters.highFrequencyContainer.present = HighFrequencyContainer_PR_basicVehicleContainerHighFrequency;
-	cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.heading.headingConfidence = HeadingConfidence_unavailable;
-	cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.speed.speedConfidence = SpeedConfidence_unavailable;
-	cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.vehicleLength.vehicleLengthValue = VehicleLengthValue_unavailable;
-	cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.vehicleWidth = VehicleWidth_unavailable;
 }
 
-void CAMFactory::set_location()
+CAMFactory::~CAMFactory()
 {
-	s->source_position.timestamp = 771994298;
-	s->source_position.latitude = 522732617;
-	s->source_position.longitude = 105252691;
-
-	cam->cam.generationDeltaTime = 1000;
-	cam->cam.camParameters.basicContainer.referencePosition.latitude = 522732617;
-	cam->cam.camParameters.basicContainer.referencePosition.longitude = 105252691;
-	cam->cam.camParameters.basicContainer.referencePosition.altitude.altitudeValue = 7000;
-	//cam->cam.camParameters.basicContainer.referencePosition.altitude.altitudeConfidence = ;
+    free(buf);
+    free(cam);
 }
 
 void CAMFactory::build_packet()
 {
-	asn_enc_rval_t r = uper_encode_to_buffer(&asn_DEF_CAM, NULL, cam, buf + header_len, 1024-header_len);
+	asn_enc_rval_t r = uper_encode_to_buffer(&asn_DEF_CAM, nullptr, cam, buf + header_len, MAX_BUF_LEN-header_len);
 	if (r.encoded == -1)
 	{
 		std::cout << "error building packet: " << (r.failed_type ? r.failed_type->name : "") << std::endl;
@@ -90,4 +75,65 @@ uint8_t *CAMFactory::get_raw()
 uint32_t CAMFactory::get_len()
 {
 	return buflen;
+}
+
+
+/**
+ * @param lat Latitude in degree
+ * @param lon Longitude in degree
+ * @param altitude Altitude in m
+ */
+void CAMFactory::set_location(double lat, double lon, int32_t altitude)
+{
+    s->source_position.latitude = lat * 10000000.0;
+    s->source_position.longitude = lon * 10000000.0;
+
+    cam->cam.camParameters.basicContainer.referencePosition.latitude = lat * 10000000.0;
+    cam->cam.camParameters.basicContainer.referencePosition.longitude = lon * 10000000.0;
+    cam->cam.camParameters.basicContainer.referencePosition.altitude.altitudeValue = altitude * 100;
+    //cam->cam.camParameters.basicContainer.referencePosition.altitude.altitudeConfidence = ;
+}
+
+void CAMFactory::set_timestamp(uint32_t timestamp, uint16_t delta)
+{
+    s->source_position.timestamp = timestamp;
+    cam->cam.generationDeltaTime = delta;
+}
+
+void CAMFactory::set_station_type(StationType_t type)
+{
+    cam->cam.camParameters.basicContainer.stationType = type;
+
+    switch (type)
+    {
+        case StationType_unknown:
+            break;
+        case StationType_roadSideUnit:
+            cam->cam.camParameters.highFrequencyContainer.present = HighFrequencyContainer_PR_basicVehicleContainerHighFrequency;
+            cam->cam.camParameters.highFrequencyContainer.choice.rsuContainerHighFrequency.protectedCommunicationZonesRSU = nullptr;
+            break;
+        case StationType_pedestrian:
+        case StationType_bus:
+        case StationType_cyclist:
+        case StationType_heavyTruck:
+        case StationType_lightTruck:
+        case StationType_moped:
+        case StationType_motorcycle:
+        case StationType_passengerCar:
+        case StationType_specialVehicles:
+        case StationType_tram:
+            cam->cam.camParameters.highFrequencyContainer.present = HighFrequencyContainer_PR_basicVehicleContainerHighFrequency;
+            cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.heading.headingConfidence = HeadingConfidence_unavailable;
+            cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.speed.speedConfidence = SpeedConfidence_unavailable;
+            cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.vehicleLength.vehicleLengthValue = VehicleLengthValue_unavailable;
+            cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.vehicleWidth = VehicleWidth_unavailable;
+            break;
+        default:
+            throw "Tried to set unhandled station type";
+    }
+}
+
+void CAMFactory::set_station_id(StationID_t id)
+{
+    cam->header.stationID = id;
 }

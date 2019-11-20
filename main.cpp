@@ -8,8 +8,8 @@
 
 void dump_geonet(uint8_t *buf, uint32_t len)
 {
-	ethernet_t *e = (ethernet_t *)buf;
-	geonetworking_t *g = (geonetworking_t *)e->data;
+	auto *e = (ethernet_t *)buf;
+	auto *g = (geonetworking_t *)e->data;
 
 	std::cout << "GeoNet " << format_geonet_type((geonet_type_t) g->common_header.type.raw) << std::endl;
 
@@ -18,7 +18,7 @@ void dump_geonet(uint8_t *buf, uint32_t len)
 		case GEONET_TYPE_SHB:
 		case GEONET_TYPE_BEACON:
 		{
-			geonet_long_position_vector_t *p = (geonet_long_position_vector_t *)g->data;
+			auto *p = (geonet_long_position_vector_t *)g->data;
 			double lat = p->latitude / 10000000.0;
 			double lon = p->longitude / 10000000.0;
 			std::cout << "Location: ";
@@ -54,20 +54,40 @@ void asserts()
 	assert(sizeof(btp_b_t) == 4);
 }
 
-int main()
+#define SERVER "10.1.4.72"
+#define PORT 17565
+int main(int argc, char *argv[])
 {
-	asserts();
+    Proxy p;
+    int port = PORT;
 
-	Proxy p;
+    asserts();
 
-	p.connect();
+	if (argc < 2)
+    {
+	    std::cout << "Usage: " << argv[0] << " <addr> [port]" << std::endl;
+	    return -1;
+    }
+	if (argc >= 3)
+    {
+        port = (int)strtoul(argv[2], nullptr, 10);
+    }
 
-	CAMFactory f(1337);
+	if (p.connect(argv[1], port))
+    {
+	    return -1;
+    }
 
-	f.set_location();
-	f.build_packet();
+	CAMFactory r;
 
-	p.send_packet(f.get_raw(), f.get_len());
+	r.set_timestamp(771994298, 1000);
+	r.set_location(52.2732617, 10.5252691, 70);
+	r.set_station_id(1337);
+	r.set_station_type(StationType_pedestrian);
+
+	r.build_packet();
+
+	p.send_packet(r.get_raw(), r.get_len());
 
 	uint8_t buf[1024];
 	uint32_t buflen = sizeof(buf);

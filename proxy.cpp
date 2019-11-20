@@ -14,9 +14,6 @@
 
 #include <iostream>
 
-#define PORT 17565
-#define SERVER "10.1.4.72"
-
 Proxy::Proxy()
 {
 	sock = -1;
@@ -30,25 +27,25 @@ Proxy::~Proxy()
 	}
 }
 
-int Proxy::connect()
+int Proxy::connect(char *caddr, int port)
 {
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock < 0)
 	{
-		std::cout << "error creating socket" << std::endl;
+		std::cerr << "error creating socket" << std::endl;
 		return -1;
 	}
 
 	struct sockaddr_in server = {};
-	unsigned long addr = inet_addr(SERVER);
+	unsigned long addr = inet_addr(caddr);
 	memcpy(&server.sin_addr, &addr, sizeof(addr));
 	server.sin_family = AF_INET;
-	server.sin_port = htons(PORT);
+	server.sin_port = htons(port);
 
 	if (::connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0)
 	{
-		std::cout << "error connecting: " << strerror(errno) << std::endl;
+		std::cerr << "error connecting: " << strerror(errno) << std::endl;
 		return -2;
 	}
 

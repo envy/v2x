@@ -5,6 +5,7 @@
 #include "CAM.h"
 #include "StationID.h"
 
+static const uint32_t MAX_BUF_LEN = 1024;
 
 class CAMFactory
 {
@@ -21,9 +22,13 @@ private:
 
 	CAM_t *cam;
 public:
-	CAMFactory(StationID_t station_id);
+	CAMFactory();
+	virtual ~CAMFactory();
 
-	void set_location();
+	void set_location(double lat, double lon, int32_t altitude);
+	void set_timestamp(uint32_t timestamp, uint16_t delta);
+	void set_station_type(StationType_t type);
+	void set_station_id(StationID_t id);
 
 	void build_packet();
 	uint8_t *get_raw();
