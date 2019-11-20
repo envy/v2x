@@ -121,13 +121,20 @@ void CAMFactory::set_station_type(StationType_t type)
         case StationType_motorcycle:
         case StationType_passengerCar:
         case StationType_specialVehicles:
-        case StationType_tram:
+        case StationType_tram: {
+            auto &c = cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency;
             cam->cam.camParameters.highFrequencyContainer.present = HighFrequencyContainer_PR_basicVehicleContainerHighFrequency;
-            cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.heading.headingConfidence = HeadingConfidence_unavailable;
-            cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.speed.speedConfidence = SpeedConfidence_unavailable;
-            cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.vehicleLength.vehicleLengthValue = VehicleLengthValue_unavailable;
-            cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.vehicleWidth = VehicleWidth_unavailable;
+            c.curvature.curvatureConfidence = CurvatureConfidence_unavailable;
+            c.curvatureCalculationMode = CurvatureCalculationMode_unavailable;
+            c.heading.headingConfidence = HeadingConfidence_unavailable;
+            c.longitudinalAcceleration.longitudinalAccelerationConfidence = AccelerationConfidence_unavailable;
+            c.speed.speedConfidence = SpeedConfidence_unavailable;
+            c.vehicleLength.vehicleLengthValue = VehicleLengthValue_unavailable;
+            c.vehicleLength.vehicleLengthConfidenceIndication = VehicleLengthConfidenceIndication_unavailable;
+            c.vehicleWidth = VehicleWidth_unavailable;
+            c.yawRate.yawRateConfidence = YawRateConfidence_unavailable;
             break;
+        }
         default:
             throw "Tried to set unhandled station type";
     }
