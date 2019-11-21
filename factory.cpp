@@ -1,12 +1,7 @@
 #include "factory.h"
 
 #include <iostream>
-
-#include "StationType.h"
-#include "HighFrequencyContainer.h"
-#include "HeadingConfidence.h"
-#include "SpeedConfidence.h"
-#include "VehicleLengthValue.h"
+#include <chrono>
 
 uint32_t timestamp_now()
 {
@@ -58,8 +53,8 @@ PacketFactory::~PacketFactory()
 
 void PacketFactory::set_location(double lat, double lon)
 {
-    s->source_position.latitude = lat * 10000000.0;
-    s->source_position.longitude = lon * 10000000.0;
+    s->source_position.latitude = htonl(lat * 10000000.0);
+    s->source_position.longitude = htonl(lon * 10000000.0);
 }
 
 void PacketFactory::set_timestamp(uint32_t timestamp)

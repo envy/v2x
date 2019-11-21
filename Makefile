@@ -4,7 +4,7 @@ ASN_DEST := asn1-src
 
 CFLAGS := -Wall -I. -I$(ASN_DEST)
 CXXFLAGS := -Wall -I. -I$(ASN_DEST)
-LDFLAGS :=
+LDFLAGS := -lpthread
 
 # =======
 
@@ -31,7 +31,7 @@ libasn.a: asn $(ASN_O_FILES)
 	$(AR) r $@ $(ASN_O_FILES)
 
 app: $(APP_O_FILES) libasn.a
-	$(CXX) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
 	rm -rf $(ASN_DEST)/*.o

@@ -20,8 +20,8 @@ void dump_geonet(uint8_t *buf, uint32_t len)
 		case GEONET_TYPE_BEACON:
 		{
 			auto *p = (geonet_long_position_vector_t *)g->data;
-			double lat = p->latitude / 10000000.0;
-			double lon = p->longitude / 10000000.0;
+			double lat = ntohl(p->latitude) / 10000000.0;
+			double lon = ntohl(p->longitude) / 10000000.0;
 			std::cout << "Location: ";
 			std::cout << lat << ", " << lon << std::endl;
 			std::cout << "Timestamp: " << p->timestamp << std::endl;
