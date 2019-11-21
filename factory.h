@@ -7,7 +7,7 @@
 
 static const uint32_t MAX_BUF_LEN = 1024;
 
-uint32_t timestamp_now();
+uint64_t timestamp_now();
 
 class PacketFactory
 {
@@ -27,7 +27,7 @@ public:
     virtual ~PacketFactory();
     virtual void build_packet() = 0;
     virtual void set_location(double lat, double lon);
-    virtual void set_timestamp(uint32_t timestamp);
+    virtual void set_timestamp(uint64_t timestamp);
     uint8_t *get_raw();
     uint32_t get_len();
 };
@@ -42,7 +42,7 @@ public:
 
     void build_packet() override;
     void set_location(double lat, double lon, int32_t altitude);
-	void set_timestamp(uint32_t timestamp) override;
+	void set_timestamp(uint64_t timestamp) override;
 	void set_station_type(StationType_t type);
 	void set_station_id(StationID_t id);
 };
@@ -58,8 +58,8 @@ public:
     void build_packet() override;
     void set_station_id(StationID_t id);
     void set_station_type(StationType_t type);
-    void set_detection_timestamp(uint32_t timestamp);
-    void set_reference_timestamp(uint32_t timestamp);
+    void set_detection_timestamp(uint64_t timestamp);
+    void set_reference_timestamp(uint64_t timestamp);
     void set_event_location(double lat, double lon, int32_t altitude);
     void set_action_id(StationID_t orig, SequenceNumber_t seq);
     void add_situation(InformationQuality_t quality, CauseCodeType_t causeType, SubCauseCodeType_t subCauseType);

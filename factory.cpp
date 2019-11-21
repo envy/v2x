@@ -3,13 +3,13 @@
 #include <iostream>
 #include <chrono>
 
-uint32_t timestamp_now()
+uint64_t timestamp_now()
 {
     static const uint64_t EPOCH_OFFSET = 1072911600000;
     // ms since 1970-01-01
     auto t = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-    return (uint32_t)((t - EPOCH_OFFSET) % UINT32_MAX);
+    return t - EPOCH_OFFSET;
 }
 
 PacketFactory::PacketFactory(const uint8_t mac[6])
@@ -57,9 +57,9 @@ void PacketFactory::set_location(double lat, double lon)
     s->source_position.longitude = htonl(lon * 10000000.0);
 }
 
-void PacketFactory::set_timestamp(uint32_t timestamp)
+void PacketFactory::set_timestamp(uint64_t timestamp)
 {
-    s->source_position.timestamp = timestamp;
+    s->source_position.timestamp = (uint32_t)(timestamp % UINT32_MAX);
 }
 
 uint8_t *PacketFactory::get_raw()
@@ -114,7 +114,7 @@ void CAMFactory::set_location(double lat, double lon, int32_t altitude)
     r.altitude.altitudeConfidence = AltitudeConfidence_unavailable;
 }
 
-void CAMFactory::set_timestamp(uint32_t timestamp)
+void CAMFactory::set_timestamp(uint64_t timestamp)
 {
     PacketFactory::set_timestamp(timestamp);
     cam->cam.generationDeltaTime = (uint16_t)(timestamp % UINT16_MAX);
@@ -208,12 +208,12 @@ void DENMFactory::set_station_type(StationType_t type)
     denm->denm.management.stationType = type;
 }
 
-void DENMFactory::set_detection_timestamp(uint32_t timestamp)
+void DENMFactory::set_detection_timestamp(uint64_t timestamp)
 {
     asn_ulong2INTEGER(&denm->denm.management.detectionTime, timestamp);
 }
 
-void DENMFactory::set_reference_timestamp(uint32_t timestamp)
+void DENMFactory::set_reference_timestamp(uint64_t timestamp)
 {
     asn_ulong2INTEGER(&denm->denm.management.referenceTime, timestamp);
 }

@@ -34,6 +34,9 @@ int Proxy::connect(char *caddr, int port)
 		return -1;
 	}
 
+	//int flags = 1;
+	//setsockopt(sock, SOL_TCP, TCP_NODELAY, (void *)&flags, sizeof(flags));
+
 	struct sockaddr_in server = {};
 	unsigned long addr = inet_addr(caddr);
 	memcpy(&server.sin_addr, &addr, sizeof(addr));

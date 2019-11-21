@@ -214,6 +214,7 @@ int btp_offset(uint8_t *buf, uint32_t len)
 			return fix_offset + sizeof(geonet_beacon_t);
 		default:
 			std::cerr << "FIXME: unknown geonet type 0x" << std::hex << (unsigned int)g->common_header.type.raw << std::dec << std::endl;
+			return -1;
 	}
 
 	return fix_offset;
@@ -222,7 +223,7 @@ int btp_offset(uint8_t *buf, uint32_t len)
 bool is_cam(uint8_t *buf, uint32_t len, uint32_t *cam_start)
 {
 	int btpoffset = btp_offset(buf, len);
-	if (btpoffset <= 0)
+	if (btpoffset <= 0 || btpoffset >= len)
 	{
 		return false;
 	}
@@ -244,7 +245,7 @@ bool is_cam(uint8_t *buf, uint32_t len, uint32_t *cam_start)
 bool is_denm(uint8_t *buf, uint32_t len, uint32_t *denm_start)
 {
     int btpoffset = btp_offset(buf, len);
-    if (btpoffset <= 0)
+    if (btpoffset <= 0 || btpoffset >= len)
     {
         return false;
     }
