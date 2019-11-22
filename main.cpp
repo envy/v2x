@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <thread>
+#include <asn1-src/ProtectedCommunicationZonesRSU.h>
 
 void dump_geonet(uint8_t *buf, uint32_t len)
 {
@@ -22,9 +23,8 @@ void dump_geonet(uint8_t *buf, uint32_t len)
 			auto *p = (geonet_long_position_vector_t *)g->data;
 			double lat = ntohl(p->latitude) / 10000000.0;
 			double lon = ntohl(p->longitude) / 10000000.0;
-			std::cout << "Location: ";
-			std::cout << lat << ", " << lon << std::endl;
-			std::cout << "Timestamp: " << p->timestamp << std::endl;
+			std::cout << " Location: " << lat << ", " << lon << std::endl;
+			std::cout << " Timestamp: " << p->timestamp << std::endl;
 		}
 	}
 }
@@ -38,7 +38,7 @@ void dump_cam(CAM_t *cam)
 	std::cout << cam->cam.generationDeltaTime;
 	std::cout << std::endl;
 
-	std::cout << "Location: ";
+	std::cout << " Location: ";
 	double lat = cam->cam.camParameters.basicContainer.referencePosition.latitude / 10000000.0;
 	double lon = cam->cam.camParameters.basicContainer.referencePosition.longitude / 10000000.0;
 	std::cout << lat << ", " << lon;
@@ -47,10 +47,25 @@ void dump_cam(CAM_t *cam)
 	if (cam->cam.camParameters.highFrequencyContainer.present == HighFrequencyContainer_PR_basicVehicleContainerHighFrequency)
 	{
 		auto &b = cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency;
-		std::cout << "Vehicle Length: " << format_vehicle_length(b.vehicleLength.vehicleLengthValue) << std::endl;
-		std::cout << "Vehicle Width: " << format_vehicle_width(b.vehicleWidth) << std::endl;
-		std::cout << "Speed: " << format_speed_value(b.speed.speedValue) << std::endl;
-		std::cout << "Heading: " << format_heading_value(b.heading.headingValue) << std::endl;
+		std::cout << " Vehicle Length: " << format_vehicle_length(b.vehicleLength.vehicleLengthValue) << std::endl;
+		std::cout << " Vehicle Width: " << format_vehicle_width(b.vehicleWidth) << std::endl;
+		std::cout << " Speed: " << format_speed_value(b.speed.speedValue) << std::endl;
+		std::cout << " Heading: " << format_heading_value(b.heading.headingValue) << std::endl;
+	}
+	else if (cam->cam.camParameters.highFrequencyContainer.present == HighFrequencyContainer_PR_rsuContainerHighFrequency)
+	{
+		auto &r = cam->cam.camParameters.highFrequencyContainer.choice.rsuContainerHighFrequency;
+		if (r.protectedCommunicationZonesRSU != nullptr)
+		{
+			for(uint32_t i = 0; i < r.protectedCommunicationZonesRSU->list.count; ++i)
+			{
+				auto item = r.protectedCommunicationZonesRSU->list.array[i];
+				double _lat = item->protectedZoneLatitude / 10000000.0;
+				double _lon = item->protectedZoneLongitude / 10000000.0;
+				std::cout << " Protected Zone: " << format_protected_zone_type(item->protectedZoneType) << std::endl;
+				std::cout << " Location: " << _lat << ", " << _lon << std::endl;
+			}
+		}
 	}
 }
 
@@ -63,26 +78,30 @@ void dump_denm(DENM_t *denm)
 	if (denm->denm.situation != nullptr)
 	{
 		auto situation = denm->denm.situation;
-		std::cout << "Cause: " << format_cause_code(situation->eventType) << std::endl;
-		std::cout << "Info Quality: " << situation->informationQuality << std::endl;
+		std::cout << " Cause: " << format_cause_code(situation->eventType) << std::endl;
+		std::cout << " Info Quality: " << situation->informationQuality << std::endl;
 	}
 }
 
-void dump_spat(SPAT_t *spat)
+void dump_spat(SPATEM_t *spat)
 {
 	std::cout << "SPAT v" << spat->header.protocolVersion << " from ";
 	std::cout << spat->header.stationID;
 	std::cout << std::endl;
 
-	for (uint32_t i = 0; i < spat->intersections.list.count; ++i)
+	if (spat->spat.timeStamp != nullptr)
 	{
-		auto intersection = spat->intersections.list.array[i];
-		std::cout << "  Intersection " << intersection->id.id << std::endl;
+		std::cout << " Timestamp: " << *spat->spat.timeStamp << std::endl;
+	}
+
+	for (uint32_t i = 0; i < spat->spat.intersections.list.count; ++i)
+	{
+		auto intersection = spat->spat.intersections.list.array[i];
+		std::cout << " Intersection " << intersection->id.id << std::endl;
 		for (uint32_t j = 0; j < intersection->states.list.count; ++j)
 		{
 			auto signal = intersection->states.list.array[j];
-			auto pad = signal->state_time_speed.list.count;
-			std::cout << "   Signal Group " << signal->signalGroup << ": ";
+			std::cout << "  Signal Group " << signal->signalGroup << ": ";
 			for (uint32_t k = 0; k < signal->state_time_speed.list.count; ++k)
 			{
 				if (k != 0)
@@ -184,8 +203,8 @@ int main(int argc, char *argv[]) {
 	mac[4] = 0xB6;
 	mac[5] = 0x00;
 
-	std::thread camthread(send_cam_thread, mac, id, &p);
-	std::thread denmthread(send_denm_thread, mac, id, &p);
+	//std::thread camthread(send_cam_thread, mac, id, &p);
+	//std::thread denmthread(send_denm_thread, mac, id, &p);
 
 	uint8_t aspat[] = "\xff\xff\xff\xff\xff\xff\x00\x0d\x41\x12\x21\x4d\x89\x47\x01\x00" \
 "\x1a\x01\x20\x50\x03\x00\x00\x8a\x01\x00\x3c\xe8\x00\x0d\x41\x12" \
@@ -250,18 +269,19 @@ int main(int argc, char *argv[]) {
 "\x08\x12\x99\x00\x00\x00\x00\x31\xfb\x2c\xbc\x65\x2a\x7b\x30\x81" \
 "\x31\x90\x00\x00\x00\x03\x1e\xfb\x25\x46\x51\xc7\x8d\x80";
 
+	/*
 	uint32_t s = 0;
 	dump_geonet(aspat, sizeof(aspat));
 	if (is_spat(aspat, sizeof(aspat), &s))
 	{
-		SPAT_t *spat = nullptr;
+		SPATEM_t *spat = nullptr;
 		int ret = parse_spat(aspat+s, sizeof(aspat)-s, &spat);
 		if (ret == 0)
 		{
 			dump_spat(spat);
-			//xer_fprint(stdout, &asn_DEF_SPAT, spat);
 		}
 	}
+	//*/
 
 	uint8_t buf[2048];
 	uint32_t buflen = sizeof(buf);

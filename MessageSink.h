@@ -5,10 +5,11 @@
 #include <map>
 #include <mutex>
 #include <thread>
+#include <condition_variable>
 #include "parser.h"
 #include "CAM.h"
 #include "DENM.h"
-#include "SPAT.h"
+#include "SPATEM.h"
 
 typedef struct
 {
@@ -21,7 +22,7 @@ typedef struct
 	uint64_t last;
 	CAM_t *cam;
 	DENM_t *denm;
-	SPAT_t *spat;
+	SPATEM_t *spat;
 } station_msgs_t;
 
 class MessageSink {

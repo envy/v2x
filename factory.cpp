@@ -63,7 +63,7 @@ void PacketFactory::set_location(double lat, double lon)
 
 void PacketFactory::set_timestamp(uint64_t timestamp)
 {
-    s->source_position.timestamp = htonl((uint32_t)(timestamp % UINT32_MAX));
+    s->source_position.timestamp = (uint32_t)(timestamp % UINT32_MAX);
 }
 
 uint8_t *PacketFactory::get_raw()
@@ -81,7 +81,7 @@ CAMFactory::CAMFactory(const uint8_t mac[6]) : PacketFactory(mac)
     b->port = htons(BTP_B_PORT_CAM);
 
     cam = (CAM_t *) calloc(1, sizeof(CAM_t));
-    cam->header.protocolVersion = 2;
+    cam->header.protocolVersion =2;
     cam->header.messageID = ItsPduHeader__messageID_cam;
 }
 
@@ -121,7 +121,7 @@ void CAMFactory::set_location(double lat, double lon, int32_t altitude)
 void CAMFactory::set_timestamp(uint64_t timestamp)
 {
     PacketFactory::set_timestamp(timestamp);
-    cam->cam.generationDeltaTime = htons((uint16_t)(timestamp % UINT16_MAX));
+    cam->cam.generationDeltaTime = (uint16_t)(timestamp % UINT16_MAX);
 }
 
 void CAMFactory::set_station_type(StationType_t type)

@@ -1,14 +1,15 @@
 #include "MessageSink.h"
+#include "main.h"
+#include "factory.h"
 
 #include <iostream>
 
 MessageSink::MessageSink()
 {
 	process = true;
-	std::thread _processor([this] {
+	processor = std::thread([this] {
 		process_incoming();
 	});
-	processor = std::move(_processor);
 }
 
 MessageSink::~MessageSink()
@@ -40,13 +41,15 @@ void MessageSink::process_msg(array_t arr)
 		{
 			if (msgs.find(cam->header.stationID) == msgs.end())
 			{
-				msgs.insert(std::pair<StationID_t, station_msgs_t *>(cam->header.stationID, new station_msgs_t));
+				msgs.insert(std::pair<StationID_t, station_msgs_t *>(cam->header.stationID, new station_msgs_t()));
 			}
 			if (msgs[cam->header.stationID]->cam != nullptr)
 			{
 				ASN_STRUCT_FREE(asn_DEF_CAM, msgs[cam->header.stationID]->cam);
 			}
+			msgs[cam->header.stationID]->last = timestamp_now();
 			msgs[cam->header.stationID]->cam = cam;
+			dump_cam(cam);
 			return;
 		}
 	}
@@ -59,9 +62,9 @@ void MessageSink::process_msg(array_t arr)
 		{
 			if (msgs.find(denm->header.stationID) == msgs.end())
 			{
-				msgs.insert(std::pair<StationID_t, station_msgs_t *>(denm->header.stationID, new station_msgs_t));
+				msgs.insert(std::pair<StationID_t, station_msgs_t *>(denm->header.stationID, new station_msgs_t()));
 			}
-			if (msgs[denm->header.stationID]->cam != nullptr)
+			if (msgs[denm->header.stationID]->denm != nullptr)
 			{
 				ASN_STRUCT_FREE(asn_DEF_DENM, msgs[denm->header.stationID]->denm);
 			}
@@ -72,17 +75,17 @@ void MessageSink::process_msg(array_t arr)
 
 	if (is_spat(arr.buf, arr.len, &start))
 	{
-		SPAT_t *spat = nullptr;
+		SPATEM_t *spat = nullptr;
 		int ret = parse_spat(arr.buf+start, arr.len-start, &spat);
 		if (ret == 0)
 		{
 			if (msgs.find(spat->header.stationID) == msgs.end())
 			{
-				msgs.insert(std::pair<StationID_t, station_msgs_t *>(spat->header.stationID, new station_msgs_t));
+				msgs.insert(std::pair<StationID_t, station_msgs_t *>(spat->header.stationID, new station_msgs_t()));
 			}
-			if (msgs[spat->header.stationID]->cam != nullptr)
+			if (msgs[spat->header.stationID]->spat != nullptr)
 			{
-				ASN_STRUCT_FREE(asn_DEF_SPAT, msgs[spat->header.stationID]->spat);
+				ASN_STRUCT_FREE(asn_DEF_SPATEM, msgs[spat->header.stationID]->spat);
 			}
 			msgs[spat->header.stationID]->spat = spat;
 			return;
@@ -100,7 +103,6 @@ void MessageSink::process_incoming()
 			{
 				process_msg(incoming.front());
 				incoming.pop();
-				std::cout << "processed message" << std::endl;
 			}
 			queue_cond.wait(lock);
 		}

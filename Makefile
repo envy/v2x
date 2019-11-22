@@ -2,8 +2,8 @@ ASN1 := asn1c
 ASN_FLAGS := -fcompound-names -fincludes-quoted -no-gen-example
 ASN_DEST := asn1-src
 
-CFLAGS := -std=c11 -Wall -I. -I$(ASN_DEST)
-CXXFLAGS := -std=c++2a -Wall -I. -I$(ASN_DEST)
+CFLAGS := -std=c11 -Wall -g -I. -I$(ASN_DEST)
+CXXFLAGS := -std=c++2a -Wall -g -I. -I$(ASN_DEST)
 LDFLAGS := -lpthread
 
 # =======
@@ -31,6 +31,7 @@ ASN_C_FILES := $(wildcard asn1-src/*.c)
 ASN_H_FILES := $(wildcard asn1-src/*.h)
 ASN_O_FILES := $(ASN_C_FILES:.c=.o)
 APP_O_FILES := $(APP_CXX_FILES:.cpp=.o)
+APP_H_FILES := $(wildcard *.h)
 
 all: app
 
@@ -39,10 +40,10 @@ asn: $(ASN_FILES)
 	$(eval ASN_C_FILES := $(wildcard asn1-src/*.c))
 	$(eval ASN_H_FILES := $(wildcard asn1-src/*.h))
 
-app: $(APP_O_FILES) $(ASN_O_FILES)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+app: $(APP_O_FILES) $(ASN_O_FILES) $(APP_H_FILES)
+	$(CXX) $(CXXFLAGS) -o $@ $(APP_O_FILES) $(ASN_O_FILES) $(LDFLAGS)
 
 clean:
-	rm -rf $(ASN_DEST)/*.o
+	#rm -rf $(ASN_DEST)/*.o
 	rm -rf *.o
 	rm -f app

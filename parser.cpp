@@ -204,6 +204,15 @@ std::string format_cause_code(CauseCode_t val)
 	}
 }
 
+std::string format_protected_zone_type(ProtectedZoneType_t val)
+{
+	switch (val)
+	{
+		default:
+			return "unknown";
+	}
+}
+
 int dump_packet(uint8_t *buf, uint32_t len)
 {
 	int32_t tlen = len;
@@ -343,7 +352,7 @@ static int parse_something(uint8_t *buf, uint32_t len, void **ptr, asn_TYPE_desc
 				std::cout << "FAIL";
 				break;
 			default:
-				std::cout << "??? (" << ret.code;
+				std::cout << "??? (" << ret.code << ")";
 		}
 		std::cout << std::endl;
 		return -1;
@@ -371,7 +380,7 @@ int parse_denm(uint8_t *buf, uint32_t len, DENM_t **denm)
 	return parse_something(buf, len, (void **)denm, &asn_DEF_DENM);
 }
 
-int parse_spat(uint8_t *buf, uint32_t len, SPAT_t **spat)
+int parse_spat(uint8_t *buf, uint32_t len, SPATEM_t **spat)
 {
-	return parse_something(buf, len, (void **)spat, &asn_DEF_SPAT);
+	return parse_something(buf, len, (void **)spat, &asn_DEF_SPATEM);
 }

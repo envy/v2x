@@ -6,7 +6,7 @@
 
 #include "CAM.h"
 #include "DENM.h"
-#include "SPAT.h"
+#include "SPATEM.h"
 
 #define ETHERTYPE_GEONET 0x8947
 
@@ -104,6 +104,7 @@ std::string format_speed_value(VehicleWidth_t val);
 std::string format_heading_value(HeadingValue_t val);
 std::string format_event_state(MovementPhaseState_t val);
 std::string format_cause_code(CauseCode_t val);
+std::string format_protected_zone_type(ProtectedZoneType_t val);
 
 int btp_offset(uint8_t *buf, uint32_t len);
 
@@ -117,6 +118,6 @@ geonetworking_t *get_geonet_ptr(uint8_t);
 
 int parse_cam(uint8_t *buf, uint32_t len, CAM_t **cam);
 int parse_denm(uint8_t *buf, uint32_t len, DENM_t **denm);
-int parse_spat(uint8_t *buf, uint32_t len, SPAT_t **spat);
+int parse_spat(uint8_t *buf, uint32_t len, SPATEM_t **spat);
 
 #endif
