@@ -8,9 +8,22 @@ LDFLAGS := -lpthread
 
 # =======
 
-ASN_FILES := asn1/TS102894-2v131-CDD.asn \
-	asn1/EN302637-2v141-CAM.asn \
-	asn1/EN302637-3v131-DENM.asn
+ASN_FILES := asn1/ITS-Container.asn \
+	asn1/CAM.asn \
+
+NOP := \
+	asn1/DENM.asn \
+	asn1/EV-RSR-PDU-Descriptions.asn \
+	asn1/EVCSN-PDU-Descriptions.asn \
+	asn1/ETSI_TS_103301.asn \
+	asn1/ISO_TS_14816.asn \
+	asn1/ISO_TS_14906_Application.asn \
+	asn1/ISO_TS_14906_Generic.asn \
+	asn1/ISO_TS_17419.asn \
+	asn1/ISO_TS_19091.asn \
+	asn1/ISO_TS_19321.asn \
+	asn1/ISO_TS_24534-3.asn
+
 
 APP_CXX_FILES := main.cpp \
 	parser.cpp \
@@ -25,7 +38,7 @@ APP_O_FILES := $(APP_CXX_FILES:.cpp=.o)
 all: app
 
 asn: $(ASN_FILES)
-	@$(ASN1) $(ASN_FLAGS) -D $(ASN_DEST) $(ASN_FILES) 2> /dev/null
+	$(ASN1) $(ASN_FLAGS) -D $(ASN_DEST) $(ASN_FILES)
 	$(eval ASN_C_FILES := $(wildcard asn1-src/*.c))
 	$(eval ASN_H_FILES := $(wildcard asn1-src/*.h))
 

@@ -264,6 +264,28 @@ bool is_denm(uint8_t *buf, uint32_t len, uint32_t *denm_start)
     return false;
 }
 
+bool is_spat(uint8_t *buf, uint32_t len, uint32_t *spat_start)
+{
+	int btpoffset = btp_offset(buf, len);
+	if (btpoffset <= 0 || btpoffset >= len)
+	{
+		return false;
+	}
+
+	auto *b = (btp_b_t *)(buf + btpoffset);
+
+	if (ntohs(b->port) == BTP_B_PORT_SPAT)
+	{
+		if (spat_start)
+		{
+			*spat_start = (uint8_t *)b - buf + sizeof(btp_b_t);
+		}
+		return true;
+	}
+
+	return false;
+}
+
 int parse_cam(uint8_t *buf, uint32_t len, CAM_t **cam)
 {
 	asn_dec_rval_t ret;
