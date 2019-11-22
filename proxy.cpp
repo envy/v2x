@@ -1,13 +1,10 @@
 #include "proxy.h"
 #include "parser.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <netdb.h>
-#include <sys/types.h>
+#include <cerrno>
+#include <string>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -74,8 +71,8 @@ int Proxy::get_packet(uint8_t *buf, uint32_t buflen)
 	static const uint32_t header_size = sizeof(ethernet_t) + sizeof(geonetworking_t);
 
 	int _read = reliable_read(buf, header_size);
-	ethernet_t *e = (ethernet_t *)buf;
-	geonetworking_t *g = (geonetworking_t *)e->data;
+	auto *e = (ethernet_t *)buf;
+	auto *g = (geonetworking_t *)e->data;
 	uint32_t payload_length = ntohs(g->common_header.payload_length);
 	switch (g->common_header.type.raw)
 	{
@@ -100,10 +97,7 @@ int Proxy::send_packet(uint8_t *buf, uint32_t len)
     std::lock_guard<std::mutex> lock(send_lock);
 	int written = 0;
 	//written = write(sock, buf, len);
-	while (written < len && (written += write(sock, buf + written, len - written)) > 0)
-    {
-
-    }
+	while (written < len && (written += write(sock, buf + written, len - written)) > 0) {}
 	if (written <= 0)
 	{
 		std::cerr << "write error: " << strerror(errno) << std::endl;
@@ -116,9 +110,9 @@ int Proxy::send_packet(uint8_t *buf, uint32_t len)
 
 void Proxy::disconnect()
 {
-    if (sock < 0)
-    {
-        close(sock);
-    }
+	if (sock < 0)
+	{
+		close(sock);
+	}
 }
 

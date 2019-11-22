@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <thread>
+#include <asn1-src/MovementEventList.h>
 
 void dump_geonet(uint8_t *buf, uint32_t len)
 {
@@ -33,7 +34,7 @@ void dump_cam(CAM_t *cam)
 {
 	std::cout << "CAM v" << cam->header.protocolVersion << " from ";
 	std::cout << cam->header.stationID;
-	std::cout << " (" << format_cam_station_type(cam->cam.camParameters.basicContainer.stationType);
+	std::cout << " (" << format_station_type(cam->cam.camParameters.basicContainer.stationType);
 	std::cout << ") ∆ ";
 	std::cout << cam->cam.generationDeltaTime;
 	std::cout << std::endl;
@@ -59,6 +60,42 @@ void dump_denm(DENM_t *denm)
 	std::cout << "DENM v" << denm->header.protocolVersion << " from ";
 	std::cout << denm->header.stationID;
 	std::cout << std::endl;
+
+	if (denm->denm.situation != nullptr)
+	{
+		auto situation = denm->denm.situation;
+		std::cout << "Cause: " << format_cause_code(situation->eventType) << std::endl;
+		std::cout << "Info Quality: " << situation->informationQuality << std::endl;
+	}
+}
+
+void dump_spat(SPAT_t *spat)
+{
+	std::cout << "SPAT v" << spat->header.protocolVersion << " from ";
+	std::cout << spat->header.stationID;
+	std::cout << std::endl;
+
+	for (uint32_t i = 0; i < spat->intersections.list.count; ++i)
+	{
+		auto intersection = spat->intersections.list.array[i];
+		std::cout << "  Intersection " << intersection->id.id << std::endl;
+		for (uint32_t j = 0; j < intersection->states.list.count; ++j)
+		{
+			auto signal = intersection->states.list.array[j];
+			auto pad = signal->state_time_speed.list.count;
+			std::cout << "   Signal Group " << signal->signalGroup << ": ";
+			for (uint32_t k = 0; k < signal->state_time_speed.list.count; ++k)
+			{
+				if (k != 0)
+				{
+					std::cout << ", ";
+				}
+				auto state = signal->state_time_speed.list.array[k];
+				std::cout << format_event_state(state->eventState);
+			}
+			std::cout << std::endl;
+		}
+	}
 }
 
 void asserts()
@@ -147,10 +184,10 @@ int main(int argc, char *argv[]) {
 	mac[4] = 0xB6;
 	mac[5] = 0x00;
 
-	//std::thread camthread(send_cam_thread, mac, id, &p);
-	//std::thread denmthread(send_denm_thread, mac, id, &p);
+	std::thread camthread(send_cam_thread, mac, id, &p);
+	std::thread denmthread(send_denm_thread, mac, id, &p);
 
-	uint8_t spat[] = "\xff\xff\xff\xff\xff\xff\x00\x0d\x41\x12\x21\x4d\x89\x47\x01\x00" \
+	uint8_t aspat[] = "\xff\xff\xff\xff\xff\xff\x00\x0d\x41\x12\x21\x4d\x89\x47\x01\x00" \
 "\x1a\x01\x20\x50\x03\x00\x00\x8a\x01\x00\x3c\xe8\x00\x0d\x41\x12" \
 "\x21\x4d\xc4\xaa\x78\x0e\x1f\x28\x8c\x7a\x06\x45\xe0\x84\x80\x19" \
 "\x00\x1b\x00\x01\x00\x00\x07\xd4\x00\x00\x01\x04\x00\x12\x20\x4c" \
@@ -162,7 +199,7 @@ int main(int argc, char *argv[]) {
 "\x80\x86\xe8\x3a\x38\x3d\xf8\x3c\x1b\x00\xd0\x43\x74\x1d\x1c\x1e" \
 "\xfc\x1e\x0d\x80\x70\x22\x82\x04\xdc\x03\xc1\x0c\x10\x3f\xe0\x20" \
 "\x08\x60\x81\xff\x01\x10\x43\x04\x0f\xf8\x09\x02\x18\x20\x7f\xc0";
-	uint8_t topo[] = "\xff\xff\xff\xff\xff\xff\x00\x0d\x41\x12\x21\x4d\x89\x47\x01\x00" \
+	uint8_t atopo[] = "\xff\xff\xff\xff\xff\xff\x00\x0d\x41\x12\x21\x4d\x89\x47\x01\x00" \
 "\x1a\x01\x20\x50\x03\x00\x02\xe8\x01\x00\x3c\xe8\x00\x0d\x41\x12" \
 "\x21\x4d\xc4\xaa\x77\x70\x1f\x28\x8c\x7a\x06\x45\xe0\x84\x80\x19" \
 "\x00\x1b\x00\x01\x00\x00\x07\xd3\x00\x00\x01\x05\x00\x12\x20\x4c" \
@@ -213,7 +250,20 @@ int main(int argc, char *argv[]) {
 "\x08\x12\x99\x00\x00\x00\x00\x31\xfb\x2c\xbc\x65\x2a\x7b\x30\x81" \
 "\x31\x90\x00\x00\x00\x03\x1e\xfb\x25\x46\x51\xc7\x8d\x80";
 
-	uint8_t buf[1024];
+	uint32_t s = 0;
+	dump_geonet(aspat, sizeof(aspat));
+	if (is_spat(aspat, sizeof(aspat), &s))
+	{
+		SPAT_t *spat = nullptr;
+		int ret = parse_spat(aspat+s, sizeof(aspat)-s, &spat);
+		if (ret == 0)
+		{
+			dump_spat(spat);
+			//xer_fprint(stdout, &asn_DEF_SPAT, spat);
+		}
+	}
+
+	uint8_t buf[2048];
 	uint32_t buflen = sizeof(buf);
 	while((buflen = p.get_packet((uint8_t *)&buf, buflen)) >= 0)
 	{
@@ -244,6 +294,18 @@ int main(int argc, char *argv[]) {
 			{
 				dump_denm(denm);
 				//xer_fprint(stdout, &asn_DEF_DENM, denm);
+				goto next_iter;
+			}
+		}
+
+		if (is_spat(buf, buflen, &start))
+		{
+			SPAT_t *spat = nullptr;
+			int ret = parse_spat(buf+start, buflen-start, &spat);
+			if (ret == 0)
+			{
+				dump_spat(spat);
+				//xer_fprint(stdout, &asn_DEF_SPAT, spat);
 				goto next_iter;
 			}
 		}

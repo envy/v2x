@@ -4,6 +4,10 @@
 #include <sstream>
 #include <iomanip>
 
+#define RED "\x1b[31m"
+#define GREEN "\x1b[32m"
+#define RST "\x1b[0m"
+
 static std::string format_mac(uint8_t mac[6])
 {
 	std::stringstream ss;
@@ -17,7 +21,7 @@ static std::string format_mac(uint8_t mac[6])
 	return std::string(ss.str());
 }
 
-std::string format_cam_station_type(StationType_t type)
+std::string format_station_type(StationType_t type)
 {
 	switch (type)
 	{
@@ -49,91 +53,155 @@ std::string format_geonet_type(geonet_type_t type)
 
 std::string format_vehicle_length(VehicleLengthValue_t val)
 {
-    std::stringstream ss;
-    switch (val)
-    {
-        case VehicleLengthValue_unavailable:
-            ss << "unavailable";
-            break;
-        case VehicleLengthValue_outOfRange:
-            ss << "out of range";
-            break;
-        default:
-            ss << val*10 << " cm";
-    }
-    return ss.str();
+	std::stringstream ss;
+	switch (val)
+	{
+		case VehicleLengthValue_unavailable:
+			ss << "unavailable";
+			break;
+		case VehicleLengthValue_outOfRange:
+			ss << "out of range";
+			break;
+		default:
+			ss << val*10 << " cm";
+	}
+	return ss.str();
 }
 
 std::string format_vehicle_width(VehicleWidth_t val)
 {
-    std::stringstream ss;
-    switch (val)
-    {
-        case VehicleWidth_unavailable:
-            ss << "unavailable";
-            break;
-        case VehicleWidth_outOfRange:
-            ss << "out of range";
-            break;
-        default:
-            ss << val*10 << " cm";
-    }
-    return ss.str();
+	std::stringstream ss;
+	switch (val)
+	{
+		case VehicleWidth_unavailable:
+			ss << "unavailable";
+			break;
+		case VehicleWidth_outOfRange:
+			ss << "out of range";
+			break;
+		default:
+			ss << val*10 << " cm";
+	}
+	return ss.str();
 }
 
 std::string format_speed_value(VehicleWidth_t val)
 {
-    std::stringstream ss;
-    switch (val)
-    {
-        case SpeedValue_unavailable:
-            ss << "unavailable";
-            break;
-        default:
-            ss << val << " cm/s (" << val / 100 << " m/s; " << val * 3.6 << " km/h)";
-    }
-    return ss.str();
+	std::stringstream ss;
+	switch (val)
+	{
+		case SpeedValue_unavailable:
+			ss << "unavailable";
+			break;
+		default:
+			ss << val << " cm/s (" << val / 100 << " m/s; " << val * 3.6 << " km/h)";
+	}
+	return ss.str();
 }
 
 std::string format_heading_value(HeadingValue_t val)
 {
-    std::stringstream ss;
-    switch (val)
-    {
-        case HeadingValue_unavailable:
-            ss << "unavailable";
-            break;
-        case HeadingValue_wgs84North:
-            ss << "North";
-            break;
-        case HeadingValue_wgs84East:
-            ss << "East";
-            break;
-        case HeadingValue_wgs84South:
-            ss << "South";
-            break;
-        case HeadingValue_wgs84West:
-            ss << "West";
-            break;
-        default:
-            if (val > HeadingValue_wgs84North && val < HeadingValue_wgs84East)
-            {
-                ss << "North East";
-            }
-            else if (val > HeadingValue_wgs84East && val < HeadingValue_wgs84South)
-            {
-                ss << "South East";
-            }
-            else if (val > HeadingValue_wgs84South && val < HeadingValue_wgs84West)
-            {
-                ss << "South West";
-            }
-            else if (val > HeadingValue_wgs84West && val < HeadingValue_unavailable)
-            {
-                ss << "North West";
-            }
-    }
-    return ss.str();
+	std::stringstream ss;
+	switch (val)
+	{
+		case HeadingValue_unavailable:
+			ss << "unavailable";
+			break;
+		case HeadingValue_wgs84North:
+			ss << "North";
+			break;
+		case HeadingValue_wgs84East:
+			ss << "East";
+			break;
+		case HeadingValue_wgs84South:
+			ss << "South";
+			break;
+		case HeadingValue_wgs84West:
+			ss << "West";
+			break;
+		default:
+			if (val > HeadingValue_wgs84North && val < HeadingValue_wgs84East)
+			{
+				ss << "North East";
+			}
+			else if (val > HeadingValue_wgs84East && val < HeadingValue_wgs84South)
+			{
+				ss << "South East";
+			}
+			else if (val > HeadingValue_wgs84South && val < HeadingValue_wgs84West)
+			{
+				ss << "South West";
+			}
+			else if (val > HeadingValue_wgs84West && val < HeadingValue_unavailable)
+			{
+				ss << "North West";
+			}
+	}
+	return ss.str();
+}
+
+std::string format_event_state(MovementPhaseState_t val)
+{
+	switch (val)
+	{
+		case MovementPhaseState_unavailable:
+			return "unavailable";
+		case MovementPhaseState_dark:
+			return "dark";
+		case MovementPhaseState_stop_Then_Proceed:
+			return RED "STOP" RST " then proceed";
+		case MovementPhaseState_stop_And_Remain:
+			return RED "STOP" RST " and remain";
+		case MovementPhaseState_pre_Movement:
+			return "pre movement";
+		case MovementPhaseState_permissive_Movement_Allowed:
+			return "movement allowed (permissive)";
+		case MovementPhaseState_protected_Movement_Allowed:
+			return "movement allowed (protected)";
+		case MovementPhaseState_permissive_clearance:
+			return "clearance (permissive)";
+		case MovementPhaseState_protected_clearance:
+			return "clearance (protected)";
+		case MovementPhaseState_caution_Conflicting_Traffic:
+			return "/!\\ conflicting traffic";
+		default:
+			return "unknown";
+	}
+}
+
+std::string format_cause_code(CauseCode_t val)
+{
+	switch (val.causeCode)
+	{
+		case CauseCodeType_reserved:
+			return "reserved";
+		case CauseCodeType_trafficCondition:
+			return "Traffic condition";
+		case CauseCodeType_accident:
+			return "Accident";
+		case CauseCodeType_roadworks:
+			return "Roadworks";
+		case CauseCodeType_impassability:
+			return "Impassability";
+		case CauseCodeType_adverseWeatherCondition_Adhesion:
+			return "Adhesion";
+		case CauseCodeType_aquaplannning:
+			return "Aquaplaning";
+		case CauseCodeType_hazardousLocation_SurfaceCondition:
+			return "Surface condition";
+		case CauseCodeType_hazardousLocation_ObstacleOnTheRoad:
+			return "Obstacle on road";
+		case CauseCodeType_hazardousLocation_AnimalOnTheRoad:
+			return "Animal on the road";
+		case CauseCodeType_humanPresenceOnTheRoad:
+			return "Human on the road";
+		case CauseCodeType_wrongWayDriving:
+			return "Wrong way driving";
+		case CauseCodeType_emergencyVehicleApproaching:
+			return "Emergency vehicle approaching";
+		default:
+			return "unknown";
+	}
 }
 
 int dump_packet(uint8_t *buf, uint32_t len)
@@ -220,7 +288,7 @@ int btp_offset(uint8_t *buf, uint32_t len)
 	return fix_offset;
 }
 
-bool is_cam(uint8_t *buf, uint32_t len, uint32_t *cam_start)
+static bool is_something(uint8_t *buf, uint32_t len, uint32_t *start, uint16_t port)
 {
 	int btpoffset = btp_offset(buf, len);
 	if (btpoffset <= 0 || btpoffset >= len)
@@ -230,71 +298,42 @@ bool is_cam(uint8_t *buf, uint32_t len, uint32_t *cam_start)
 
 	auto *b = (btp_b_t *)(buf + btpoffset);
 
-	if (ntohs(b->port) == BTP_B_PORT_CAM)
+	if (ntohs(b->port) == port)
 	{
-		if (cam_start)
+		if (start)
 		{
-			*cam_start = (uint8_t *)b - buf + sizeof(btp_b_t);
+			*start = (uint8_t *)b - buf + sizeof(btp_b_t);
 		}
 		return true;
 	}
 
 	return false;
+}
+
+bool is_cam(uint8_t *buf, uint32_t len, uint32_t *cam_start)
+{
+	return is_something(buf, len, cam_start, BTP_B_PORT_CAM);
 }
 
 bool is_denm(uint8_t *buf, uint32_t len, uint32_t *denm_start)
 {
-    int btpoffset = btp_offset(buf, len);
-    if (btpoffset <= 0 || btpoffset >= len)
-    {
-        return false;
-    }
-
-    auto *b = (btp_b_t *)(buf + btpoffset);
-
-    if (ntohs(b->port) == BTP_B_PORT_DENM)
-    {
-        if (denm_start)
-        {
-            *denm_start = (uint8_t *)b - buf + sizeof(btp_b_t);
-        }
-        return true;
-    }
-
-    return false;
+	return is_something(buf, len, denm_start, BTP_B_PORT_DENM);
 }
 
 bool is_spat(uint8_t *buf, uint32_t len, uint32_t *spat_start)
 {
-	int btpoffset = btp_offset(buf, len);
-	if (btpoffset <= 0 || btpoffset >= len)
-	{
-		return false;
-	}
-
-	auto *b = (btp_b_t *)(buf + btpoffset);
-
-	if (ntohs(b->port) == BTP_B_PORT_SPAT)
-	{
-		if (spat_start)
-		{
-			*spat_start = (uint8_t *)b - buf + sizeof(btp_b_t);
-		}
-		return true;
-	}
-
-	return false;
+	return is_something(buf, len, spat_start, BTP_B_PORT_SPAT);
 }
 
-int parse_cam(uint8_t *buf, uint32_t len, CAM_t **cam)
+static int parse_something(uint8_t *buf, uint32_t len, void **ptr, asn_TYPE_descriptor_t *desc)
 {
 	asn_dec_rval_t ret;
 
-	ret = uper_decode_complete(nullptr, &asn_DEF_CAM, (void **)cam, buf, len);
+	ret = uper_decode_complete(nullptr, desc, ptr, buf, len);
 
 	if (ret.code != RC_OK)
 	{
-		std::cout << "Could not decode CAM: ";
+		std::cout << "Could not decode: ";
 		switch (ret.code)
 		{
 			case RC_WMORE:
@@ -312,7 +351,7 @@ int parse_cam(uint8_t *buf, uint32_t len, CAM_t **cam)
 
 	char errmsg[256];
 	size_t errlen = sizeof(errmsg);
-	int iret = asn_check_constraints(&asn_DEF_CAM, cam, errmsg, &errlen);
+	int iret = asn_check_constraints(desc, ptr, errmsg, &errlen);
 	if (iret != 0)
 	{
 		//std::cout << "Constraint error: " << errmsg << std::endl;
@@ -322,38 +361,17 @@ int parse_cam(uint8_t *buf, uint32_t len, CAM_t **cam)
 	return 0;
 }
 
+int parse_cam(uint8_t *buf, uint32_t len, CAM_t **cam)
+{
+	return parse_something(buf, len, (void **)cam, &asn_DEF_CAM);
+}
+
 int parse_denm(uint8_t *buf, uint32_t len, DENM_t **denm)
 {
-    asn_dec_rval_t ret;
+	return parse_something(buf, len, (void **)denm, &asn_DEF_DENM);
+}
 
-    ret = uper_decode_complete(nullptr, &asn_DEF_DENM, (void **)denm, buf, len);
-
-    if (ret.code != RC_OK)
-    {
-        std::cout << "Could not decode DENM: ";
-        switch (ret.code)
-        {
-            case RC_WMORE:
-                std::cout << "WMORE (not enought data)";
-                break;
-            case RC_FAIL:
-                std::cout << "FAIL";
-                break;
-            default:
-                std::cout << "??? (" << ret.code;
-        }
-        std::cout << std::endl;
-        return -1;
-    }
-
-    char errmsg[256];
-    size_t errlen = sizeof(errmsg);
-    int iret = asn_check_constraints(&asn_DEF_DENM, denm, errmsg, &errlen);
-    if (iret != 0)
-    {
-        //std::cout << "Constraint error: " << errmsg << std::endl;
-        //return -2;
-    }
-
-    return 0;
+int parse_spat(uint8_t *buf, uint32_t len, SPAT_t **spat)
+{
+	return parse_something(buf, len, (void **)spat, &asn_DEF_SPAT);
 }

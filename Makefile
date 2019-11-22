@@ -10,11 +10,7 @@ LDFLAGS := -lpthread
 
 ASN_FILES := asn1/ITS-Container.asn \
 	asn1/CAM.asn \
-
-NOP := \
 	asn1/DENM.asn \
-	asn1/EV-RSR-PDU-Descriptions.asn \
-	asn1/EVCSN-PDU-Descriptions.asn \
 	asn1/ETSI_TS_103301.asn \
 	asn1/ISO_TS_14816.asn \
 	asn1/ISO_TS_14906_Application.asn \
@@ -42,10 +38,8 @@ asn: $(ASN_FILES)
 	$(eval ASN_C_FILES := $(wildcard asn1-src/*.c))
 	$(eval ASN_H_FILES := $(wildcard asn1-src/*.h))
 
-$(APP_O_FILES): asn
-
 app: $(APP_O_FILES) $(ASN_O_FILES)
-	@$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
 	rm -rf $(ASN_DEST)/*.o

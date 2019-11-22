@@ -274,6 +274,7 @@ RegionalExtension {REG-EXT-ID-AND-TYPE : Set} ::= SEQUENCE {
    }
 
 SPAT ::= SEQUENCE {
+   header ItsPduHeader,
    timeStamp     MinuteOfTheYear OPTIONAL,
    name          DescriptiveName OPTIONAL,
                  -- human readable name for this collection
