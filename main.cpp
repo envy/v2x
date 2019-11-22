@@ -1,12 +1,11 @@
 #include "parser.h"
 #include "proxy.h"
 #include "factory.h"
-#include "CAM.h"
+#include "MessageSink.h"
 
 #include <unistd.h>
 #include <iostream>
 #include <thread>
-#include <asn1-src/MovementEventList.h>
 
 void dump_geonet(uint8_t *buf, uint32_t len)
 {
@@ -158,6 +157,7 @@ void send_denm_thread(uint8_t mac[6], StationID_t id, Proxy *p)
 #define PORT 17565
 int main(int argc, char *argv[]) {
 	Proxy p;
+	MessageSink ms;
 	int port = PORT;
 
 	asserts();
@@ -267,51 +267,8 @@ int main(int argc, char *argv[]) {
 	uint32_t buflen = sizeof(buf);
 	while((buflen = p.get_packet((uint8_t *)&buf, buflen)) >= 0)
 	{
-		std::cout << "=======" << std::endl;
-
-		dump_geonet(buf, buflen);
-
-		uint32_t start;
-
-		if (is_cam(buf, buflen, &start))
-		{
-			//std::cout << "cam @ " << cam_start << std::endl;
-			CAM_t *cam = nullptr;
-			int ret = parse_cam(buf+start, buflen-start, &cam);
-			if (ret == 0)
-			{
-				dump_cam(cam);
-				//xer_fprint(stdout, &asn_DEF_CAM, cam);
-				goto next_iter;
-			}
-		}
-
-		if (is_denm(buf, buflen, &start))
-		{
-			DENM_t *denm = nullptr;
-			int ret = parse_denm(buf+start, buflen-start, &denm);
-			if (ret == 0)
-			{
-				dump_denm(denm);
-				//xer_fprint(stdout, &asn_DEF_DENM, denm);
-				goto next_iter;
-			}
-		}
-
-		if (is_spat(buf, buflen, &start))
-		{
-			SPAT_t *spat = nullptr;
-			int ret = parse_spat(buf+start, buflen-start, &spat);
-			if (ret == 0)
-			{
-				dump_spat(spat);
-				//xer_fprint(stdout, &asn_DEF_SPAT, spat);
-				goto next_iter;
-			}
-		}
-
-		std::cout << "unknown packet" << std::endl;
-next_iter:
+		array_t a = { buf, buflen };
+		ms.add_msg(a);
 		buflen = sizeof(buf);
 	}
 

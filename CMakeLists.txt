@@ -11,7 +11,8 @@ set(APP_SOURCE_FILES
         factory.cpp
         main.cpp
         parser.cpp
-        proxy.cpp)
+        proxy.cpp
+        MessageSink.cpp)
 
 add_executable(app ${APP_SOURCE_FILES} ${ASN_FILES})
 

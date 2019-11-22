@@ -24,7 +24,8 @@ ASN_FILES := asn1/ITS-Container.asn \
 APP_CXX_FILES := main.cpp \
 	parser.cpp \
 	proxy.cpp \
-	factory.cpp
+	factory.cpp \
+	MessageSink.cpp
 
 ASN_C_FILES := $(wildcard asn1-src/*.c)
 ASN_H_FILES := $(wildcard asn1-src/*.h)
