@@ -3,6 +3,7 @@
 #include "factory.h"
 
 #include <iostream>
+#include <sstream>
 
 MessageSink::MessageSink()
 {
@@ -106,5 +107,20 @@ void MessageSink::process_incoming()
 			}
 			queue_cond.wait(lock);
 		}
+	}
+}
+
+void MessageSink::draw_data()
+{
+	auto it = msgs.begin();
+	uint32_t i = 1;
+	while (it != msgs.end())
+	{
+		std::stringstream ss;
+		ss << it->first;
+		write(20, 20*i, sf::Color::White, ss.str());
+		std::cout << "." << std::flush;
+		++it;
+		++i;
 	}
 }

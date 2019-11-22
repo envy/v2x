@@ -6,6 +6,8 @@
 #include <mutex>
 #include <thread>
 #include <condition_variable>
+#include <SFML/Graphics.hpp>
+
 #include "parser.h"
 #include "CAM.h"
 #include "DENM.h"
@@ -41,6 +43,7 @@ public:
 	virtual ~MessageSink();
 
 	void add_msg(const array_t &arr);
+	void draw_data();
 };
 
 

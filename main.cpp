@@ -6,7 +6,15 @@
 #include <unistd.h>
 #include <iostream>
 #include <thread>
-#include <asn1-src/ProtectedCommunicationZonesRSU.h>
+
+#include <SFML/Graphics.hpp>
+
+Proxy p;
+MessageSink ms;
+
+sf::Font font;
+
+sf::RenderWindow *window = nullptr;
 
 void dump_geonet(uint8_t *buf, uint32_t len)
 {
@@ -172,11 +180,38 @@ void send_denm_thread(uint8_t mac[6], StationID_t id, Proxy *p)
 	}
 }
 
+void reader_thread()
+{
+	uint8_t buf[2048];
+	uint32_t buflen = sizeof(buf);
+	while((buflen = p.get_packet((uint8_t *)&buf, buflen)) >= 0)
+	{
+		array_t a = { buf, buflen };
+		ms.add_msg(a);
+		buflen = sizeof(buf);
+	}
+}
+
+void draw_data()
+{
+	ms.draw_data();
+}
+
+void write(float x, float y, const sf::Color &color, const std::string &text)
+{
+	sf::Text t;
+	t.setFont(font);
+	t.setCharacterSize(24);
+	t.setFillColor(color);
+	//t.setOrigin(x, y);
+	t.setPosition(x, y);
+	t.setString(text);
+	window->draw(t);
+}
+
 #define SERVER "10.1.4.72"
 #define PORT 17565
 int main(int argc, char *argv[]) {
-	Proxy p;
-	MessageSink ms;
 	int port = PORT;
 
 	asserts();
@@ -268,6 +303,7 @@ int main(int argc, char *argv[]) {
 "\x30\xe0\x81\x21\x90\x00\x00\x00\x03\x1f\x9a\x8e\x86\x56\xe7\x82" \
 "\x08\x12\x99\x00\x00\x00\x00\x31\xfb\x2c\xbc\x65\x2a\x7b\x30\x81" \
 "\x31\x90\x00\x00\x00\x03\x1e\xfb\x25\x46\x51\xc7\x8d\x80";
+//*/
 
 	/*
 	uint32_t s = 0;
@@ -283,14 +319,35 @@ int main(int argc, char *argv[]) {
 	}
 	//*/
 
-	uint8_t buf[2048];
-	uint32_t buflen = sizeof(buf);
-	while((buflen = p.get_packet((uint8_t *)&buf, buflen)) >= 0)
+	ms.add_msg({ aspat, sizeof(aspat) });
+
+	if (!font.loadFromFile("FiraCode-Regular.ttf"))
 	{
-		array_t a = { buf, buflen };
-		ms.add_msg(a);
-		buflen = sizeof(buf);
+		return -1;
 	}
+
+	std::thread reader(reader_thread);
+
+	window = new sf::RenderWindow(sf::VideoMode(1024, 786), "v2x");
+	window->setVerticalSyncEnabled(true);
+	while (window->isOpen())
+	{
+		sf::Event event = {};
+		while (window->pollEvent(event))
+		{
+			// "close requested" event: we close the window
+			if (event.type == sf::Event::Closed)
+				window->close();
+		}
+
+		window->clear(sf::Color::Black);
+
+		draw_data();
+
+		window->display();
+	}
+
+	exit(0);
 
 	return 0;
 }
