@@ -6,8 +6,12 @@
 uint64_t timestamp_now()
 {
     static const uint64_t EPOCH_OFFSET = 1072911600000;
-    // ms since 1970-01-01
+    #if __cpp_lib_chrono >= 201907
+    auto t = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::utc_clock::now().time_since_epoch()).count();
+    #else
+    #warning No c++20 chrono utc_clock available! Falling back to system_clock
     auto t = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    #endif
 
     return t - EPOCH_OFFSET;
 }

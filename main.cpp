@@ -60,6 +60,7 @@ void dump_denm(DENM_t *denm)
 	std::cout << denm->header.stationID;
 	std::cout << std::endl;
 }
+
 void asserts()
 {
 	assert(sizeof(ethernet_t) == 14);
@@ -146,8 +147,8 @@ int main(int argc, char *argv[]) {
 	mac[4] = 0xB6;
 	mac[5] = 0x00;
 
-	std::thread camthread(send_cam_thread, mac, id, &p);
-	std::thread denmthread(send_denm_thread, mac, id, &p);
+	//std::thread camthread(send_cam_thread, mac, id, &p);
+	//std::thread denmthread(send_denm_thread, mac, id, &p);
 
 	uint8_t buf[1024];
 	uint32_t buflen = sizeof(buf);
