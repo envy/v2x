@@ -19,4 +19,4 @@ set(APP_SOURCE_FILES
 add_executable(app ${APP_SOURCE_FILES} ${ASN_FILES})
 
 target_include_directories(app PUBLIC . asn1-src)
-target_link_libraries(app sfml-graphics sfml-window)
+target_link_libraries(app sfml-graphics sfml-window pthread)
