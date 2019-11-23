@@ -23,12 +23,6 @@ typedef enum __btpb_port
 	BTP_B_PORT_SSEM = 2008,
 } btpb_port_t;
 
-typedef enum __geonet_type
-{
-	GEONET_TYPE_BEACON = 0x10,
-	GEONET_TYPE_SHB = 0x50,
-} geonet_type_t;
-
 typedef struct __ethernet
 {
 	uint8_t destination_mac[6];
@@ -37,13 +31,59 @@ typedef struct __ethernet
 	uint8_t data[];
 } __attribute__((packed)) ethernet_t;
 
+typedef enum
+{
+	GEONET_BASIC_HEADER_NEXT_ANY = 0,
+	GEONET_BASIC_HEADER_NEXT_COMMON = 1,
+	GEONET_BASIC_HEADER_NEXT_SECURED = 2,
+} geonet_basic_header_next_t;
+
+typedef enum
+{
+	GEONET_BASIC_HEADER_LIFETIME_BASE_50MS = 0,
+	GEONET_BASIC_HEADER_LIFETIME_BASE_1S = 1,
+	GEONET_BASIC_HEADER_LIFETIME_BASE_10S = 2,
+	GEONET_BASIC_HEADER_LIFETIME_BASE_100S = 3,
+} geonet_basic_header_lifetime_base_t;
+
+typedef enum
+{
+	GEONET_COMMON_HEADER_NEXT_ANY = 0,
+	GEONET_COMMON_HEADER_NEXT_BTP_A = 1,
+	GEONET_COMMON_HEADER_NEXT_BTP_B = 2,
+	GEONET_COMMON_HEADER_NEXT_IPV6 = 3,
+} geonet_common_header_next_t;
+
+typedef enum __geonet_type
+{
+	GEONET_TYPE_ANY = 0x00,
+	GEONET_TYPE_BEACON = 0x10,
+	GEONET_TYPE_GUC = 0x20,
+	GEONET_TYPE_GAC_CIRCLE = 0x30,
+	GEONET_TYPE_GAC_RECT = 0x31,
+	GEONET_TYPE_GAC_ELLIPSE = 0x32,
+	GEONET_TYPE_GBC_CIRCLE = 0x40,
+	GEONET_TYPE_GBC_RECT = 0x41,
+	GEONET_TYPE_GBC_ELLIPSE = 0x42,
+	GEONET_TYPE_TSB_SHB = 0x50,
+	GEONET_TYPE_TSB_MHB = 0x51,
+	GEONET_TYPE_LS_REQUEST = 0x60,
+	GEONET_TYPE_LS_REPLAY = 0x61,
+} geonet_type_t;
+
 typedef struct __geonetworking
 {
 	struct {
 		uint8_t next_header:4;
 		uint8_t version:4;
 		uint8_t reserved;
-		uint8_t life_time;
+		union {
+			uint8_t raw;
+			struct {
+				uint8_t base:2;
+				uint8_t mult:6;
+			} fields;
+		} life_time;
 		uint8_t remaining_hop_limit;
 	} basic_header;
 	struct {
@@ -56,7 +96,14 @@ typedef struct __geonetworking
 				uint8_t type:4;
 			} fields;
 		} type;
-		uint8_t traffic_class;
+		union {
+			uint8_t raw;
+			struct {
+				uint8_t id:6;
+				uint8_t offload:1;
+				uint8_t scf:1;
+			} fields;
+		} traffic_class;
 		union {
 			uint8_t raw;
 			struct {
@@ -76,22 +123,66 @@ typedef struct __geonet_long_position_vector
 	uint32_t timestamp;
 	uint32_t latitude;
 	uint32_t longitude;
-	uint16_t accuracy_speed;
+	struct {
+		uint8_t accuracy:1;
+		uint16_t speed:15;
+	} accuracy_speed;
 	uint16_t heading;
 } __attribute__((packed)) geonet_long_position_vector_t;
 
-typedef struct __geonet_shb
+typedef struct __geonet_short_position_vector
 {
-	geonet_long_position_vector_t source_position;
-	uint32_t media_dependent_data;
-	uint8_t data[];
-} __attribute__((packed)) geonet_shb_t;
+	uint64_t address;
+	uint32_t timestamp;
+	uint32_t latitude;
+	uint32_t longitude;
+} __attribute__((packed)) geonet_short_position_vector_t;
 
-typedef struct __geonet_beacon
+typedef struct
 {
 	geonet_long_position_vector_t source_position;
 	uint8_t data[];
 } __attribute__((packed)) geonet_beacon_t;
+
+typedef struct
+{
+	uint16_t sequence_number;
+	uint16_t reserved;
+	geonet_long_position_vector_t source_position;
+	geonet_short_position_vector_t destination;
+	uint8_t data[];
+} __attribute__((packed)) geonet_guc_t;
+
+typedef struct
+{
+	uint16_t sequence_number;
+	uint16_t reserved;
+	geonet_long_position_vector_t source_position;
+	uint32_t latitude;
+	uint32_t longitude;
+	uint16_t distance_a;
+	uint16_t distance_b;
+	uint16_t angle;
+	uint16_t reserved2;
+	uint8_t data[];
+} __attribute__((packed)) geonet_gac_t;
+
+typedef struct
+{
+	uint16_t sequence_number;
+	uint16_t reserved;
+	geonet_long_position_vector_t source_position;
+	uint8_t data[];
+} __attribute__((packed)) geonet_tsb_mhb_t;
+
+typedef struct
+{
+	geonet_long_position_vector_t source_position;
+	uint32_t media_dependent_data;
+	uint8_t data[];
+} __attribute__((packed)) geonet_tsb_shb_t;
+
+
 
 typedef struct __btp_b
 {
@@ -99,18 +190,6 @@ typedef struct __btp_b
 	uint16_t port_info;
 	uint8_t data[];
 } btp_b_t;
-
-std::string format_station_type(StationType_t type);
-std::string format_geonet_type(geonet_type_t type);
-std::string format_vehicle_length(VehicleLengthValue_t val);
-std::string format_vehicle_width(VehicleWidth_t val);
-std::string format_speed_value(SpeedValue_t val);
-std::string format_heading_value(HeadingValue_t val);
-std::string format_event_state(MovementPhaseState_t val);
-std::string format_cause_code(CauseCode_t &val);
-std::string format_protected_zone_type(ProtectedZoneType_t val);
-std::string format_lane_direction(LaneDirection_t &val);
-std::string format_lane_type(LaneTypeAttributes_t &val);
 
 int btp_offset(uint8_t *buf, uint32_t len);
 

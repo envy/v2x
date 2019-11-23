@@ -25,7 +25,8 @@ APP_CXX_FILES := main.cpp \
 	parser.cpp \
 	proxy.cpp \
 	factory.cpp \
-	MessageSink.cpp
+	MessageSink.cpp \
+	Formatter.cpp
 
 ASN_C_FILES := $(wildcard asn1-src/*.c)
 ASN_H_FILES := $(wildcard asn1-src/*.h)
@@ -40,6 +41,8 @@ asn: $(ASN_FILES)
 	$(eval ASN_C_FILES := $(wildcard asn1-src/*.c))
 	$(eval ASN_H_FILES := $(wildcard asn1-src/*.h))
 
-app:
+app: $(APP_CXX_FILES) $(APP_H_FILES) $(ASN_C_FILES) $(ASN_H_FILES)
 	mkdir -p build
 	cd build && cmake .. && make
+	rm -f app
+	ln -s build/app .

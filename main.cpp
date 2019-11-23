@@ -2,15 +2,13 @@
 #include "proxy.h"
 #include "factory.h"
 #include "MessageSink.h"
+#include "Formatter.h"
 
 #include <unistd.h>
 #include <iostream>
 #include <thread>
 
 #include <SFML/Graphics.hpp>
-#include <asn1-src/RoadSegmentList.h>
-#include <asn1-src/RoadLaneSetList.h>
-#include <asn1-src/ConnectsToList.h>
 
 Proxy p;
 MessageSink ms;
@@ -24,11 +22,11 @@ void dump_geonet(uint8_t *buf, uint32_t len)
 	auto *e = (ethernet_t *)buf;
 	auto *g = (geonetworking_t *)e->data;
 
-	std::cout << "GeoNet " << format_geonet_type((geonet_type_t) g->common_header.type.raw) << std::endl;
+	std::cout << "GeoNet " << Formatter::format_geonet_type((geonet_type_t) g->common_header.type.raw) << std::endl;
 
 	switch (g->common_header.type.raw)
 	{
-		case GEONET_TYPE_SHB:
+		case GEONET_TYPE_TSB_SHB:
 		case GEONET_TYPE_BEACON:
 		{
 			auto *p = (geonet_long_position_vector_t *)g->data;
@@ -40,149 +38,13 @@ void dump_geonet(uint8_t *buf, uint32_t len)
 	}
 }
 
-void dump_cam(CAM_t *cam)
-{
-	std::cout << "CAM v" << cam->header.protocolVersion << " from ";
-	std::cout << cam->header.stationID;
-	std::cout << " (" << format_station_type(cam->cam.camParameters.basicContainer.stationType);
-	std::cout << ") ∆ ";
-	std::cout << cam->cam.generationDeltaTime;
-	std::cout << std::endl;
-
-	std::cout << " Location: ";
-	double lat = cam->cam.camParameters.basicContainer.referencePosition.latitude / 10000000.0;
-	double lon = cam->cam.camParameters.basicContainer.referencePosition.longitude / 10000000.0;
-	std::cout << lat << ", " << lon;
-	std::cout << std::endl;
-
-	if (cam->cam.camParameters.highFrequencyContainer.present == HighFrequencyContainer_PR_basicVehicleContainerHighFrequency)
-	{
-		auto &b = cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency;
-		std::cout << " Vehicle Length: " << format_vehicle_length(b.vehicleLength.vehicleLengthValue) << std::endl;
-		std::cout << " Vehicle Width: " << format_vehicle_width(b.vehicleWidth) << std::endl;
-		std::cout << " Speed: " << format_speed_value(b.speed.speedValue) << std::endl;
-		std::cout << " Heading: " << format_heading_value(b.heading.headingValue) << std::endl;
-	}
-	else if (cam->cam.camParameters.highFrequencyContainer.present == HighFrequencyContainer_PR_rsuContainerHighFrequency)
-	{
-		auto &r = cam->cam.camParameters.highFrequencyContainer.choice.rsuContainerHighFrequency;
-		if (r.protectedCommunicationZonesRSU != nullptr)
-		{
-			for(uint32_t i = 0; i < r.protectedCommunicationZonesRSU->list.count; ++i)
-			{
-				auto item = r.protectedCommunicationZonesRSU->list.array[i];
-				double _lat = item->protectedZoneLatitude / 10000000.0;
-				double _lon = item->protectedZoneLongitude / 10000000.0;
-				std::cout << " Protected Zone: " << format_protected_zone_type(item->protectedZoneType) << std::endl;
-				std::cout << " Location: " << _lat << ", " << _lon << std::endl;
-			}
-		}
-	}
-}
-
-void dump_denm(DENM_t *denm)
-{
-	std::cout << "DENM v" << denm->header.protocolVersion << " from ";
-	std::cout << denm->header.stationID;
-	std::cout << std::endl;
-
-	if (denm->denm.situation != nullptr)
-	{
-		auto situation = denm->denm.situation;
-		std::cout << " Cause: " << format_cause_code(situation->eventType) << std::endl;
-		std::cout << " Info Quality: " << situation->informationQuality << std::endl;
-	}
-}
-
-void dump_spatem(SPATEM_t *spatem)
-{
-	std::cout << "SPATEM v" << spatem->header.protocolVersion << " from ";
-	std::cout << spatem->header.stationID;
-	std::cout << std::endl;
-
-	if (spatem->spat.timeStamp != nullptr)
-	{
-		std::cout << " Timestamp: " << *spatem->spat.timeStamp << std::endl;
-	}
-
-	for (uint32_t i = 0; i < spatem->spat.intersections.list.count; ++i)
-	{
-		auto intersection = spatem->spat.intersections.list.array[i];
-		std::cout << " Intersection " << intersection->id.id << std::endl;
-		for (uint32_t j = 0; j < intersection->states.list.count; ++j)
-		{
-			auto signal = intersection->states.list.array[j];
-			std::cout << "  Signal Group " << signal->signalGroup << ": ";
-			for (uint32_t k = 0; k < signal->state_time_speed.list.count; ++k)
-			{
-				if (k != 0)
-				{
-					std::cout << ", ";
-				}
-				auto state = signal->state_time_speed.list.array[k];
-				std::cout << format_event_state(state->eventState);
-			}
-			std::cout << std::endl;
-		}
-	}
-}
-
-void dump_mapem(MAPEM_t *mapem)
-{
-	std::cout << "MAPEM v" << mapem->header.protocolVersion << " from ";
-	std::cout << mapem->header.stationID;
-	std::cout << std::endl;
-
-	if (mapem->map.roadSegments != nullptr)
-	{
-		for (uint32_t rs = 0; rs < mapem->map.roadSegments->list.count; ++rs)
-		{
-			auto seg = mapem->map.roadSegments->list.array[rs];
-			std::cout << " Road Segment: " << seg->id.id;
-			if (seg->name != nullptr)
-			{
-				std::cout << " - " << std::string((char *)seg->name->buf, seg->name->size);
-			}
-			std::cout << std::endl;
-			double lat = seg->refPoint.lat / 10000000.0;
-			double lon = seg->refPoint.Long / 10000000.0;
-			std::cout << "  Location: " << lat << ", " << lon << std::endl;
-			for (uint32_t ls = 0; ls < seg->roadLaneSet.list.count; ++ls)
-			{
-				auto rl = seg->roadLaneSet.list.array[ls];
-				std::cout << "  Lane: " << rl->laneID << std::endl;
-				std::cout << "   Direction: " << format_lane_direction(rl->laneAttributes.directionalUse) << std::endl;
-				std::cout << "   Type: " << format_lane_type(rl->laneAttributes.laneType) << std::endl;
-				if (rl->connectsTo != nullptr)
-				{
-					std::cout << "   Connects to: ";
-					for (uint32_t ct = 0; ct < rl->connectsTo->list.count; ++ct)
-					{
-						if (ct != 0)
-						{
-							std::cout << ", ";
-						}
-						auto con = rl->connectsTo->list.array[ct];
-						std::cout << con->connectingLane.lane;
-						if (con->signalGroup != nullptr)
-						{
-							std::cout << " (SG " << *con->signalGroup << ")";
-						}
-					}
-					std::cout << std::endl;
-				}
-			}
-		}
-	}
-}
-
 void asserts()
 {
 	assert(sizeof(ethernet_t) == 14);
 	assert(sizeof(geonetworking_t) == 4+8);
 	assert(sizeof(geonet_long_position_vector_t) == 24);
 	assert(sizeof(geonet_beacon_t) == 24);
-	assert(sizeof(geonet_shb_t) == 28);
+	assert(sizeof(geonet_tsb_shb_t) == 28);
 	assert(sizeof(btp_b_t) == 4);
 }
 
@@ -246,10 +108,11 @@ void reader_thread()
 
 void draw_data()
 {
-	ms.draw_data();
+	ms.draw_station_list();
+	ms.draw_details();
 }
 
-void write(float x, float y, const sf::Color &color, const std::string &text)
+void write_text(float x, float y, const sf::Color &color, const std::string &text)
 {
 	sf::Text t;
 	t.setFont(font);
@@ -259,6 +122,55 @@ void write(float x, float y, const sf::Color &color, const std::string &text)
 	t.setPosition(x, y);
 	t.setString(text);
 	window->draw(t);
+}
+
+bool is_pressed = false;
+sf::Keyboard::Key last_key;
+
+void key_pressed(sf::Keyboard::Key k)
+{
+	is_pressed = true;
+	last_key = k;
+}
+
+void key_handler()
+{
+	if (is_pressed && !sf::Keyboard::isKeyPressed(last_key))
+	{
+		is_pressed = false;
+	} else if (is_pressed && sf::Keyboard::isKeyPressed(last_key))
+	{
+		return;
+	}
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+	{
+		key_pressed(sf::Keyboard::Q);
+		window->close();
+		return;
+	}
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::C))
+	{
+		key_pressed(sf::Keyboard::C);
+		ms.set_show_cams(!ms.get_show_cams());
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+	{
+		key_pressed(sf::Keyboard::D);
+		ms.set_show_denms(!ms.get_show_denms());
+	}
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+	{
+		key_pressed(sf::Keyboard::Down);
+		ms.inc_selected();
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+	{
+		key_pressed(sf::Keyboard::Up);
+		ms.dec_selected();
+	}
 }
 
 #define SERVER "10.1.4.72"
@@ -290,8 +202,8 @@ int main(int argc, char *argv[]) {
 	mac[4] = 0xB6;
 	mac[5] = 0x00;
 
-	//std::thread camthread(send_cam_thread, mac, id, &p);
-	//std::thread denmthread(send_denm_thread, mac, id, &p);
+	std::thread camthread(send_cam_thread, mac, id, &p);
+	std::thread denmthread(send_denm_thread, mac, id, &p);
 
 	uint8_t aspat[] = "\xff\xff\xff\xff\xff\xff\x00\x0d\x41\x12\x21\x4d\x89\x47\x01\x00" \
 "\x1a\x01\x20\x50\x03\x00\x00\x8a\x01\x00\x3c\xe8\x00\x0d\x41\x12" \
@@ -374,7 +286,7 @@ int main(int argc, char *argv[]) {
 		ret = parse_mapem(atopo+s, sizeof(atopo)-s, &mapem);
 		if (ret == 0)
 		{
-			dump_mapem(mapem);
+			std::cout << Formatter::dump_mapem(mapem);
 			xer_fprint(stdout, &asn_DEF_MAPEM, mapem);
 		}
 	}
@@ -389,7 +301,7 @@ int main(int argc, char *argv[]) {
 
 	std::thread reader(reader_thread);
 
-	window = new sf::RenderWindow(sf::VideoMode(1024, 786), "v2x");
+	window = new sf::RenderWindow(sf::VideoMode(1920, 1080), "v2x");
 	window->setVerticalSyncEnabled(true);
 	while (window->isOpen())
 	{
@@ -401,9 +313,16 @@ int main(int argc, char *argv[]) {
 				window->close();
 		}
 
+		if (window->hasFocus())
+		{
+			key_handler();
+		}
+
 		window->clear(sf::Color::Black);
 
 		draw_data();
+
+		write_text(20, 0, sf::Color::White, "Quit | show CDSM | Up | Down | sEnd");
 
 		window->display();
 	}

@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
 project(v2x)
 
-set(CMAKE_CXX_STANDARD 14)
-
-include_directories(.)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
 
 find_package(SFML 2.5 COMPONENTS graphics window REQUIRED)
 
@@ -14,9 +13,11 @@ set(APP_SOURCE_FILES
         main.cpp
         parser.cpp
         proxy.cpp
-        MessageSink.cpp)
+        MessageSink.cpp
+        Formatter.cpp)
 
 add_executable(app ${APP_SOURCE_FILES} ${ASN_FILES})
 
 target_include_directories(app PUBLIC . asn1-src)
 target_link_libraries(app sfml-graphics sfml-window pthread)
+target_compile_options(app PUBLIC -Wall -g -O0)

@@ -1,12 +1,18 @@
 #include "MessageSink.h"
 #include "main.h"
 #include "factory.h"
+#include "Formatter.h"
 
 #include <iostream>
 #include <sstream>
 
 MessageSink::MessageSink()
 {
+	selected_index = 0;
+	_show_cams = true;
+	_show_denms = true;
+	_show_spatems = true;
+	_show_mapems = true;
 	process = true;
 	processor = std::thread([this] {
 		process_incoming();
@@ -17,21 +23,15 @@ MessageSink::~MessageSink()
 {
 	process = false;
 	{
-		std::unique_lock<std::mutex> lock(queue_lock);
+		std::unique_lock lock(queue_lock);
 		queue_cond.notify_all();
 	}
 	processor.join();
 }
 
-void MessageSink::add_msg(const array_t &arr)
-{
-	std::unique_lock<std::mutex> lock(queue_lock);
-	incoming.push(arr);
-	queue_cond.notify_all();
-}
-
 void MessageSink::process_msg(array_t arr)
 {
+	std::unique_lock lock(data_lock);
 	uint32_t start;
 
 	if (is_cam(arr.buf, arr.len, &start))
@@ -50,7 +50,6 @@ void MessageSink::process_msg(array_t arr)
 			}
 			msgs[cam->header.stationID]->last = timestamp_now();
 			msgs[cam->header.stationID]->cam = cam;
-			dump_cam(cam);
 			return;
 		}
 	}
@@ -118,7 +117,7 @@ void MessageSink::process_incoming()
 	while(process)
 	{
 		{
-			std::unique_lock<std::mutex> lock(queue_lock);
+			std::unique_lock lock(queue_lock);
 			if (!incoming.empty())
 			{
 				process_msg(incoming.front());
@@ -129,17 +128,126 @@ void MessageSink::process_incoming()
 	}
 }
 
-void MessageSink::draw_data()
+void MessageSink::add_msg(const array_t &arr)
 {
+	std::unique_lock qlock(queue_lock);
+	incoming.push(arr);
+	queue_cond.notify_all();
+}
+
+void MessageSink::inc_selected()
+{
+	if (selected_index == UINT32_MAX || selected_index + 1 >= msgs.size())
+	{
+		return;
+	}
+	selected_index++;
+}
+
+void MessageSink::dec_selected()
+{
+	if (selected_index == 0)
+	{
+		return;
+	}
+	selected_index--;
+}
+
+void MessageSink::set_show_cams(bool show)
+{
+	_show_cams = show;
+}
+bool MessageSink::get_show_cams()
+{
+	return _show_cams;
+}
+
+void MessageSink::set_show_denms(bool show)
+{
+	_show_denms = show;
+}
+bool MessageSink::get_show_denms()
+{
+	return _show_denms;
+}
+
+void MessageSink::set_show_spatems(bool show)
+{
+	_show_spatems = show;
+}
+bool MessageSink::get_show_spatems()
+{
+	return _show_spatems;
+}
+
+void MessageSink::set_show_mapems(bool show)
+{
+	_show_mapems = show;
+}
+bool MessageSink::get_show_mapems()
+{
+	return _show_mapems;
+}
+
+void MessageSink::draw_station_list()
+{
+	std::shared_lock lock(data_lock);
 	auto it = msgs.begin();
 	uint32_t i = 1;
 	while (it != msgs.end())
 	{
 		std::stringstream ss;
+		if (i == selected_index + 1)
+		{
+			ss << "> ";
+		}
+		else
+		{
+			ss << "  ";
+		}
 		ss << it->first;
-		write(20, 20*i, sf::Color::White, ss.str());
-		//std::cout << "." << std::flush;
+		write_text(20, 10 + 20 * i, sf::Color::White, ss.str());
 		++it;
 		++i;
 	}
+}
+
+void MessageSink::draw_details()
+{
+	std::shared_lock lock(data_lock);
+
+	station_msgs_t *data = nullptr;
+
+	auto it = msgs.begin();
+	uint32_t i = 0;
+	while (i < selected_index)
+	{
+		++i;
+		++it;
+	}
+	data = it->second;
+
+	if (data == nullptr)
+	{
+		return;
+	}
+
+	std::stringstream ss;
+	if (data->cam != nullptr && _show_cams)
+	{
+		ss << Formatter::dump_cam(data->cam);
+	}
+	if (data->denm != nullptr && _show_denms)
+	{
+		ss << Formatter::dump_denm(data->denm);
+	}
+	if (data->spatem != nullptr && _show_spatems)
+	{
+		ss << Formatter::dump_spatem(data->spatem);
+	}
+	if (data->mapem != nullptr && _show_mapems)
+	{
+		ss << Formatter::dump_mapem(data->mapem);
+	}
+	write_text(200, 30, sf::Color::White, ss.str());
 }

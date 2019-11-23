@@ -76,8 +76,11 @@ int Proxy::get_packet(uint8_t *buf, uint32_t buflen)
 	uint32_t payload_length = ntohs(g->common_header.payload_length);
 	switch (g->common_header.type.raw)
 	{
-		case GEONET_TYPE_SHB:
-			payload_length += sizeof(geonet_shb_t);
+		case GEONET_TYPE_TSB_MHB:
+			payload_length += sizeof(geonet_tsb_mhb_t);
+			break;
+		case GEONET_TYPE_TSB_SHB:
+			payload_length += sizeof(geonet_tsb_shb_t);
 			break;
 		case GEONET_TYPE_BEACON:
 			payload_length += sizeof(geonet_beacon_t);
@@ -96,11 +99,11 @@ int Proxy::send_packet(uint8_t *buf, uint32_t len)
 {
     std::lock_guard<std::mutex> lock(send_lock);
 	int written = 0;
-	//written = write(sock, buf, len);
+	//written = write_text(sock, buf, len);
 	while (written < len && (written += write(sock, buf + written, len - written)) > 0) {}
 	if (written <= 0)
 	{
-		std::cerr << "write error: " << strerror(errno) << std::endl;
+		std::cerr << "write_text error: " << strerror(errno) << std::endl;
 	}
 
 	usleep(100*1000);

@@ -19,7 +19,7 @@ protected:
 
 	ethernet_t *e;
 	geonetworking_t *g;
-	geonet_shb_t *s;
+	geonet_tsb_shb_t *s;
 	btp_b_t *b;
 
 public:
