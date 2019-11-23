@@ -8,6 +8,9 @@
 #include <thread>
 
 #include <SFML/Graphics.hpp>
+#include <asn1-src/RoadSegmentList.h>
+#include <asn1-src/RoadLaneSetList.h>
+#include <asn1-src/ConnectsToList.h>
 
 Proxy p;
 MessageSink ms;
@@ -91,20 +94,20 @@ void dump_denm(DENM_t *denm)
 	}
 }
 
-void dump_spat(SPATEM_t *spat)
+void dump_spatem(SPATEM_t *spatem)
 {
-	std::cout << "SPAT v" << spat->header.protocolVersion << " from ";
-	std::cout << spat->header.stationID;
+	std::cout << "SPATEM v" << spatem->header.protocolVersion << " from ";
+	std::cout << spatem->header.stationID;
 	std::cout << std::endl;
 
-	if (spat->spat.timeStamp != nullptr)
+	if (spatem->spat.timeStamp != nullptr)
 	{
-		std::cout << " Timestamp: " << *spat->spat.timeStamp << std::endl;
+		std::cout << " Timestamp: " << *spatem->spat.timeStamp << std::endl;
 	}
 
-	for (uint32_t i = 0; i < spat->spat.intersections.list.count; ++i)
+	for (uint32_t i = 0; i < spatem->spat.intersections.list.count; ++i)
 	{
-		auto intersection = spat->spat.intersections.list.array[i];
+		auto intersection = spatem->spat.intersections.list.array[i];
 		std::cout << " Intersection " << intersection->id.id << std::endl;
 		for (uint32_t j = 0; j < intersection->states.list.count; ++j)
 		{
@@ -120,6 +123,55 @@ void dump_spat(SPATEM_t *spat)
 				std::cout << format_event_state(state->eventState);
 			}
 			std::cout << std::endl;
+		}
+	}
+}
+
+void dump_mapem(MAPEM_t *mapem)
+{
+	std::cout << "MAPEM v" << mapem->header.protocolVersion << " from ";
+	std::cout << mapem->header.stationID;
+	std::cout << std::endl;
+
+	if (mapem->map.roadSegments != nullptr)
+	{
+		for (uint32_t rs = 0; rs < mapem->map.roadSegments->list.count; ++rs)
+		{
+			auto seg = mapem->map.roadSegments->list.array[rs];
+			std::cout << " Road Segment: " << seg->id.id;
+			if (seg->name != nullptr)
+			{
+				std::cout << " - " << std::string((char *)seg->name->buf, seg->name->size);
+			}
+			std::cout << std::endl;
+			double lat = seg->refPoint.lat / 10000000.0;
+			double lon = seg->refPoint.Long / 10000000.0;
+			std::cout << "  Location: " << lat << ", " << lon << std::endl;
+			for (uint32_t ls = 0; ls < seg->roadLaneSet.list.count; ++ls)
+			{
+				auto rl = seg->roadLaneSet.list.array[ls];
+				std::cout << "  Lane: " << rl->laneID << std::endl;
+				std::cout << "   Direction: " << format_lane_direction(rl->laneAttributes.directionalUse) << std::endl;
+				std::cout << "   Type: " << format_lane_type(rl->laneAttributes.laneType) << std::endl;
+				if (rl->connectsTo != nullptr)
+				{
+					std::cout << "   Connects to: ";
+					for (uint32_t ct = 0; ct < rl->connectsTo->list.count; ++ct)
+					{
+						if (ct != 0)
+						{
+							std::cout << ", ";
+						}
+						auto con = rl->connectsTo->list.array[ct];
+						std::cout << con->connectingLane.lane;
+						if (con->signalGroup != nullptr)
+						{
+							std::cout << " (SG " << *con->signalGroup << ")";
+						}
+					}
+					std::cout << std::endl;
+				}
+			}
 		}
 	}
 }
@@ -305,16 +357,25 @@ int main(int argc, char *argv[]) {
 "\x31\x90\x00\x00\x00\x03\x1e\xfb\x25\x46\x51\xc7\x8d\x80";
 //*/
 
-	/*
+	///*
 	uint32_t s = 0;
-	dump_geonet(aspat, sizeof(aspat));
-	if (is_spat(aspat, sizeof(aspat), &s))
+	//dump_packet(atopo, sizeof(atopo));
+	dump_geonet(atopo, sizeof(atopo));
+	if (is_mapem(atopo, sizeof(atopo), &s))
 	{
-		SPATEM_t *spat = nullptr;
-		int ret = parse_spat(aspat+s, sizeof(aspat)-s, &spat);
+		ItsPduHeader_t *header = nullptr;
+		int ret = parse_header(atopo+s, sizeof(atopo)-s, &header);
 		if (ret == 0)
 		{
-			dump_spat(spat);
+			xer_fprint(stdout, &asn_DEF_ItsPduHeader, header);
+		}
+
+		MAPEM_t *mapem = nullptr;
+		ret = parse_mapem(atopo+s, sizeof(atopo)-s, &mapem);
+		if (ret == 0)
+		{
+			dump_mapem(mapem);
+			xer_fprint(stdout, &asn_DEF_MAPEM, mapem);
 		}
 	}
 	//*/

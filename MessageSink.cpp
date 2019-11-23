@@ -74,21 +74,40 @@ void MessageSink::process_msg(array_t arr)
 		}
 	}
 
-	if (is_spat(arr.buf, arr.len, &start))
+	if (is_spatem(arr.buf, arr.len, &start))
 	{
-		SPATEM_t *spat = nullptr;
-		int ret = parse_spat(arr.buf+start, arr.len-start, &spat);
+		SPATEM_t *spatem = nullptr;
+		int ret = parse_spatem(arr.buf + start, arr.len - start, &spatem);
 		if (ret == 0)
 		{
-			if (msgs.find(spat->header.stationID) == msgs.end())
+			if (msgs.find(spatem->header.stationID) == msgs.end())
 			{
-				msgs.insert(std::pair<StationID_t, station_msgs_t *>(spat->header.stationID, new station_msgs_t()));
+				msgs.insert(std::pair<StationID_t, station_msgs_t *>(spatem->header.stationID, new station_msgs_t()));
 			}
-			if (msgs[spat->header.stationID]->spat != nullptr)
+			if (msgs[spatem->header.stationID]->spatem != nullptr)
 			{
-				ASN_STRUCT_FREE(asn_DEF_SPATEM, msgs[spat->header.stationID]->spat);
+				ASN_STRUCT_FREE(asn_DEF_SPATEM, msgs[spatem->header.stationID]->spatem);
 			}
-			msgs[spat->header.stationID]->spat = spat;
+			msgs[spatem->header.stationID]->spatem = spatem;
+			return;
+		}
+	}
+
+	if (is_mapem(arr.buf, arr.len, &start))
+	{
+		MAPEM_t *mapem = nullptr;
+		int ret = parse_mapem(arr.buf + start, arr.len - start, &mapem);
+		if (ret == 0)
+		{
+			if (msgs.find(mapem->header.stationID) == msgs.end())
+			{
+				msgs.insert(std::pair<StationID_t, station_msgs_t *>(mapem->header.stationID, new station_msgs_t()));
+			}
+			if (msgs[mapem->header.stationID]->mapem != nullptr)
+			{
+				ASN_STRUCT_FREE(asn_DEF_MAPEM, msgs[mapem->header.stationID]->mapem);
+			}
+			msgs[mapem->header.stationID]->mapem = mapem;
 			return;
 		}
 	}
@@ -119,7 +138,7 @@ void MessageSink::draw_data()
 		std::stringstream ss;
 		ss << it->first;
 		write(20, 20*i, sf::Color::White, ss.str());
-		std::cout << "." << std::flush;
+		//std::cout << "." << std::flush;
 		++it;
 		++i;
 	}

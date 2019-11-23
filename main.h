@@ -7,7 +7,8 @@
 
 void dump_cam(CAM_t *cam);
 void dump_denm(DENM_t *denm);
-void dump_spat(SPATEM_t *spat);
+void dump_spatem(SPATEM_t *spatem);
+void dump_mapem(MAPEM_t *mapem);
 
 extern sf::Font font;
 

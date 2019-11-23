@@ -1,6 +1,8 @@
 *.o
 app
-libasn.a
+*.a
+
+.idea/
 
 asn1-src/*.c
 asn1-src/*.h

@@ -24,7 +24,8 @@ typedef struct
 	uint64_t last;
 	CAM_t *cam;
 	DENM_t *denm;
-	SPATEM_t *spat;
+	SPATEM_t *spatem;
+	MAPEM_t *mapem;
 } station_msgs_t;
 
 class MessageSink {

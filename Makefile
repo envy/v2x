@@ -40,10 +40,6 @@ asn: $(ASN_FILES)
 	$(eval ASN_C_FILES := $(wildcard asn1-src/*.c))
 	$(eval ASN_H_FILES := $(wildcard asn1-src/*.h))
 
-app: $(APP_O_FILES) $(ASN_O_FILES) $(APP_H_FILES)
-	$(CXX) $(CXXFLAGS) -o $@ $(APP_O_FILES) $(ASN_O_FILES) $(LDFLAGS)
-
-clean:
-	#rm -rf $(ASN_DEST)/*.o
-	rm -rf *.o
-	rm -f app
+app:
+	mkdir -p build
+	cd build && cmake .. && make

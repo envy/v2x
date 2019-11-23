@@ -85,7 +85,7 @@ std::string format_vehicle_width(VehicleWidth_t val)
 	return ss.str();
 }
 
-std::string format_speed_value(VehicleWidth_t val)
+std::string format_speed_value(SpeedValue_t val)
 {
 	std::stringstream ss;
 	switch (val)
@@ -169,7 +169,7 @@ std::string format_event_state(MovementPhaseState_t val)
 	}
 }
 
-std::string format_cause_code(CauseCode_t val)
+std::string format_cause_code(CauseCode_t &val)
 {
 	switch (val.causeCode)
 	{
@@ -208,6 +208,44 @@ std::string format_protected_zone_type(ProtectedZoneType_t val)
 {
 	switch (val)
 	{
+		default:
+			return "unknown";
+	}
+}
+
+std::string format_lane_direction(LaneDirection_t &val)
+{
+	if (val.buf[LaneDirection_egressPath])
+	{
+		return "egress";
+	}
+	if (val.buf[LaneDirection_ingressPath])
+	{
+		return "ingress";
+	}
+	return "unknown";
+}
+
+std::string format_lane_type(LaneTypeAttributes_t &val)
+{
+	switch (val.present)
+	{
+		case LaneTypeAttributes_PR_vehicle:
+			return "Vehicle";
+		case LaneTypeAttributes_PR_crosswalk:
+			return "Crosswalk";
+		case LaneTypeAttributes_PR_bikeLane:
+			return "Bike lane";
+		case LaneTypeAttributes_PR_sidewalk:
+			return "Sidewalk";
+		case LaneTypeAttributes_PR_median:
+			return "Median";
+		case LaneTypeAttributes_PR_striping:
+			return "Striping";
+		case LaneTypeAttributes_PR_trackedVehicle:
+			return "Tracked Vehicle";
+		case LaneTypeAttributes_PR_parking:
+			return "Parking";
 		default:
 			return "unknown";
 	}
@@ -329,14 +367,19 @@ bool is_denm(uint8_t *buf, uint32_t len, uint32_t *denm_start)
 	return is_something(buf, len, denm_start, BTP_B_PORT_DENM);
 }
 
-bool is_spat(uint8_t *buf, uint32_t len, uint32_t *spat_start)
+bool is_mapem(uint8_t *buf, uint32_t len, uint32_t *mapem_start)
 {
-	return is_something(buf, len, spat_start, BTP_B_PORT_SPAT);
+	return is_something(buf, len, mapem_start, BTP_B_PORT_MAPEM);
+}
+
+bool is_spatem(uint8_t *buf, uint32_t len, uint32_t *spatem_start)
+{
+	return is_something(buf, len, spatem_start, BTP_B_PORT_SPATEM);
 }
 
 static int parse_something(uint8_t *buf, uint32_t len, void **ptr, asn_TYPE_descriptor_t *desc)
 {
-	asn_dec_rval_t ret;
+	asn_dec_rval_t ret = {};
 
 	ret = uper_decode_complete(nullptr, desc, ptr, buf, len);
 
@@ -370,6 +413,11 @@ static int parse_something(uint8_t *buf, uint32_t len, void **ptr, asn_TYPE_desc
 	return 0;
 }
 
+int parse_header(uint8_t *buf, uint32_t len, ItsPduHeader_t **header)
+{
+	return parse_something(buf, len, (void **)header, &asn_DEF_ItsPduHeader);
+}
+
 int parse_cam(uint8_t *buf, uint32_t len, CAM_t **cam)
 {
 	return parse_something(buf, len, (void **)cam, &asn_DEF_CAM);
@@ -380,7 +428,12 @@ int parse_denm(uint8_t *buf, uint32_t len, DENM_t **denm)
 	return parse_something(buf, len, (void **)denm, &asn_DEF_DENM);
 }
 
-int parse_spat(uint8_t *buf, uint32_t len, SPATEM_t **spat)
+int parse_mapem(uint8_t *buf, uint32_t len, MAPEM_t **mapem)
 {
-	return parse_something(buf, len, (void **)spat, &asn_DEF_SPATEM);
+	return parse_something(buf, len, (void **)mapem, &asn_DEF_MAPEM);
+}
+
+int parse_spatem(uint8_t *buf, uint32_t len, SPATEM_t **spatem)
+{
+	return parse_something(buf, len, (void **)spatem, &asn_DEF_SPATEM);
 }
