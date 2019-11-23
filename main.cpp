@@ -33,12 +33,12 @@ void dump_geonet(uint8_t *buf, uint32_t len)
 
 void asserts()
 {
-	assert(sizeof(ethernet_t) == 14);
-	assert(sizeof(geonetworking_t) == 4+8);
-	assert(sizeof(geonet_long_position_vector_t) == 24);
-	assert(sizeof(geonet_beacon_t) == 24);
-	assert(sizeof(geonet_tsb_shb_t) == 28);
-	assert(sizeof(btp_b_t) == 4);
+	static_assert(sizeof(ethernet_t) == 14);
+	static_assert(sizeof(geonetworking_t) == 4+8);
+	static_assert(sizeof(geonet_long_position_vector_t) == 24);
+	static_assert(sizeof(geonet_beacon_t) == 24);
+	static_assert(sizeof(geonet_tsb_shb_t) == 28);
+	static_assert(sizeof(btp_b_t) == 4);
 }
 
 void send_cam(uint8_t mac[6], StationID_t id, Proxy *p)
