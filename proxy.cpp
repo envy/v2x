@@ -113,9 +113,10 @@ int Proxy::send_packet(uint8_t *buf, uint32_t len)
 
 void Proxy::disconnect()
 {
-	if (sock < 0)
+	if (sock >= 0)
 	{
 		close(sock);
+		sock = -1;
 	}
 }
 

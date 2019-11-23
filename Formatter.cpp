@@ -61,10 +61,32 @@ std::string Formatter::format_geonet_type(geonet_type_t type)
 {
 	switch (type)
 	{
-		case GEONET_TYPE_TSB_SHB:
-			return "SHB";
+		case GEONET_TYPE_ANY:
+			return "Any";
 		case GEONET_TYPE_BEACON:
 			return "Beacon";
+		case GEONET_TYPE_GUC:
+			return "Unicast";
+		case GEONET_TYPE_GAC_CIRCLE:
+			return "Anycast Circle";
+		case GEONET_TYPE_GAC_RECT:
+			return "Anycast Rectangle";
+		case GEONET_TYPE_GAC_ELLIPSE:
+			return "Anycast Ellipse";
+		case GEONET_TYPE_GBC_CIRCLE:
+			return "Broadcast Circle";
+		case GEONET_TYPE_GBC_RECT:
+			return "Broadcast Rectangle";
+		case GEONET_TYPE_GBC_ELLIPSE:
+			return "Broadcast Ellipse";
+		case GEONET_TYPE_TSB_MHB:
+			return "TSB MHB";
+		case GEONET_TYPE_TSB_SHB:
+			return "TSB SHB";
+		case GEONET_TYPE_LS_REQUEST:
+			return "LS Request";
+		case GEONET_TYPE_LS_REPLY:
+			return "LS Reply";
 	}
 
 	return "unknown";
@@ -107,14 +129,10 @@ std::string Formatter::format_vehicle_width(VehicleWidth_t val)
 std::string Formatter::format_speed_value(SpeedValue_t val)
 {
 	std::stringstream ss;
-	switch (val)
-	{
-		case SpeedValue_unavailable:
-			ss << "unavailable";
-			break;
-		default:
-			ss << val << " cm/s (" << val / 100 << " m/s; " << val * 3.6 << " km/h)";
+	if (val == SpeedValue_unavailable) {
+		return "unavailable";
 	}
+	ss << val << " cm/s (" << val / 100 << " m/s; " << val * 3.6 << " km/h)";
 	return ss.str();
 }
 

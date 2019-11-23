@@ -68,7 +68,7 @@ typedef enum __geonet_type
 	GEONET_TYPE_TSB_SHB = 0x50,
 	GEONET_TYPE_TSB_MHB = 0x51,
 	GEONET_TYPE_LS_REQUEST = 0x60,
-	GEONET_TYPE_LS_REPLAY = 0x61,
+	GEONET_TYPE_LS_REPLY = 0x61,
 } geonet_type_t;
 
 typedef struct __geonetworking

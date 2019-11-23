@@ -1,21 +1,14 @@
+#include "main.h"
+
 #include "parser.h"
-#include "proxy.h"
 #include "factory.h"
-#include "MessageSink.h"
 #include "Formatter.h"
 
 #include <unistd.h>
 #include <iostream>
 #include <thread>
 
-#include <SFML/Graphics.hpp>
-
-Proxy p;
-MessageSink ms;
-
-sf::Font font;
-
-sf::RenderWindow *window = nullptr;
+Main *_main = nullptr;
 
 void dump_geonet(uint8_t *buf, uint32_t len)
 {
@@ -29,11 +22,11 @@ void dump_geonet(uint8_t *buf, uint32_t len)
 		case GEONET_TYPE_TSB_SHB:
 		case GEONET_TYPE_BEACON:
 		{
-			auto *p = (geonet_long_position_vector_t *)g->data;
-			double lat = ntohl(p->latitude) / 10000000.0;
-			double lon = ntohl(p->longitude) / 10000000.0;
+			auto *pos = (geonet_long_position_vector_t *)g->data;
+			double lat = ntohl(pos->latitude) / 10000000.0;
+			double lon = ntohl(pos->longitude) / 10000000.0;
 			std::cout << " Location: " << lat << ", " << lon << std::endl;
-			std::cout << " Timestamp: " << p->timestamp << std::endl;
+			std::cout << " Timestamp: " << pos->timestamp << std::endl;
 		}
 	}
 }
@@ -61,7 +54,7 @@ void send_cam(uint8_t mac[6], StationID_t id, Proxy *p)
 
 void send_cam_thread(uint8_t mac[6], StationID_t id, Proxy *p)
 {
-	while (1)
+	while (true)
 	{
 		send_cam(mac, id, p);
 		usleep(1000*1000);
@@ -87,14 +80,14 @@ void send_denm(uint8_t mac[6], StationID_t id, Proxy *p)
 
 void send_denm_thread(uint8_t mac[6], StationID_t id, Proxy *p)
 {
-	while (1)
+	while (true)
 	{
 		send_denm(mac, id, p);
 		usleep(1000*1000);
 	}
 }
 
-void reader_thread()
+void Main::reader_thread()
 {
 	uint8_t buf[2048];
 	uint32_t buflen = sizeof(buf);
@@ -106,34 +99,30 @@ void reader_thread()
 	}
 }
 
-void draw_data()
+void Main::draw_data()
 {
 	ms.draw_station_list();
 	ms.draw_details();
 }
 
-void write_text(float x, float y, const sf::Color &color, const std::string &text)
+void Main::write_text(float x, float y, const sf::Color &color, const std::string &text)
 {
 	sf::Text t;
 	t.setFont(font);
 	t.setCharacterSize(24);
 	t.setFillColor(color);
-	//t.setOrigin(x, y);
 	t.setPosition(x, y);
 	t.setString(text);
 	window->draw(t);
 }
 
-bool is_pressed = false;
-sf::Keyboard::Key last_key;
-
-void key_pressed(sf::Keyboard::Key k)
+void Main::key_pressed(sf::Keyboard::Key k)
 {
 	is_pressed = true;
 	last_key = k;
 }
 
-void key_handler()
+void Main::key_handler()
 {
 	if (is_pressed && !sf::Keyboard::isKeyPressed(last_key))
 	{
@@ -188,22 +177,13 @@ int main(int argc, char *argv[]) {
 		port = (int) strtoul(argv[2], nullptr, 10);
 	}
 
-	if (p.connect(argv[1], port)) {
-		return -1;
-	}
+	Main m(argv[1], port);
+	_main = &m;
 
 	StationID_t id = 1337;
 
-	uint8_t mac[6];
-	mac[0] = 0x24;
-	mac[1] = 0xA4;
-	mac[2] = 0x3C;
-	mac[3] = 0x02;
-	mac[4] = 0xB6;
-	mac[5] = 0x00;
-
-	std::thread camthread(send_cam_thread, mac, id, &p);
-	std::thread denmthread(send_denm_thread, mac, id, &p);
+	//std::thread camthread(send_cam_thread, mac, id, &p);
+	//std::thread denmthread(send_denm_thread, mac, id, &p);
 
 	uint8_t aspat[] = "\xff\xff\xff\xff\xff\xff\x00\x0d\x41\x12\x21\x4d\x89\x47\x01\x00" \
 "\x1a\x01\x20\x50\x03\x00\x00\x8a\x01\x00\x3c\xe8\x00\x0d\x41\x12" \
@@ -292,17 +272,45 @@ int main(int argc, char *argv[]) {
 	}
 	//*/
 
-	ms.add_msg({ aspat, sizeof(aspat) });
+	m.run();
+
+	exit(0);
+}
+
+Main::Main(char *addr, int port) : mac(), last_key()
+{
+	mac[0] = 0x24;
+	mac[1] = 0xA4;
+	mac[2] = 0x3C;
+	mac[3] = 0x02;
+	mac[4] = 0xB6;
+	mac[5] = 0x00;
+
+	if (p.connect(addr, port)) {
+		throw std::exception();
+	}
 
 	if (!font.loadFromFile("FiraCode-Regular.ttf"))
 	{
-		return -1;
+		throw std::exception();
 	}
 
-	std::thread reader(reader_thread);
+	reader = std::thread([this] {
+		reader_thread();
+	});
 
 	window = new sf::RenderWindow(sf::VideoMode(1920, 1080), "v2x");
 	window->setVerticalSyncEnabled(true);
+}
+
+Main::~Main()
+{
+	delete window;
+	p.disconnect();
+}
+
+void Main::run()
+{
 	while (window->isOpen())
 	{
 		sf::Event event = {};
@@ -326,8 +334,4 @@ int main(int argc, char *argv[]) {
 
 		window->display();
 	}
-
-	exit(0);
-
-	return 0;
 }

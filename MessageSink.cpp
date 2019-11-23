@@ -206,7 +206,7 @@ void MessageSink::draw_station_list()
 			ss << "  ";
 		}
 		ss << it->first;
-		write_text(20, 10 + 20 * i, sf::Color::White, ss.str());
+		_main->write_text(20, 10 + 20 * i, sf::Color::White, ss.str());
 		++it;
 		++i;
 	}
@@ -249,5 +249,6 @@ void MessageSink::draw_details()
 	{
 		ss << Formatter::dump_mapem(data->mapem);
 	}
-	write_text(200, 30, sf::Color::White, ss.str());
+
+	_main->write_text(200, 30, sf::Color::White, ss.str());
 }
