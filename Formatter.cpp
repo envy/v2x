@@ -3,9 +3,24 @@
 #include <sstream>
 #include <iomanip>
 
-#define RED "\x1b[31m"
-#define GREEN "\x1b[32m"
-#define RST "\x1b[0m"
+#include "BasicVehicleContainerHighFrequency.h"
+#include "RSUContainerHighFrequency.h"
+#include "ProtectedCommunicationZonesRSU.h"
+#include "ProtectedCommunicationZone.h"
+#include "SituationContainer.h"
+#include "IntersectionState.h"
+#include "RoadSegmentList.h"
+#include "MovementState.h"
+#include "MovementEvent.h"
+#include "RoadSegment.h"
+#include "GenericLane.h"
+#include "ConnectsToList.h"
+#include "Connection.h"
+#include "IntersectionGeometryList.h"
+#include "IntersectionGeometry.h"
+#include "IntersectionReferenceID.h"
+#include "IntersectionID.h"
+#include "LaneList.h"
 
 std::string Formatter::format_mac(uint8_t mac[6])
 {
@@ -186,9 +201,9 @@ std::string Formatter::format_event_state(MovementPhaseState_t val)
 		case MovementPhaseState_dark:
 			return "dark";
 		case MovementPhaseState_stop_Then_Proceed:
-			return RED "STOP" RST " then proceed";
+			return "STOP then proceed";
 		case MovementPhaseState_stop_And_Remain:
-			return RED "STOP" RST " and remain";
+			return "STOP and remain";
 		case MovementPhaseState_pre_Movement:
 			return "pre movement";
 		case MovementPhaseState_permissive_Movement_Allowed:
@@ -252,15 +267,22 @@ std::string Formatter::format_protected_zone_type(ProtectedZoneType_t val)
 
 std::string Formatter::format_lane_direction(LaneDirection_t &val)
 {
-	if (val.buf[LaneDirection_egressPath])
+	bool is_egress = false;
+	std::stringstream ss;
+	if (val.buf[0] & (1u << (7-LaneDirection_egressPath)))
 	{
-		return "egress";
+		ss << "egress";
+		is_egress = true;
 	}
-	if (val.buf[LaneDirection_ingressPath])
+	if (val.buf[0] & (1u << (7-LaneDirection_ingressPath)))
 	{
-		return "ingress";
+		if (is_egress)
+		{
+			ss << " / ";
+		}
+		ss << "ingress";
 	}
-	return "unknown";
+	return ss.str();
 }
 
 std::string Formatter::format_lane_type(LaneTypeAttributes_t &val)
@@ -392,6 +414,56 @@ std::string Formatter::dump_mapem(MAPEM_t *mapem)
 	ss << "MAPEM v" << mapem->header.protocolVersion << " from ";
 	ss << mapem->header.stationID;
 	ss << std::endl;
+
+	if (mapem->map.intersections != nullptr)
+	{
+		for (uint32_t _i = 0; _i < mapem->map.intersections->list.count; ++_i)
+		{
+			auto in = mapem->map.intersections->list.array[_i];
+			ss << " Intersection: " << in->id.id;
+			if (in->name != nullptr)
+			{
+				ss << " - " << std::string((char *)in->name->buf, in->name->size);
+			}
+			ss << std::endl;
+			double lat = in->refPoint.lat / 10000000.0;
+			double lon = in->refPoint.Long / 10000000.0;
+			ss << "  Location: " << lat << ", " << lon << std::endl;
+			for (uint32_t _l = 0; _l < in->laneSet.list.count; ++_l)
+			{
+				auto lane = in->laneSet.list.array[_l];
+				if (lane->laneAttributes.laneType.present != LaneTypeAttributes_PR_vehicle)
+				{
+					continue;
+				}
+				ss << "  Lane: " << lane->laneID << std::endl;
+				ss << "   Direction: " << format_lane_direction(lane->laneAttributes.directionalUse);
+				ss << "   Type: " << format_lane_type(lane->laneAttributes.laneType);
+				if (lane->connectsTo != nullptr)
+				{
+					ss << "   Connects to: ";
+					for (uint32_t ct = 0; ct < lane->connectsTo->list.count; ++ct)
+					{
+						if (ct != 0)
+						{
+							ss << ", ";
+						}
+						auto con = lane->connectsTo->list.array[ct];
+						ss << con->connectingLane.lane;
+						if (con->signalGroup != nullptr)
+						{
+							ss << " (SG " << *con->signalGroup << ")";
+						}
+					}
+					ss << std::endl;
+				}
+				else
+				{
+					ss << std::endl;
+				}
+			}
+		}
+	}
 
 	if (mapem->map.roadSegments != nullptr)
 	{

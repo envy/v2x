@@ -107,6 +107,7 @@ void MessageSink::process_msg(array_t arr)
 				ASN_STRUCT_FREE(asn_DEF_MAPEM, msgs[mapem->header.stationID]->mapem);
 			}
 			msgs[mapem->header.stationID]->mapem = mapem;
+			xer_fprint(stdout, &asn_DEF_MAPEM, mapem);
 			return;
 		}
 	}

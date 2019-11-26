@@ -4,6 +4,10 @@
 #include <iostream>
 #include <chrono>
 
+#include "RSUContainerHighFrequency.h"
+#include "BasicVehicleContainerHighFrequency.h"
+#include "SituationContainer.h"
+
 uint64_t timestamp_now()
 {
 	static const uint64_t EPOCH_OFFSET = 1072911600000;

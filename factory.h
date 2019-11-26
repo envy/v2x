@@ -3,6 +3,10 @@
 
 #include "parser.h"
 
+#include "InformationQuality.h"
+#include "CauseCodeType.h"
+#include "SubCauseCodeType.h"
+
 static const uint32_t MAX_BUF_LEN = 1024;
 
 uint64_t timestamp_now();

@@ -8,6 +8,16 @@
 #include "SPAT.h"
 #include "MAPEM.h"
 
+#include "VehicleLengthValue.h"
+#include "VehicleWidth.h"
+#include "SpeedValue.h"
+#include "HeadingValue.h"
+#include "MovementPhaseState.h"
+#include "CauseCode.h"
+#include "ProtectedZoneType.h"
+#include "LaneDirection.h"
+#include "LaneTypeAttributes.h"
+
 class Formatter
 {
 private:

@@ -11,7 +11,7 @@ private:
 	sf::RenderWindow *window;
 	sf::Font font;
 	Proxy p;
-	MessageSink ms;
+
 
 	uint8_t mac[6];
 	StationID_t station_id;
@@ -29,6 +29,7 @@ private:
 public:
 	Main(char *addr, int port, StationID_t stationId);
 	~Main();
+	MessageSink ms;
 
 	void run();
 	void write_text(float x, float y, const sf::Color &color, const std::string &text);
