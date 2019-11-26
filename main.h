@@ -14,6 +14,8 @@ private:
 	MessageSink ms;
 
 	uint8_t mac[6];
+	StationID_t station_id;
+
 	bool is_pressed = false;
 	sf::Keyboard::Key last_key;
 
@@ -25,7 +27,7 @@ private:
 	void draw_data();
 
 public:
-	Main(char *addr, int port);
+	Main(char *addr, int port, StationID_t stationId);
 	~Main();
 
 	void run();

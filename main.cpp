@@ -177,13 +177,8 @@ int main(int argc, char *argv[]) {
 		port = (int) strtoul(argv[2], nullptr, 10);
 	}
 
-	Main m(argv[1], port);
+	Main m(argv[1], port, 1337);
 	_main = &m;
-
-	StationID_t id = 1337;
-
-	//std::thread camthread(send_cam_thread, mac, id, &p);
-	//std::thread denmthread(send_denm_thread, mac, id, &p);
 
 	uint8_t aspat[] = "\xff\xff\xff\xff\xff\xff\x00\x0d\x41\x12\x21\x4d\x89\x47\x01\x00" \
 "\x1a\x01\x20\x50\x03\x00\x00\x8a\x01\x00\x3c\xe8\x00\x0d\x41\x12" \
@@ -269,6 +264,8 @@ int main(int argc, char *argv[]) {
 			std::cout << Formatter::dump_mapem(mapem);
 			xer_fprint(stdout, &asn_DEF_MAPEM, mapem);
 		}
+		std::cout << Formatter::dump_mapem(mapem);
+		xer_fprint(stdout, &asn_DEF_MAPEM, mapem);
 	}
 	//*/
 
@@ -277,7 +274,7 @@ int main(int argc, char *argv[]) {
 	exit(0);
 }
 
-Main::Main(char *addr, int port) : mac(), last_key()
+Main::Main(char *addr, int port, StationID_t stationId) : mac(), last_key()
 {
 	mac[0] = 0x24;
 	mac[1] = 0xA4;
@@ -285,6 +282,8 @@ Main::Main(char *addr, int port) : mac(), last_key()
 	mac[3] = 0x02;
 	mac[4] = 0xB6;
 	mac[5] = 0x00;
+
+	station_id = stationId;
 
 	if (p.connect(addr, port)) {
 		throw std::exception();
@@ -311,6 +310,9 @@ Main::~Main()
 
 void Main::run()
 {
+	std::thread camthread(send_cam_thread, mac, station_id, &p);
+	//std::thread denmthread(send_denm_thread, mac, station_id, &p);
+
 	while (window->isOpen())
 	{
 		sf::Event event = {};

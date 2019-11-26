@@ -2,8 +2,6 @@
 #define __FACTORY_H_
 
 #include "parser.h"
-#include "CAM.h"
-#include "DENM.h"
 
 static const uint32_t MAX_BUF_LEN = 1024;
 

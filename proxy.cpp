@@ -87,6 +87,7 @@ int Proxy::get_packet(uint8_t *buf, uint32_t buflen)
 			break;
 		default:
 			std::cerr << "FIXME: unknown geonet type 0x" << std::hex << (unsigned int)g->common_header.type.raw << std::dec << std::endl;
+			payload_length += 0;
 			break;
 	}
 

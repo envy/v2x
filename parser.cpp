@@ -141,7 +141,7 @@ static int parse_something(uint8_t *buf, uint32_t len, void **ptr, asn_TYPE_desc
 		switch (ret.code)
 		{
 			case RC_WMORE:
-				std::cout << "WMORE (not enought data)";
+				std::cout << "WMORE (not enough data)";
 				break;
 			case RC_FAIL:
 				std::cout << "FAIL";

@@ -1,22 +1,22 @@
 CAM-PDU-Descriptions {
-itu-t (0) identified-organization (4) etsi (0) itsDomain (5) wg1 (1) en (302637) cam (2) version (1)
+itu-t (0) identified-organization (4) etsi (0) itsDomain (5) wg1 (1) en (302637) cam (2) version (2) 
 }
 
 DEFINITIONS AUTOMATIC TAGS ::=
 
 BEGIN
 
-IMPORTS
+IMPORTS 
 ItsPduHeader, CauseCode, ReferencePosition, AccelerationControl, Curvature, CurvatureCalculationMode, Heading, LanePosition, EmergencyPriority, EmbarkationStatus, Speed, DriveDirection, LongitudinalAcceleration, LateralAcceleration, VerticalAcceleration, StationType, ExteriorLights, DangerousGoodsBasic, SpecialTransportType, LightBarSirenInUse, VehicleRole, VehicleLength, VehicleWidth, PathHistory, RoadworksSubCauseCode, ClosedLanes, TrafficRule, SpeedLimit, SteeringWheelAngle, PerformanceClass, YawRate, ProtectedCommunicationZone, PtActivation, Latitude, Longitude, ProtectedCommunicationZonesRSU, CenDsrcTollingZone FROM ITS-Container {
-itu-t (0) identified-organization (4) etsi (0) itsDomain (5) wg1 (1) ts (102894) cdd (2) version (1)
+itu-t (0) identified-organization (4) etsi (0) itsDomain (5) wg1 (1) ts (102894) cdd (2) version (2) 
 };
 
 
---  The root data frame for cooperative awareness messages
+--	The root data frame for cooperative awareness messages
 
 CAM ::= SEQUENCE {
-    header ItsPduHeader,
-    cam CoopAwareness
+	header ItsPduHeader,
+	cam CoopAwareness
 }
 
 CoopAwareness ::= SEQUENCE {
@@ -29,18 +29,18 @@ CamParameters ::= SEQUENCE {
     highFrequencyContainer HighFrequencyContainer,
     lowFrequencyContainer LowFrequencyContainer OPTIONAL,
     specialVehicleContainer SpecialVehicleContainer OPTIONAL,
-    ...
+	...
 }
 
 HighFrequencyContainer ::= CHOICE {
     basicVehicleContainerHighFrequency BasicVehicleContainerHighFrequency,
     rsuContainerHighFrequency RSUContainerHighFrequency,
-    ...
+	...
 }
 
  LowFrequencyContainer ::= CHOICE {
   basicVehicleContainerLowFrequency BasicVehicleContainerLowFrequency,
-    ...
+	...
 }
 
 SpecialVehicleContainer ::= CHOICE {
@@ -51,54 +51,54 @@ SpecialVehicleContainer ::= CHOICE {
     rescueContainer RescueContainer,
     emergencyContainer EmergencyContainer,
     safetyCarContainer SafetyCarContainer,
-    ...
+	...
 }
 
 BasicContainer ::= SEQUENCE {
-    stationType StationType,
-    referencePosition ReferencePosition,
-    ...
+	stationType StationType,
+	referencePosition ReferencePosition,
+	...
 }
 
 BasicVehicleContainerHighFrequency ::= SEQUENCE {
     heading Heading,
     speed Speed,
-    driveDirection DriveDirection,
-    vehicleLength VehicleLength,
-    vehicleWidth VehicleWidth,
-    longitudinalAcceleration LongitudinalAcceleration,
+	driveDirection DriveDirection,
+	vehicleLength VehicleLength,
+	vehicleWidth VehicleWidth,
+	longitudinalAcceleration LongitudinalAcceleration,
     curvature Curvature,
-    curvatureCalculationMode CurvatureCalculationMode,
+	curvatureCalculationMode CurvatureCalculationMode,
     yawRate YawRate,
-    accelerationControl AccelerationControl OPTIONAL,
-    lanePosition LanePosition OPTIONAL,
+	accelerationControl AccelerationControl OPTIONAL,
+	lanePosition LanePosition OPTIONAL,
     steeringWheelAngle SteeringWheelAngle OPTIONAL,
-    lateralAcceleration LateralAcceleration OPTIONAL,
-    verticalAcceleration VerticalAcceleration OPTIONAL,
+	lateralAcceleration LateralAcceleration OPTIONAL,
+	verticalAcceleration VerticalAcceleration OPTIONAL,
     performanceClass PerformanceClass OPTIONAL,
-    cenDsrcTollingZone CenDsrcTollingZone OPTIONAL
+	cenDsrcTollingZone CenDsrcTollingZone OPTIONAL
 }
 
 BasicVehicleContainerLowFrequency  ::= SEQUENCE {
-    vehicleRole VehicleRole,
-    exteriorLights ExteriorLights,
+	vehicleRole VehicleRole,
+	exteriorLights ExteriorLights,
     pathHistory PathHistory
 }
 
 PublicTransportContainer ::= SEQUENCE {
-    embarkationStatus EmbarkationStatus,
+	embarkationStatus EmbarkationStatus,
     ptActivation PtActivation OPTIONAL
 }
 
 SpecialTransportContainer ::= SEQUENCE {
-    specialTransportType SpecialTransportType,
-    lightBarSirenInUse LightBarSirenInUse
+	specialTransportType SpecialTransportType,
+	lightBarSirenInUse LightBarSirenInUse
 }
 
  DangerousGoodsContainer ::= SEQUENCE {
   dangerousGoodsBasic DangerousGoodsBasic
  }
-
+ 
  RoadWorksContainerBasic ::= SEQUENCE {
   roadworksSubCauseCode RoadworksSubCauseCode OPTIONAL,
   lightBarSirenInUse LightBarSirenInUse,
@@ -106,25 +106,25 @@ SpecialTransportContainer ::= SEQUENCE {
  }
 
 RescueContainer ::= SEQUENCE {
-    lightBarSirenInUse LightBarSirenInUse
+	lightBarSirenInUse LightBarSirenInUse
 }
 
 EmergencyContainer ::= SEQUENCE {
-    lightBarSirenInUse LightBarSirenInUse,
-    incidentIndication CauseCode OPTIONAL,
-    emergencyPriority EmergencyPriority OPTIONAL
+	lightBarSirenInUse LightBarSirenInUse,
+	incidentIndication CauseCode OPTIONAL,
+	emergencyPriority EmergencyPriority OPTIONAL
 }
 
 SafetyCarContainer ::= SEQUENCE {
-    lightBarSirenInUse LightBarSirenInUse,
-    incidentIndication CauseCode OPTIONAL,
-    trafficRule TrafficRule OPTIONAL,
+	lightBarSirenInUse LightBarSirenInUse,
+	incidentIndication CauseCode OPTIONAL,
+	trafficRule TrafficRule OPTIONAL,
     speedLimit SpeedLimit OPTIONAL
 }
 
 RSUContainerHighFrequency ::= SEQUENCE {
-    protectedCommunicationZonesRSU ProtectedCommunicationZonesRSU OPTIONAL,
-    ...
+	protectedCommunicationZonesRSU ProtectedCommunicationZonesRSU OPTIONAL,
+	...
 }
 
 GenerationDeltaTime ::= INTEGER { oneMilliSec(1) } (0..65535)

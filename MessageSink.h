@@ -10,9 +10,6 @@
 #include <SFML/Graphics.hpp>
 
 #include "parser.h"
-#include "CAM.h"
-#include "DENM.h"
-#include "SPATEM.h"
 
 typedef struct
 {

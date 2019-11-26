@@ -89,7 +89,7 @@ CAMFactory::CAMFactory(const uint8_t mac[6]) : PacketFactory(mac)
 
 CAMFactory::~CAMFactory()
 {
-	free(cam);
+	ASN_STRUCT_FREE(asn_DEF_CAM, cam);
 }
 
 void CAMFactory::build_packet()
@@ -136,38 +136,39 @@ void CAMFactory::set_station_type(StationType_t type)
 			break;
 		case StationType_roadSideUnit:
 			cam->cam.camParameters.highFrequencyContainer.present = HighFrequencyContainer_PR_basicVehicleContainerHighFrequency;
-			cam->cam.camParameters.highFrequencyContainer.choice.rsuContainerHighFrequency.protectedCommunicationZonesRSU = nullptr;
+			cam->cam.camParameters.highFrequencyContainer.choice.rsuContainerHighFrequency = (RSUContainerHighFrequency_t *)calloc(1, sizeof(RSUContainerHighFrequency_t));
+			cam->cam.camParameters.highFrequencyContainer.choice.rsuContainerHighFrequency->protectedCommunicationZonesRSU = nullptr;
 			break;
 		case StationType_pedestrian:
-		case StationType_bus:
 		case StationType_cyclist:
-		case StationType_heavyTruck:
-		case StationType_lightTruck:
 		case StationType_moped:
 		case StationType_motorcycle:
 		case StationType_passengerCar:
+		case StationType_bus:
+		case StationType_lightTruck:
+		case StationType_heavyTruck:
+		case StationType_trailer:
 		case StationType_specialVehicles:
 		case StationType_tram: {
 			auto &c = cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency;
+			c = (BasicVehicleContainerHighFrequency_t *)calloc(1, sizeof(BasicVehicleContainerHighFrequency_t));
 			cam->cam.camParameters.highFrequencyContainer.present = HighFrequencyContainer_PR_basicVehicleContainerHighFrequency;
-			c.curvature.curvatureValue = CurvatureValue_unavailable;
-			c.curvature.curvatureConfidence = CurvatureConfidence_unavailable;
-			c.curvatureCalculationMode = CurvatureCalculationMode_unavailable;
-			c.heading.headingValue = HeadingValue_unavailable;
-			c.heading.headingConfidence = HeadingConfidence_unavailable;
-			c.longitudinalAcceleration.longitudinalAccelerationValue = LongitudinalAccelerationValue_unavailable;
-			c.longitudinalAcceleration.longitudinalAccelerationConfidence = AccelerationConfidence_unavailable;
-			c.speed.speedValue = SpeedValue_unavailable;
-			c.speed.speedConfidence = SpeedConfidence_unavailable;
-			c.vehicleLength.vehicleLengthValue = VehicleLengthValue_unavailable;
-			c.vehicleLength.vehicleLengthConfidenceIndication = VehicleLengthConfidenceIndication_unavailable;
-			c.vehicleWidth = VehicleWidth_unavailable;
-			c.yawRate.yawRateValue = YawRateValue_unavailable;
-			c.yawRate.yawRateConfidence = YawRateConfidence_unavailable;
+			c->curvature.curvatureValue = CurvatureValue_unavailable;
+			c->curvature.curvatureConfidence = CurvatureConfidence_unavailable;
+			c->curvatureCalculationMode = CurvatureCalculationMode_unavailable;
+			c->heading.headingValue = HeadingValue_unavailable;
+			c->heading.headingConfidence = HeadingConfidence_unavailable;
+			c->longitudinalAcceleration.longitudinalAccelerationValue = LongitudinalAccelerationValue_unavailable;
+			c->longitudinalAcceleration.longitudinalAccelerationConfidence = AccelerationConfidence_unavailable;
+			c->speed.speedValue = SpeedValue_unavailable;
+			c->speed.speedConfidence = SpeedConfidence_unavailable;
+			c->vehicleLength.vehicleLengthValue = VehicleLengthValue_unavailable;
+			c->vehicleLength.vehicleLengthConfidenceIndication = VehicleLengthConfidenceIndication_unavailable;
+			c->vehicleWidth = VehicleWidth_unavailable;
+			c->yawRate.yawRateValue = YawRateValue_unavailable;
+			c->yawRate.yawRateConfidence = YawRateConfidence_unavailable;
 			break;
 		}
-		default:
-			throw "Tried to set unhandled station type";
 	}
 }
 
@@ -188,7 +189,7 @@ DENMFactory::DENMFactory(const uint8_t mac[6]) : PacketFactory(mac)
 
 DENMFactory::~DENMFactory()
 {
-	free(denm);
+	ASN_STRUCT_FREE(asn_DEF_DENM, denm);
 }
 
 void DENMFactory::build_packet()

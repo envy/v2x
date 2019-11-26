@@ -307,19 +307,21 @@ std::string Formatter::dump_cam(CAM_t *cam)
 	if (cam->cam.camParameters.highFrequencyContainer.present == HighFrequencyContainer_PR_basicVehicleContainerHighFrequency)
 	{
 		auto &b = cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency;
-		ss << " Vehicle Length: " << format_vehicle_length(b.vehicleLength.vehicleLengthValue) << std::endl;
-		ss << " Vehicle Width: " << format_vehicle_width(b.vehicleWidth) << std::endl;
-		ss << " Speed: " << format_speed_value(b.speed.speedValue) << std::endl;
-		ss << " Heading: " << format_heading_value(b.heading.headingValue) << std::endl;
+		//auto &b = cam->cam.camParameters.highFrequencyContainer.basicVehicleContainerHighFrequency;
+		ss << " Vehicle Length: " << format_vehicle_length(b->vehicleLength.vehicleLengthValue) << std::endl;
+		ss << " Vehicle Width: " << format_vehicle_width(b->vehicleWidth) << std::endl;
+		ss << " Speed: " << format_speed_value(b->speed.speedValue) << std::endl;
+		ss << " Heading: " << format_heading_value(b->heading.headingValue) << std::endl;
 	}
 	else if (cam->cam.camParameters.highFrequencyContainer.present == HighFrequencyContainer_PR_rsuContainerHighFrequency)
 	{
 		auto &r = cam->cam.camParameters.highFrequencyContainer.choice.rsuContainerHighFrequency;
-		if (r.protectedCommunicationZonesRSU != nullptr)
+		//auto &r = cam->cam.camParameters.highFrequencyContainer.rsuContainerHighFrequency;
+		if (r->protectedCommunicationZonesRSU != nullptr)
 		{
-			for(uint32_t i = 0; i < r.protectedCommunicationZonesRSU->list.count; ++i)
+			for(uint32_t i = 0; i < r->protectedCommunicationZonesRSU->list.count; ++i)
 			{
-				auto item = r.protectedCommunicationZonesRSU->list.array[i];
+				auto item = r->protectedCommunicationZonesRSU->list.array[i];
 				double _lat = item->protectedZoneLatitude / 10000000.0;
 				double _lon = item->protectedZoneLongitude / 10000000.0;
 				ss << " Protected Zone: " << format_protected_zone_type(item->protectedZoneType) << std::endl;
