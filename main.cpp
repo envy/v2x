@@ -177,9 +177,6 @@ int main(int argc, char *argv[]) {
 		port = (int) strtoul(argv[2], nullptr, 10);
 	}
 
-	Main m(argv[1], port, 1337);
-	_main = &m;
-
 	uint8_t aspat[] = "\xff\xff\xff\xff\xff\xff\x00\x0d\x41\x12\x21\x4d\x89\x47\x01\x00" \
 "\x1a\x01\x20\x50\x03\x00\x00\x8a\x01\x00\x3c\xe8\x00\x0d\x41\x12" \
 "\x21\x4d\xc4\xaa\x78\x0e\x1f\x28\x8c\x7a\x06\x45\xe0\x84\x80\x19" \
@@ -250,15 +247,17 @@ int main(int argc, char *argv[]) {
 	dump_geonet(atopo, sizeof(atopo));
 	if (is_mapem(atopo, sizeof(atopo), &s))
 	{
+		/*
 		ItsPduHeader_t *header = nullptr;
 		int ret = parse_header(atopo+s, sizeof(atopo)-s, &header);
 		if (ret == 0)
 		{
 			xer_fprint(stdout, &asn_DEF_ItsPduHeader, header);
 		}
+		//*/
 
 		MAPEM_t *mapem = nullptr;
-		ret = parse_mapem(atopo+s, sizeof(atopo)-s, &mapem);
+		int ret = parse_mapem(atopo+s, sizeof(atopo)-s, &mapem);
 		if (ret == 0)
 		{
 			std::cout << Formatter::dump_mapem(mapem);
@@ -266,8 +265,12 @@ int main(int argc, char *argv[]) {
 		}
 		std::cout << Formatter::dump_mapem(mapem);
 		xer_fprint(stdout, &asn_DEF_MAPEM, mapem);
+		exit(0);
 	}
 	//*/
+
+	Main m(argv[1], port, 1337);
+	_main = &m;
 
 	m.run();
 
