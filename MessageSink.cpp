@@ -6,7 +6,6 @@
 
 #include <iostream>
 #include <sstream>
-#include <asn1-src/NodeSetXY.h>
 
 #include "IntersectionGeometryList.h"
 #include "IntersectionGeometry.h"
@@ -21,6 +20,8 @@
 #include "NodeOffsetPointXY.h"
 #include "Node-XY-20b.h"
 #include "Offset-B10.h"
+#include "Node-XY-22b.h"
+#include "Offset-B11.h"
 #include "Node-XY-24b.h"
 #include "Offset-B12.h"
 #include "Node-XY-26b.h"
@@ -322,6 +323,13 @@ void MessageSink::draw_intersection(station_msgs_t *data)
 						case NodeOffsetPointXY_PR_node_XY1:
 						{
 							auto nop = node->delta.choice.node_XY1;
+							next_x = nop->x;
+							next_y = nop->y;
+							break;
+						}
+						case NodeOffsetPointXY_PR_node_XY2:
+						{
+							auto nop = node->delta.choice.node_XY2;
 							next_x = nop->x;
 							next_y = nop->y;
 							break;
