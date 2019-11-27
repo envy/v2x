@@ -38,6 +38,8 @@ MessageSink::MessageSink()
 	_show_denms = true;
 	_show_spatems = true;
 	_show_mapems = true;
+	_show_visu = true;
+	_visu_only_vehicles = true;
 	process = true;
 	processor = std::thread([this] {
 		process_incoming();
@@ -215,6 +217,24 @@ bool MessageSink::get_show_mapems()
 	return _show_mapems;
 }
 
+void MessageSink::set_show_visu(bool show)
+{
+	_show_visu = show;
+}
+bool MessageSink::get_show_visu()
+{
+	return _show_visu;
+}
+
+void MessageSink::set_visu_only_vehicles(bool show)
+{
+	_visu_only_vehicles = show;
+}
+bool MessageSink::get_visu_only_vehicles()
+{
+	return _visu_only_vehicles;
+}
+
 void MessageSink::draw_station_list()
 {
 	std::shared_lock lock(data_lock);
@@ -265,7 +285,7 @@ void MessageSink::draw_intersection(station_msgs_t *data)
 	for (uint32_t _l = 0; _l < in->laneSet.list.count; ++_l)
 	{
 		auto lane = in->laneSet.list.array[_l];
-		if (lane->laneAttributes.laneType.present != LaneTypeAttributes_PR_vehicle)
+		if (_visu_only_vehicles && lane->laneAttributes.laneType.present != LaneTypeAttributes_PR_vehicle)
 		{
 			continue;
 		}
@@ -367,7 +387,7 @@ void MessageSink::draw_intersection(station_msgs_t *data)
 	for (uint32_t _l = 0; _l < in->laneSet.list.count; ++_l)
 	{
 		auto lane = in->laneSet.list.array[_l];
-		if (lane->laneAttributes.laneType.present != LaneTypeAttributes_PR_vehicle)
+		if (_visu_only_vehicles && lane->laneAttributes.laneType.present != LaneTypeAttributes_PR_vehicle)
 		{
 			continue;
 		}
@@ -446,7 +466,7 @@ void MessageSink::draw_details()
 		return;
 	}
 
-	if (data->mapem != nullptr && _show_mapems)
+	if (data->mapem != nullptr && _show_visu)
 	{
 		draw_intersection(data);
 		return;

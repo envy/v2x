@@ -159,6 +159,16 @@ void Main::key_handler()
 		key_pressed(sf::Keyboard::M);
 		ms.set_show_mapems(!ms.get_show_mapems());
 	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::V))
+	{
+		key_pressed(sf::Keyboard::V);
+		ms.set_show_visu(!ms.get_show_visu());
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::H))
+	{
+		key_pressed(sf::Keyboard::H);
+		ms.set_visu_only_vehicles(!ms.get_visu_only_vehicles());
+	}
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 	{
@@ -412,7 +422,7 @@ void Main::run()
 
 		draw_data();
 
-		write_text(20, 0, sf::Color::White, "Quit | show CDSM | Up | Down | sEnd");
+		write_text(20, 0, sf::Color::White, "Quit | show CDSM | Visualize (only veHicles) | Up | Down | sEnd");
 
 		window->display();
 	}

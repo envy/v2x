@@ -49,6 +49,9 @@ private:
 	bool _show_denms;
 	bool _show_spatems;
 	bool _show_mapems;
+	bool _show_visu;
+	bool _visu_only_vehicles;
+	float origin_x, origin_y;
 
 	void process_incoming();
 	void process_msg(array_t arr);
@@ -67,6 +70,10 @@ public:
 	bool get_show_spatems();
 	void set_show_mapems(bool show);
 	bool get_show_mapems();
+	void set_show_visu(bool show);
+	bool get_show_visu();
+	void set_visu_only_vehicles(bool show);
+	bool get_visu_only_vehicles();
 	void draw_station_list();
 	void draw_details();
 	void draw_intersection(station_msgs_t *data);
