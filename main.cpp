@@ -416,3 +416,8 @@ void Main::run()
 		window->display();
 	}
 }
+
+sf::RenderWindow *Main::get_window()
+{
+	return window;
+}

@@ -26,6 +26,14 @@ typedef struct
 	MAPEM_t *mapem;
 } station_msgs_t;
 
+typedef struct
+{
+	struct {
+		float x;
+		float y;
+	} first_node;
+} intersection_data_t;
+
 class MessageSink {
 private:
 	std::queue<array_t> incoming;
@@ -61,6 +69,7 @@ public:
 	bool get_show_mapems();
 	void draw_station_list();
 	void draw_details();
+	void draw_intersection(station_msgs_t *data);
 };
 
 #endif //V2X_MESSAGESINK_H

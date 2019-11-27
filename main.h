@@ -33,6 +33,7 @@ public:
 
 	void run();
 	void write_text(float x, float y, const sf::Color &color, const std::string &text);
+	sf::RenderWindow *get_window();
 };
 
 extern Main *_main;
