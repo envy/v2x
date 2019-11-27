@@ -1,4 +1,5 @@
 #include <asn1-src/MovementEventList.h>
+#include <cmath>
 #include "Utils.h"
 
 #include "IntersectionState.h"
@@ -70,4 +71,19 @@ MovementPhaseState_t Utils::get_movement_phase_for_signal_group(station_msgs_t *
 	}
 
 	return MovementPhaseState_unavailable;
+}
+
+sf::Vector2f Utils::ortho(sf::Vector2f &a)
+{
+	return sf::Vector2f(a.y/length(a), -a.x/length(a));
+}
+
+sf::Vector2f Utils::normalize(sf::Vector2f &a)
+{
+	return a/length(a);
+}
+
+float Utils::length(sf::Vector2f &a)
+{
+	return sqrt(a.x*a.x + a.y*a.y);
 }

@@ -36,6 +36,9 @@ typedef struct
 
 class MessageSink {
 private:
+	static constexpr float center_x = 1000;
+	static constexpr float center_y = 500;
+	float scale;
 	std::queue<array_t> incoming;
 	std::map<StationID_t, station_msgs_t *> msgs;
 	std::mutex queue_lock;
@@ -51,7 +54,7 @@ private:
 	bool _show_mapems;
 	bool _show_visu;
 	bool _visu_only_vehicles;
-	float origin_x, origin_y;
+	uint32_t origin_x, origin_y;
 
 	void process_incoming();
 	void process_msg(array_t arr);
@@ -77,6 +80,8 @@ public:
 	void draw_station_list();
 	void draw_details();
 	void draw_intersection(station_msgs_t *data);
+	void set_origin(uint32_t lat, uint32_t lon);
+	void zoom(float step);
 };
 
 #endif //V2X_MESSAGESINK_H

@@ -132,9 +132,8 @@ void Main::key_handler()
 		return;
 	}
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q) && sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
 	{
-		key_pressed(sf::Keyboard::Q);
 		window->close();
 		return;
 	}
@@ -168,6 +167,16 @@ void Main::key_handler()
 	{
 		key_pressed(sf::Keyboard::H);
 		ms.set_visu_only_vehicles(!ms.get_visu_only_vehicles());
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
+	{
+		key_pressed(sf::Keyboard::E);
+		ms.zoom(-1.0);
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+	{
+		key_pressed(sf::Keyboard::Q);
+		ms.zoom(1.0);
 	}
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
@@ -359,6 +368,9 @@ uint8_t mapem2[] = {0x01, 0x05, 0x00, 0x00, 0x00, 0x7b, 0x08, 0x00, 0x03, 0x04, 
 	m.ms.add_msg({mapem1, sizeof(mapem1)});
 	m.ms.add_msg({aspat, sizeof(aspat)});
 
+	// m.ms.set_origin(522732617, 105252691); // IZ
+	m.ms.set_origin(522750000, 105244000);
+
 	m.run();
 
 	exit(0);
@@ -422,7 +434,7 @@ void Main::run()
 
 		draw_data();
 
-		write_text(20, 0, sf::Color::White, "Quit | show CDSM | Visualize (only veHicles) | Up | Down | sEnd");
+		write_text(20, 0, sf::Color::White, "Quit S-Q | Visualize (only veHicles) | Zoom QE");
 
 		window->display();
 	}

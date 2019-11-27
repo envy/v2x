@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <cmath>
 
 #include "IntersectionGeometryList.h"
 #include "IntersectionGeometry.h"
@@ -35,6 +36,9 @@
 MessageSink::MessageSink()
 {
 	selected_index = 0;
+	scale = 25.0;
+	origin_x = 0;
+	origin_y = 0;
 	_show_cams = true;
 	_show_denms = true;
 	_show_spatems = true;
@@ -261,18 +265,15 @@ void MessageSink::draw_station_list()
 
 void MessageSink::draw_intersection(station_msgs_t *data)
 {
-#define ORIGIN_X 1000
-#define ORIGIN_Y 500
-#define SCALE 25.0
-
 	float x, y, prev_x, prev_y;
 	bool is_first;
-
+	auto lane_color = sf::Color(100, 100, 100);
+	auto lane_outer_color = sf::Color(200, 200, 200);
 	std::map<LaneID_t, intersection_data_t> intersection;
 
 	sf::CircleShape snode(5);
 	snode.setFillColor(sf::Color::White);
-	snode.setPosition(ORIGIN_X, ORIGIN_Y);
+	snode.setPosition(center_x, center_y);
 	_main->get_window()->draw(snode);
 
 	if (data->mapem->map.intersections == nullptr || data->mapem->map.intersections->list.count == 0)
@@ -293,6 +294,18 @@ void MessageSink::draw_intersection(station_msgs_t *data)
 		//ss << "  Lane: " << lane->laneID << std::endl;
 		//ss << "   Direction: " << format_lane_direction(lane->laneAttributes.directionalUse);
 		//ss << "   Type: " << format_lane_type(lane->laneAttributes.laneType);
+		float width = 330.0f / scale;
+		if (in->laneWidth != nullptr)
+		{
+			// laneWidth in cm, so 330 = 3.3m
+			width = *in->laneWidth / scale;
+			//std::cout << "width: " << *in->laneWidth << std::endl;
+		}
+		float half_width = width / 2.0f;
+
+		snode.setFillColor(sf::Color::Yellow);
+		snode.setPosition(center_x + (in->refPoint.Long - origin_x)/scale, center_y - (in->refPoint.lat - origin_y)/scale);
+		_main->get_window()->draw(snode);
 
 		if (Utils::is_ingress_lane(lane->laneAttributes.directionalUse))
 		{
@@ -303,8 +316,8 @@ void MessageSink::draw_intersection(station_msgs_t *data)
 			snode.setFillColor(sf::Color::Red);
 		}
 
-		x = ORIGIN_X;
-		y = ORIGIN_Y;
+		x = center_x + (in->refPoint.Long - origin_x)/scale;
+		y = center_y - (in->refPoint.lat - origin_y)/scale;
 		is_first = true;
 		switch(lane->nodeList.present)
 		{
@@ -319,7 +332,7 @@ void MessageSink::draw_intersection(station_msgs_t *data)
 					switch (node->delta.present)
 					{
 						case NodeOffsetPointXY_PR_NOTHING:
-							break;
+							continue;
 						case NodeOffsetPointXY_PR_node_XY1:
 						{
 							auto nop = node->delta.choice.node_XY1;
@@ -362,11 +375,17 @@ void MessageSink::draw_intersection(station_msgs_t *data)
 							next_y = nop->y;
 							break;
 						}
+						case NodeOffsetPointXY_PR_node_LatLon:
+							continue;
+						case NodeOffsetPointXY_PR_regional:
+							continue;
+						default:
+							continue;
 					}
 					prev_x = x;
 					prev_y = y;
-					x = (float)(x + (next_x / SCALE));
-					y = (float)(y - (next_y / SCALE));
+					x = (float)(x + (next_x / scale));
+					y = (float)(y - (next_y / scale));
 					snode.setPosition(x, y);
 					if (is_first)
 					{
@@ -377,10 +396,25 @@ void MessageSink::draw_intersection(station_msgs_t *data)
 					}
 					else
 					{
-						sf::Vertex line[] = {sf::Vertex(sf::Vector2f(prev_x, prev_y)), sf::Vertex(sf::Vector2f(x, y))};
-						_main->get_window()->draw(line, 2, sf::Lines);
+						// connect both nodes
+						auto start = sf::Vector2f(prev_x, prev_y);
+						auto end = sf::Vector2f(x, y);
+						auto dir = end-start;
+						sf::ConvexShape road;
+						road.setPointCount(4);
+						road.setFillColor(lane_color);
+						road.setOutlineColor(lane_outer_color);
+						road.setOutlineThickness(1);
+						road.setPoint(0, start - Utils::ortho(dir) * half_width);
+						road.setPoint(1, start + Utils::ortho(dir) * half_width);
+						road.setPoint(2, end + Utils::ortho(dir) * half_width);
+						road.setPoint(3, end - Utils::ortho(dir) * half_width);
+						_main->get_window()->draw(road);
+
+						//sf::Vertex line[] = {sf::Vertex(start), sf::Vertex(end)};
+						//_main->get_window()->draw(line, 2, sf::Lines);
 					}
-					_main->get_window()->draw(snode);
+					//_main->get_window()->draw(snode);
 				}
 			}
 			break;
@@ -499,4 +533,16 @@ void MessageSink::draw_details()
 	}
 
 	_main->write_text(200, 30, sf::Color::White, ss.str());
+}
+
+void MessageSink::set_origin(uint32_t lat, uint32_t lon)
+{
+	// lon is x, lat is y
+	origin_x = lon;
+	origin_y = lat;
+}
+
+void MessageSink::zoom(float step)
+{
+	scale += step;
 }
