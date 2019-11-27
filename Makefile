@@ -13,7 +13,7 @@ ASN_FILES := asn1/ITS_Container.asn \
 	asn1/DENM.asn \
 	asn1/mod/DSRC.asn \
 	asn1/mod/REGION.asn \
-	asn1/mod/AddGrpc.asn \
+	asn1/mod/AddGrpC.asn \
 	asn1/ElectronicRegistrationIdentificationVehicleDataModule.asn \
 	asn1/MAPEM_PDU_Descriptions.asn \
 	asn1/SPATEM_PDU_Descriptions.asn
@@ -23,7 +23,7 @@ ASN_ORIG_FILES := asn1/ITS_Container.asn \
 	asn1/DENM.asn \
 	asn1/original/DSRC.asn \
 	asn1/original/REGION.asn \
-	asn1/original/AddGrpc.asn \
+	asn1/original/AddGrpC.asn \
 	asn1/ElectronicRegistrationIdentificationVehicleDataModule.asn \
 	asn1/MAPEM_PDU_Descriptions.asn \
 	asn1/SPATEM_PDU_Descriptions.asn
