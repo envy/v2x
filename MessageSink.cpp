@@ -29,6 +29,7 @@
 #include "Offset-B14.h"
 #include "Node-XY-32b.h"
 #include "Offset-B16.h"
+#include "MovementPhaseState.h"
 
 MessageSink::MessageSink()
 {
@@ -382,12 +383,44 @@ void MessageSink::draw_intersection(station_msgs_t *data)
 				auto &e = intersection[con->connectingLane.lane];
 
 				sf::Vertex line[] = {sf::Vertex(sf::Vector2f(s.first_node.x, s.first_node.y)), sf::Vertex(sf::Vector2f(e.first_node.x, e.first_node.y))};
-				_main->get_window()->draw(line, 2, sf::Lines);
 
 				if (con->signalGroup != nullptr)
 				{
-					//ss << " (SG " << *con->signalGroup << ")";
+					auto phase = Utils::get_movement_phase_for_signal_group(data, *con->signalGroup);
+					switch (phase)
+					{
+						default:
+							break;
+						case MovementPhaseState_stop_And_Remain:
+						{
+							line[0].color = sf::Color::Red;
+							line[1].color = sf::Color::Red;
+							break;
+						}
+						case MovementPhaseState_pre_Movement:
+						{
+							line[0].color = sf::Color::Yellow;
+							line[1].color = sf::Color::Red;
+							break;
+						}
+						case MovementPhaseState_protected_Movement_Allowed:
+						case MovementPhaseState_permissive_Movement_Allowed:
+						{
+							line[0].color = sf::Color::Green;
+							line[1].color = sf::Color::Green;
+							break;
+						}
+						case MovementPhaseState_protected_clearance:
+						case MovementPhaseState_permissive_clearance:
+						{
+							line[0].color = sf::Color::Yellow;
+							line[1].color = sf::Color::Yellow;
+							break;
+						}
+					}
 				}
+
+				_main->get_window()->draw(line, 2, sf::Lines);
 			}
 		}
 	}

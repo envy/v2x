@@ -347,6 +347,7 @@ uint8_t mapem2[] = {0x01, 0x05, 0x00, 0x00, 0x00, 0x7b, 0x08, 0x00, 0x03, 0x04, 
 	_main = &m;
 
 	m.ms.add_msg({mapem1, sizeof(mapem1)});
+	m.ms.add_msg({aspat, sizeof(aspat)});
 
 	m.run();
 

@@ -1,7 +1,11 @@
 #ifndef V2X_UTILS_H
 #define V2X_UTILS_H
 
+#include "MessageSink.h"
+
 #include "LaneDirection.h"
+#include "MovementPhaseState.h"
+#include "SignalGroupID.h"
 
 class Utils
 {
@@ -11,6 +15,7 @@ private:
 public:
 	static bool is_ingress_lane(LaneDirection_t dir);
 	static bool is_egress_lane(LaneDirection_t dir);
+	static MovementPhaseState_t get_movement_phase_for_signal_group(station_msgs_t *data, SignalGroupID_t &id);
 };
 
 
