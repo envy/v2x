@@ -10,6 +10,7 @@ class Main
 private:
 	sf::RenderWindow *window;
 	sf::Font font;
+	sf::Clock keyclock;
 	Proxy p;
 
 

@@ -3,10 +3,12 @@
 #include "parser.h"
 #include "factory.h"
 #include "Formatter.h"
+#include "Utils.h"
 
 #include <unistd.h>
 #include <iostream>
 #include <thread>
+#include <sstream>
 
 Main *_main = nullptr;
 
@@ -138,26 +140,6 @@ void Main::key_handler()
 		return;
 	}
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::C))
-	{
-		key_pressed(sf::Keyboard::C);
-		ms.set_show_cams(!ms.get_show_cams());
-	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-	{
-		key_pressed(sf::Keyboard::D);
-		ms.set_show_denms(!ms.get_show_denms());
-	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-	{
-		key_pressed(sf::Keyboard::S);
-		ms.set_show_spatems(!ms.get_show_spatems());
-	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::M))
-	{
-		key_pressed(sf::Keyboard::M);
-		ms.set_show_mapems(!ms.get_show_mapems());
-	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::V))
 	{
 		key_pressed(sf::Keyboard::V);
@@ -168,15 +150,42 @@ void Main::key_handler()
 		key_pressed(sf::Keyboard::H);
 		ms.set_visu_only_vehicles(!ms.get_visu_only_vehicles());
 	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
+
+	bool _key_pressed = false;
+#define MOVE_STEP 10
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && keyclock.getElapsedTime().asMilliseconds() >= 100)
 	{
-		key_pressed(sf::Keyboard::E);
+		_key_pressed = true;
+		ms.move(MOVE_STEP * ms.get_zoom(), 0);
+	}if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && keyclock.getElapsedTime().asMilliseconds() >= 100)
+	{
+		_key_pressed = true;
+		ms.move(-MOVE_STEP * ms.get_zoom(), 0);
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) && keyclock.getElapsedTime().asMilliseconds() >= 100)
+	{
+		_key_pressed = true;
+		ms.move(0, MOVE_STEP * ms.get_zoom());
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && keyclock.getElapsedTime().asMilliseconds() >= 100)
+	{
+		_key_pressed = true;
+		ms.move(0, -MOVE_STEP * ms.get_zoom());
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::E) && keyclock.getElapsedTime().asMilliseconds() >= 100)
+	{
+		_key_pressed = true;
 		ms.zoom(-1.0);
 	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q) && keyclock.getElapsedTime().asMilliseconds() >= 100)
 	{
-		key_pressed(sf::Keyboard::Q);
+		_key_pressed = true;
 		ms.zoom(1.0);
+	}
+
+	if (_key_pressed)
+	{
+		keyclock.restart();
 	}
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
@@ -270,7 +279,10 @@ int main(int argc, char *argv[]) {
 "\x31\x90\x00\x00\x00\x03\x1e\xfb\x25\x46\x51\xc7\x8d\x80";
 //*/
 
-uint8_t mapem2[] = {0x01, 0x05, 0x00, 0x00, 0x00, 0x7b, 0x08, 0x00, 0x03, 0x04, 0x56, 0x99,
+uint8_t mapem2[] = {0xff,0xff,0xff,0xff,0xff,0xff,0x00,0x0d,0x41,0x12,0x21,0x4d,0x89,0x47,0x01,0x00
+,0x1a,0x01,0x20,0x50,0x03,0x00,0x02,0xe8,0x01,0x00,0x3c,0xe8,0x00,0x0d,0x41,0x12
+,0x21,0x4d,0xc4,0xaa,0x77,0x70,0x1f,0x28,0x8c,0x7a,0x06,0x45,0xe0,0x84,0x80,0x19
+,0x00,0x1b,0x00,0x01,0x00,0x00,0x07,0xd3,0x00,0x00, 0x01, 0x05, 0x00, 0x00, 0x00, 0x7b, 0x08, 0x00, 0x03, 0x04, 0x56, 0x99,
                     0x4e, 0x0d, 0xf9, 0x6d, 0xd9, 0xb3, 0x80, 0x18, 0x8b, 0x17, 0x01, 0x34,
                     0xb6, 0x9f, 0x66, 0x5c, 0x14, 0x4c, 0x63, 0x80, 0x30, 0x40, 0xc3, 0x50,
                     0x00, 0x00, 0x2a, 0x85, 0x64, 0x80, 0x22, 0x80, 0x00, 0x00, 0x01, 0xb3,
@@ -368,6 +380,8 @@ uint8_t mapem2[] = {0x01, 0x05, 0x00, 0x00, 0x00, 0x7b, 0x08, 0x00, 0x03, 0x04, 
 	m.ms.add_msg(mapem1, sizeof(mapem1));
 	m.ms.add_msg(aspat, sizeof(aspat));
 
+	//m.ms.add_msg({mapem2, sizeof(mapem2)});
+
 	// m.ms.set_origin(522732617, 105252691); // IZ
 	m.ms.set_origin(522750000, 105244000);
 
@@ -414,6 +428,8 @@ void Main::run()
 {
 	//std::thread camthread(send_cam_thread, mac, station_id, &p);
 	//std::thread denmthread(send_denm_thread, mac, station_id, &p);
+
+	keyclock.restart();
 
 	while (window->isOpen())
 	{

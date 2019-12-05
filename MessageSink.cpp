@@ -6,7 +6,6 @@
 
 #include <iostream>
 #include <sstream>
-#include <cmath>
 
 #include "IntersectionGeometryList.h"
 #include "IntersectionGeometry.h"
@@ -280,7 +279,7 @@ void MessageSink::draw_intersection(station_msgs_t *data)
 
 	sf::CircleShape snode(5);
 	snode.setFillColor(sf::Color::White);
-	snode.setPosition(center_x, center_y);
+	snode.setPosition(CENTER_X, CENTER_Y);
 	_main->get_window()->draw(snode);
 
 	if (data->mapem->map.intersections == nullptr || data->mapem->map.intersections->list.count == 0)
@@ -311,7 +310,7 @@ void MessageSink::draw_intersection(station_msgs_t *data)
 		float half_width = width / 2.0f;
 
 		snode.setFillColor(sf::Color::Yellow);
-		snode.setPosition(center_x + (in->refPoint.Long - origin_x)/scale, center_y - (in->refPoint.lat - origin_y)/scale);
+		snode.setPosition(CENTER_X + (in->refPoint.Long - origin_x) / scale, CENTER_Y - (in->refPoint.lat - origin_y) / scale);
 		_main->get_window()->draw(snode);
 
 		if (Utils::is_ingress_lane(lane->laneAttributes.directionalUse))
@@ -323,8 +322,8 @@ void MessageSink::draw_intersection(station_msgs_t *data)
 			snode.setFillColor(sf::Color::Red);
 		}
 
-		x = center_x + (in->refPoint.Long - origin_x)/scale;
-		y = center_y - (in->refPoint.lat - origin_y)/scale;
+		x = CENTER_X + (in->refPoint.Long - origin_x) / scale;
+		y = CENTER_Y - (in->refPoint.lat - origin_y) / scale;
 		is_first = true;
 		switch(lane->nodeList.present)
 		{
@@ -542,11 +541,28 @@ void MessageSink::draw_details()
 	_main->write_text(200, 30, sf::Color::White, ss.str());
 }
 
+float MessageSink::get_zoom()
+{
+	return scale;
+}
+
 void MessageSink::set_origin(uint32_t lat, uint32_t lon)
 {
 	// lon is x, lat is y
 	origin_x = lon;
 	origin_y = lat;
+}
+
+void MessageSink::get_origin(uint32_t *lat, uint32_t *lon)
+{
+	*lon = origin_x;
+	*lat = origin_y;
+}
+
+void MessageSink::move(uint32_t lat_delta, uint32_t lon_delta)
+{
+	origin_x += lon_delta;
+	origin_y += lat_delta;
 }
 
 void MessageSink::zoom(float step)

@@ -36,8 +36,6 @@ typedef struct
 
 class MessageSink {
 private:
-	static constexpr float center_x = 1000;
-	static constexpr float center_y = 500;
 	float scale;
 	std::queue<array_t> incoming;
 	std::map<StationID_t, station_msgs_t *> msgs;
@@ -81,7 +79,13 @@ public:
 	void draw_details();
 	void draw_intersection(station_msgs_t *data);
 	void set_origin(uint32_t lat, uint32_t lon);
+	void get_origin(uint32_t *lat, uint32_t *lon);
+	float get_zoom();
+	void move(uint32_t lat_delta, uint32_t lon_delta);
 	void zoom(float step);
+
+	static constexpr float CENTER_X = 1000;
+	static constexpr float CENTER_Y = 500;
 };
 
 #endif //V2X_MESSAGESINK_H
