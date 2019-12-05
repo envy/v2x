@@ -25,6 +25,7 @@ private:
 	void key_handler();
 	void key_pressed(sf::Keyboard::Key);
 
+	void draw_background();
 	void draw_data();
 
 public:

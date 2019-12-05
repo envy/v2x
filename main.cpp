@@ -101,6 +101,27 @@ void Main::reader_thread()
 	}
 }
 
+void Main::draw_background()
+{
+	uint32_t zoom = 19;
+	uint32_t lat, lon;
+	ms.get_origin(&lat, &lon);
+	auto xy = Utils::lat_lon_to_x_y(lat/10000000.0, lon/10000000.0, zoom);
+
+	sf::Texture t;
+	std::stringstream ss;
+	ss << "imgs/" << xy.x << "-" << xy.y << "-" << zoom << ".jpg";
+	if (!t.loadFromFile(ss.str()))
+	{
+		// ignore error
+		return;
+	}
+	sf::Sprite s;
+	s.setTexture(t);
+	s.setPosition(MessageSink::CENTER_X, MessageSink::CENTER_Y);
+	window->draw(s);
+}
+
 void Main::draw_data()
 {
 	ms.draw_station_list();
@@ -447,6 +468,8 @@ void Main::run()
 		}
 
 		window->clear(sf::Color::Black);
+
+		//draw_background();
 
 		draw_data();
 

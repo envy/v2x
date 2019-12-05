@@ -87,3 +87,15 @@ float Utils::length(sf::Vector2f &a)
 {
 	return sqrt(a.x*a.x + a.y*a.y);
 }
+
+sf::Vector2<int32_t> Utils::lat_lon_to_x_y(double lat, double lon, uint8_t zoom)
+{
+#define TILE 256
+	uint32_t scale = 1u << zoom;
+	int32_t world_x, world_y;
+	double sin_y = sin(lat * M_PI / 180.0);
+	sin_y = fmin(fmax(sin_y, -0.9999), 0.9999);
+	world_x = TILE * (0.5 + lon / 360.0);
+	world_y = TILE * (0.5 + log( (1 + sin_y) / (1 - sin_y) ) / (4 * M_PI));
+	return sf::Vector2<int32_t>(world_x * scale / TILE, world_y * scale / TILE);
+}
