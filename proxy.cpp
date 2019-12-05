@@ -51,13 +51,14 @@ int Proxy::connect(char *caddr, int port)
 
 int Proxy::reliable_read(uint8_t *buf, uint32_t len)
 {
-	int _read = 0, ret = 0;
+	int _read = 0;
+	ssize_t ret = 0;
 	while (_read < len)
 	{
 		ret = read(sock, buf + _read, len - _read);
 		if (ret <= 0)
 		{
-			return ret;
+			return (int)ret;
 		}
 
 		_read += ret;
@@ -76,14 +77,17 @@ int Proxy::get_packet(uint8_t *buf, uint32_t buflen)
 	uint32_t payload_length = ntohs(g->common_header.payload_length);
 	switch (g->common_header.type.raw)
 	{
+		case GEONET_TYPE_BEACON:
+			payload_length += sizeof(geonet_beacon_t);
+			break;
+		case GEONET_TYPE_GUC:
+			payload_length += sizeof(geonet_guc_t);
+			break;
 		case GEONET_TYPE_TSB_MHB:
 			payload_length += sizeof(geonet_tsb_mhb_t);
 			break;
 		case GEONET_TYPE_TSB_SHB:
 			payload_length += sizeof(geonet_tsb_shb_t);
-			break;
-		case GEONET_TYPE_BEACON:
-			payload_length += sizeof(geonet_beacon_t);
 			break;
 		default:
 			std::cerr << "FIXME: unknown geonet type 0x" << std::hex << (unsigned int)g->common_header.type.raw << std::dec << std::endl;
@@ -92,6 +96,7 @@ int Proxy::get_packet(uint8_t *buf, uint32_t buflen)
 	}
 
 	_read += reliable_read(buf + header_size, payload_length);
+	std::cout << "read packet with len " << _read << std::endl;
 
 	return _read;
 }

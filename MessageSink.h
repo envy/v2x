@@ -62,7 +62,7 @@ public:
 	MessageSink();
 	virtual ~MessageSink();
 
-	void add_msg(const array_t &arr);
+	void add_msg(uint8_t *buf, uint32_t buflen);
 	void inc_selected();
 	void dec_selected();
 	void set_show_cams(bool show);

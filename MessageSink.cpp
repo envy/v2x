@@ -84,6 +84,7 @@ void MessageSink::process_msg(array_t arr)
 			msgs[cam->header.stationID]->cam = cam;
 			return;
 		}
+		std::cout << "packet was CAM and had len: " << arr.len << std::endl;
 	}
 
 	if (is_denm(arr.buf, arr.len, &start))
@@ -103,6 +104,7 @@ void MessageSink::process_msg(array_t arr)
 			msgs[denm->header.stationID]->denm = denm;
 			return;
 		}
+		std::cout << "packet was DENM and had len: " << arr.len << std::endl;
 	}
 
 	if (is_spatem(arr.buf, arr.len, &start))
@@ -122,6 +124,7 @@ void MessageSink::process_msg(array_t arr)
 			msgs[spatem->header.stationID]->spatem = spatem;
 			return;
 		}
+		std::cout << "packet was SPATEM and had len: " << arr.len << std::endl;
 	}
 
 	if (is_mapem(arr.buf, arr.len, &start))
@@ -139,9 +142,9 @@ void MessageSink::process_msg(array_t arr)
 				ASN_STRUCT_FREE(asn_DEF_MAPEM, msgs[mapem->header.stationID]->mapem);
 			}
 			msgs[mapem->header.stationID]->mapem = mapem;
-			xer_fprint(stdout, &asn_DEF_MAPEM, mapem);
 			return;
 		}
+		std::cout << "packet was MAPEM and had len: " << arr.len << std::endl;
 	}
 }
 
@@ -149,22 +152,26 @@ void MessageSink::process_incoming()
 {
 	while(process)
 	{
+		array_t msg;
 		{
 			std::unique_lock lock(queue_lock);
-			if (!incoming.empty())
+			if (incoming.empty())
 			{
-				process_msg(incoming.front());
-				incoming.pop();
+				queue_cond.wait(lock);
+				continue;
 			}
-			queue_cond.wait(lock);
+			msg = incoming.front();
+			incoming.pop();
 		}
+		process_msg(msg);
+		//free(msg.buf);
 	}
 }
 
-void MessageSink::add_msg(const array_t &arr)
+void MessageSink::add_msg(uint8_t *buf, uint32_t buflen)
 {
 	std::unique_lock qlock(queue_lock);
-	incoming.push(arr);
+	incoming.push({ buf, buflen});
 	queue_cond.notify_all();
 }
 

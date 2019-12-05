@@ -63,7 +63,7 @@ void send_cam_thread(uint8_t mac[6], StationID_t id, Proxy *p)
 
 void send_denm(uint8_t mac[6], StationID_t id, Proxy *p)
 {
-	uint32_t t = timestamp_now();
+	uint64_t t = timestamp_now();
 	DENMFactory d(mac);
 	d.set_timestamp(t);
 	d.set_detection_timestamp(t - 1000);
@@ -89,13 +89,13 @@ void send_denm_thread(uint8_t mac[6], StationID_t id, Proxy *p)
 
 void Main::reader_thread()
 {
-	uint8_t buf[2048];
-	uint32_t buflen = sizeof(buf);
-	while((buflen = p.get_packet((uint8_t *)&buf, buflen)) >= 0)
+#define BUFSIZE 2048
+	uint8_t *buf = (uint8_t *)calloc(1, BUFSIZE);
+	uint32_t buflen = BUFSIZE;
+	while((buflen = p.get_packet(buf, buflen)) >= 0)
 	{
-		array_t a = { buf, buflen };
-		ms.add_msg(a);
-		buflen = sizeof(buf);
+		ms.add_msg(buf, buflen);
+		buflen = sizeof(BUFSIZE);
 	}
 }
 
@@ -365,8 +365,8 @@ uint8_t mapem2[] = {0x01, 0x05, 0x00, 0x00, 0x00, 0x7b, 0x08, 0x00, 0x03, 0x04, 
 	Main m(argv[1], port, 1337);
 	_main = &m;
 
-	m.ms.add_msg({mapem1, sizeof(mapem1)});
-	m.ms.add_msg({aspat, sizeof(aspat)});
+	m.ms.add_msg(mapem1, sizeof(mapem1));
+	m.ms.add_msg(aspat, sizeof(aspat));
 
 	// m.ms.set_origin(522732617, 105252691); // IZ
 	m.ms.set_origin(522750000, 105244000);
