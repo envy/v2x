@@ -10,20 +10,22 @@
 #include <SFML/Graphics.hpp>
 
 #include "parser.h"
+#include "IntersectionEntity.h"
 
 typedef struct
 {
-	uint8_t *buf;
-	uint32_t len;
+	uint8_t *buf { nullptr };
+	uint32_t len { 0 };
 } array_t;
 
 typedef struct
 {
-	uint64_t last;
-	CAM_t *cam;
-	DENM_t *denm;
-	SPATEM_t *spatem;
-	MAPEM_t *mapem;
+	uint64_t last { 0 };
+	CAM_t *cam { nullptr };
+	DENM_t *denm { nullptr };
+	SPATEM_t *spatem { nullptr };
+	MAPEM_t *mapem { nullptr };
+	IntersectionEntity *ie { nullptr };
 } station_msgs_t;
 
 typedef struct
@@ -36,7 +38,6 @@ typedef struct
 
 class MessageSink {
 private:
-	float scale;
 	std::queue<array_t> incoming;
 	std::map<StationID_t, station_msgs_t *> msgs;
 	std::mutex queue_lock;
@@ -52,10 +53,11 @@ private:
 	bool _show_mapems;
 	bool _show_visu;
 	bool _visu_only_vehicles;
-	uint32_t origin_x, origin_y;
 
 	void process_incoming();
 	void process_msg(array_t arr);
+
+	void parse_mapm(station_msgs_t *data);
 public:
 	MessageSink();
 	virtual ~MessageSink();
@@ -78,14 +80,6 @@ public:
 	void draw_station_list();
 	void draw_details();
 	void draw_intersection(station_msgs_t *data);
-	void set_origin(uint32_t lat, uint32_t lon);
-	void get_origin(uint32_t *lat, uint32_t *lon);
-	float get_zoom();
-	void move(uint32_t lat_delta, uint32_t lon_delta);
-	void zoom(float step);
-
-	static constexpr float CENTER_X = 1000;
-	static constexpr float CENTER_Y = 500;
 };
 
 #endif //V2X_MESSAGESINK_H

@@ -104,9 +104,7 @@ void Main::reader_thread()
 void Main::draw_background()
 {
 	uint32_t zoom = 19;
-	uint32_t lat, lon;
-	ms.get_origin(&lat, &lon);
-	auto xy = Utils::lat_lon_to_x_y(lat/10000000.0, lon/10000000.0, zoom);
+	auto xy = Utils::lat_lon_to_x_y(oy/10000000.0, ox/10000000.0, zoom);
 
 	sf::Texture t;
 	std::stringstream ss;
@@ -118,7 +116,7 @@ void Main::draw_background()
 	}
 	sf::Sprite s;
 	s.setTexture(t);
-	s.setPosition(MessageSink::CENTER_X, MessageSink::CENTER_Y);
+	s.setPosition(get_center_x(), get_center_y());
 	window->draw(s);
 }
 
@@ -177,31 +175,31 @@ void Main::key_handler()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && keyclock.getElapsedTime().asMilliseconds() >= 100)
 	{
 		_key_pressed = true;
-		ms.move(MOVE_STEP * ms.get_zoom(), 0);
+		move(0, MOVE_STEP * get_scale());
 	}if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && keyclock.getElapsedTime().asMilliseconds() >= 100)
 	{
 		_key_pressed = true;
-		ms.move(-MOVE_STEP * ms.get_zoom(), 0);
+		move(0, -MOVE_STEP * get_scale());
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) && keyclock.getElapsedTime().asMilliseconds() >= 100)
 	{
 		_key_pressed = true;
-		ms.move(0, MOVE_STEP * ms.get_zoom());
+		move(MOVE_STEP * get_scale(), 0);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && keyclock.getElapsedTime().asMilliseconds() >= 100)
 	{
 		_key_pressed = true;
-		ms.move(0, -MOVE_STEP * ms.get_zoom());
+		move(-MOVE_STEP * get_scale(), 0);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::E) && keyclock.getElapsedTime().asMilliseconds() >= 100)
 	{
 		_key_pressed = true;
-		ms.zoom(-1.0);
+		zoom(-1.0f);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q) && keyclock.getElapsedTime().asMilliseconds() >= 100)
 	{
 		_key_pressed = true;
-		ms.zoom(1.0);
+		zoom(1.0);
 	}
 
 	if (_key_pressed)
@@ -404,7 +402,7 @@ uint8_t mapem2[] = {0xff,0xff,0xff,0xff,0xff,0xff,0x00,0x0d,0x41,0x12,0x21,0x4d,
 	//m.ms.add_msg({mapem2, sizeof(mapem2)});
 
 	// m.ms.set_origin(522732617, 105252691); // IZ
-	m.ms.set_origin(522750000, 105244000);
+	m.set_origin(522750000, 105244000);
 
 	m.run();
 

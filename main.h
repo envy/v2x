@@ -13,7 +13,8 @@ private:
 	sf::Clock keyclock;
 	Proxy p;
 
-
+	float scale = { 25 };
+	int64_t ox, oy;
 	uint8_t mac[6];
 	StationID_t station_id;
 
@@ -31,11 +32,30 @@ private:
 public:
 	Main(char *addr, int port, StationID_t stationId);
 	~Main();
-	MessageSink ms;
+
+	float get_scale() { return scale; };
+	void zoom(float delta) { scale += delta; }
+	void move(int32_t xd, int32_t yd)
+	{
+		ox += xd;
+		oy += yd;
+	}
+	void set_origin(int64_t lat, int64_t lon)
+	{
+		oy = lat;
+		ox = lon;
+	}
+	uint32_t get_origin_x() { return ox; }
+	uint32_t get_origin_y() { return oy; }
+	static constexpr float get_center_x() { return 1000; };
+	static constexpr float get_center_y() { return 500; };
 
 	void run();
 	void write_text(float x, float y, const sf::Color &color, const std::string &text);
 	sf::RenderWindow *get_window();
+
+
+	MessageSink ms;
 };
 
 extern Main *_main;

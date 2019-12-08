@@ -28,20 +28,13 @@ ASN_ORIG_FILES := asn1/ITS_Container.asn \
 	asn1/MAPEM_PDU_Descriptions.asn \
 	asn1/SPATEM_PDU_Descriptions.asn
 
-
-
-APP_CXX_FILES := main.cpp \
-	parser.cpp \
-	proxy.cpp \
-	factory.cpp \
-	MessageSink.cpp \
-	Formatter.cpp
-
 ASN_C_FILES := $(wildcard asn1-src/*.c)
 ASN_H_FILES := $(wildcard asn1-src/*.h)
 ASN_O_FILES := $(ASN_C_FILES:.c=.o)
-APP_O_FILES := $(APP_CXX_FILES:.cpp=.o)
+
 APP_H_FILES := $(wildcard *.h)
+APP_CXX_FILES := $(wildcard *.cpp)
+APP_O_FILES := $(APP_CXX_FILES:.cpp=.o)
 
 all: app
 

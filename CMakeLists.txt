@@ -15,7 +15,8 @@ set(APP_SOURCE_FILES
         proxy.cpp
         MessageSink.cpp
         Formatter.cpp
-        Utils.cpp)
+        Utils.cpp
+        IntersectionEntity.cpp)
 
 add_executable(app ${APP_SOURCE_FILES} ${ASN_FILES})
 
