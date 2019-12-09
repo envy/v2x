@@ -50,7 +50,7 @@ void IntersectionEntity::build_geometry()
 	{
 		auto &laneobj = lit->second;
 
-		///*
+		/*
 		if (laneobj.attr.laneType.present != LaneTypeAttributes_PR_vehicle)
 		{
 			++lit;
