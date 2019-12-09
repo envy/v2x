@@ -7,10 +7,10 @@
 
 #include <iostream>
 #include <sstream>
-#include <asn1-src/NodeAttributeXYList.h>
 
 #include "IntersectionGeometryList.h"
 #include "IntersectionGeometry.h"
+#include "IntersectionState.h"
 #include "GenericLane.h"
 #include "LaneID.h"
 #include "SignalGroupID.h"
@@ -33,6 +33,7 @@
 #include "Node-XY-32b.h"
 #include "Offset-B16.h"
 #include "MovementPhaseState.h"
+#include "MovementState.h"
 #include "NodeAttributeSetXY.h"
 #include "NodeAttributeXYList.h"
 #include "NodeAttributeXY.h"
@@ -111,7 +112,7 @@ void MessageSink::process_msg(array_t arr)
 	if (is_spatem(arr.buf, arr.len, &start))
 	{
 		SPATEM_t *spatem = nullptr;
-		int ret = parse_spatem(arr.buf + start, arr.len - start, &spatem);
+		int ret = ::parse_spatem(arr.buf + start, arr.len - start, &spatem);
 		if (ret == 0)
 		{
 			if (msgs.find(spatem->header.stationID) == msgs.end())
@@ -123,6 +124,7 @@ void MessageSink::process_msg(array_t arr)
 				ASN_STRUCT_FREE(asn_DEF_SPATEM, msgs[spatem->header.stationID]->spatem);
 			}
 			msgs[spatem->header.stationID]->spatem = spatem;
+			parse_spatem(msgs[spatem->header.stationID]);
 			return;
 		}
 		std::cout << "packet was SPATEM and had len: " << arr.len << std::endl;
@@ -131,7 +133,7 @@ void MessageSink::process_msg(array_t arr)
 	if (is_mapem(arr.buf, arr.len, &start))
 	{
 		MAPEM_t *mapem = nullptr;
-		int ret = parse_mapem(arr.buf + start, arr.len - start, &mapem);
+		int ret = ::parse_mapem(arr.buf + start, arr.len - start, &mapem);
 		if (ret == 0)
 		{
 			if (msgs.find(mapem->header.stationID) == msgs.end())
@@ -143,17 +145,15 @@ void MessageSink::process_msg(array_t arr)
 				ASN_STRUCT_FREE(asn_DEF_MAPEM, msgs[mapem->header.stationID]->mapem);
 			}
 			msgs[mapem->header.stationID]->mapem = mapem;
-			parse_mapm(msgs[mapem->header.stationID]);
+			parse_mapem(msgs[mapem->header.stationID]);
 			return;
 		}
 		std::cout << "packet was MAPEM and had len: " << arr.len << std::endl;
 	}
 }
 
-void MessageSink::parse_mapm(station_msgs_t *data)
+void MessageSink::parse_mapem(station_msgs_t *data)
 {
-	std::map<LaneID_t, intersection_data_t> intersection;
-
 	if (data->mapem->map.intersections == nullptr || data->mapem->map.intersections->list.count == 0)
 	{
 		return;
@@ -169,16 +169,18 @@ void MessageSink::parse_mapm(station_msgs_t *data)
 	else
 	{
 		// don't need to parse new.
+		// FIXME: check data->mapem->map.msgIssueRevision against stored and update if necessary
 		return;
+	}
+
+	if (in->speedLimits != nullptr)
+	{
+		std::cout << "TODO: in->speedlimits" << std::endl;
 	}
 
 	for (uint32_t _l = 0; _l < in->laneSet.list.count; ++_l)
 	{
 		auto lane = in->laneSet.list.array[_l];
-		if (_visu_only_vehicles && lane->laneAttributes.laneType.present != LaneTypeAttributes_PR_vehicle)
-		{
-			continue;
-		}
 
 		uint64_t width = 300;
 		if (in->laneWidth != nullptr)
@@ -186,19 +188,9 @@ void MessageSink::parse_mapm(station_msgs_t *data)
 			width = (uint64_t)*in->laneWidth;
 		}
 
-		/*
-		if (Utils::is_ingress_lane(lane->laneAttributes.directionalUse))
-		{
-			snode.setFillColor(sf::Color::Blue);
-		}
-		if (Utils::is_egress_lane(lane->laneAttributes.directionalUse))
-		{
-			snode.setFillColor(sf::Color::Red);
-		}
-		//*/
+		data->ie->add_lane(lane->laneID, width, lane->laneAttributes);
 
-		uint64_t l = data->ie->add_lane(width);
-
+		// nodes
 		switch(lane->nodeList.present)
 		{
 			case NodeListXY_PR_NOTHING:
@@ -280,90 +272,64 @@ void MessageSink::parse_mapm(station_msgs_t *data)
 										break;
 									}
 									default:
-										std::cout << "unhandled node attribute: " << *ln << std::endl;
+										std::cout << "TODO: unhandled node attribute: " << *ln << std::endl;
 										break;
 								}
 							}
 						}
+
+						if (node->attributes->data != nullptr)
+						{
+							std::cout << "TODO: node->attributes->data" << std::endl;
+						}
 					}
 
-					data->ie->add_node(l, next_x, next_y, is_stopline);
-
+					data->ie->add_node(lane->laneID, next_x, next_y, is_stopline);
 				}
 			}
 				break;
 			case NodeListXY_PR_computed:
 			{
-				std::cout << "node list computed!" << std::endl;
+				std::cout << "TODO: node list computed!" << std::endl;
 			}
 		}
-	}
 
-	//_main->get_window()->draw(*data->ie);
-
-	// Iterate again for connections
-	for (uint32_t _l = 0; _l < in->laneSet.list.count; ++_l)
-	{
-		auto lane = in->laneSet.list.array[_l];
-		if (_visu_only_vehicles && lane->laneAttributes.laneType.present != LaneTypeAttributes_PR_vehicle)
-		{
-			continue;
-		}
-
+		// connections
 		if (lane->connectsTo != nullptr)
 		{
 			//ss << "   Connects to: ";
 			for (uint32_t ct = 0; ct < lane->connectsTo->list.count; ++ct)
 			{
 				auto con = lane->connectsTo->list.array[ct];
-				//ss << con->connectingLane.lane;
-				auto &s = intersection[lane->laneID];
-				auto &e = intersection[con->connectingLane.lane];
-
-				sf::Vertex line[] = {sf::Vertex(sf::Vector2f(s.first_node.x, s.first_node.y)), sf::Vertex(sf::Vector2f(e.first_node.x, e.first_node.y))};
-
-				if (con->signalGroup != nullptr)
+				data->ie->add_connection(lane->laneID, con->connectingLane.lane, con->signalGroup);
+				if (con->connectingLane.maneuver != nullptr)
 				{
-					auto phase = Utils::get_movement_phase_for_signal_group(data, *con->signalGroup);
-					switch (phase)
-					{
-						default:
-							break;
-						case MovementPhaseState_stop_And_Remain:
-						{
-							line[0].color = sf::Color::Red;
-							line[1].color = sf::Color::Red;
-							break;
-						}
-						case MovementPhaseState_pre_Movement:
-						{
-							line[0].color = sf::Color::Yellow;
-							line[1].color = sf::Color::Red;
-							break;
-						}
-						case MovementPhaseState_protected_Movement_Allowed:
-						case MovementPhaseState_permissive_Movement_Allowed:
-						{
-							line[0].color = sf::Color::Green;
-							line[1].color = sf::Color::Green;
-							break;
-						}
-						case MovementPhaseState_protected_clearance:
-						case MovementPhaseState_permissive_clearance:
-						{
-							line[0].color = sf::Color::Yellow;
-							line[1].color = sf::Color::Yellow;
-							break;
-						}
-					}
+					std::cout << "TODO: con->connectingLane.maneuver" << std::endl;
 				}
-
-				_main->get_window()->draw(line, 2, sf::Lines);
 			}
 		}
 	}
 
 	data->ie->build_geometry();
+}
+
+void MessageSink::parse_spatem(station_msgs_t *data)
+{
+	if (data->spatem == nullptr || data->ie == nullptr)
+	{
+		return;
+	}
+
+	for (uint32_t it = 0; it < data->spatem->spat.intersections.list.count; ++it)
+	{
+		auto in = data->spatem->spat.intersections.list.array[it];
+		for (uint32_t mst = 0; mst < in->states.list.count; ++mst)
+		{
+			auto ms = in->states.list.array[mst];
+			data->ie->set_signal_group_state(ms->signalGroup, Utils::get_movement_phase_for_signal_group(data->spatem, ms->signalGroup));
+		}
+	}
+
 }
 
 void MessageSink::process_incoming()

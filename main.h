@@ -13,12 +13,12 @@ private:
 	sf::Clock keyclock;
 	Proxy p;
 
-	float scale = { 25 };
+	float scale { 25 };
 	int64_t ox, oy;
 	uint8_t mac[6];
 	StationID_t station_id;
 
-	bool is_pressed = false;
+	bool is_pressed { false };
 	sf::Keyboard::Key last_key;
 
 	std::thread reader;
@@ -45,8 +45,8 @@ public:
 		oy = lat;
 		ox = lon;
 	}
-	uint32_t get_origin_x() { return ox; }
-	uint32_t get_origin_y() { return oy; }
+	int32_t get_origin_x() { return ox; }
+	int32_t get_origin_y() { return oy; }
 	static constexpr float get_center_x() { return 1000; };
 	static constexpr float get_center_y() { return 500; };
 

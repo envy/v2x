@@ -16,15 +16,15 @@ bool Utils::is_egress_lane(LaneDirection_t dir)
 	return (dir.buf[0] & (1u << (7-LaneDirection_egressPath))) > 0;
 }
 
-MovementPhaseState_t Utils::get_movement_phase_for_signal_group(station_msgs_t *data, SignalGroupID_t &id)
+MovementPhaseState_t Utils::get_movement_phase_for_signal_group(SPATEM_t *spatem, SignalGroupID_t &id)
 {
 	// Will only look at the first intersection
-	if (data->spatem == nullptr)
+	if (spatem == nullptr)
 	{
 		return MovementPhaseState_unavailable;
 	}
 
-	auto intersection = data->spatem->spat.intersections.list.array[0];
+	auto intersection = spatem->spat.intersections.list.array[0];
 
 	// make a guess where it is
 	auto sg = intersection->states.list.array[id-1];

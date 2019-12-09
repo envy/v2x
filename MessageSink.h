@@ -28,14 +28,6 @@ typedef struct
 	IntersectionEntity *ie { nullptr };
 } station_msgs_t;
 
-typedef struct
-{
-	struct {
-		float x;
-		float y;
-	} first_node;
-} intersection_data_t;
-
 class MessageSink {
 private:
 	std::queue<array_t> incoming;
@@ -57,7 +49,8 @@ private:
 	void process_incoming();
 	void process_msg(array_t arr);
 
-	void parse_mapm(station_msgs_t *data);
+	void parse_mapem(station_msgs_t *data);
+	void parse_spatem(station_msgs_t *data);
 public:
 	MessageSink();
 	virtual ~MessageSink();
