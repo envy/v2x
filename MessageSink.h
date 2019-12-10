@@ -72,6 +72,7 @@ public:
 	bool get_visu_only_vehicles();
 	void draw_station_list();
 	void draw_details();
+	void draw_map();
 	void draw_intersection(station_msgs_t *data);
 };
 

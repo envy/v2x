@@ -514,3 +514,19 @@ void MessageSink::draw_details()
 
 	_main->write_text(200, 30, sf::Color::White, ss.str());
 }
+
+void MessageSink::draw_map()
+{
+	std::shared_lock lock(data_lock);
+
+	auto it = msgs.begin();
+	while (it != msgs.end())
+	{
+		auto data = it->second;
+		if (data->mapem != nullptr)
+		{
+			draw_intersection(data);
+		}
+		++it;
+	}
+}

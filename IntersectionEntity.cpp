@@ -243,6 +243,11 @@ void IntersectionEntity::set_signal_group_state(SignalGroupID_t id, MovementPhas
 						lcit->va[0].color = sf::Color::Yellow;
 						lcit->va[1].color = sf::Color::Yellow;
 						break;
+					case MovementPhaseState_dark:
+						lcit->va[0].color = sf::Color(50, 50, 50);
+						lcit->va[1].color = sf::Color(50, 50, 50);
+					default:
+						std::cout << "TODO: unhandles movement phase state " << state << std::endl;
 				}
 			}
 			++lcit;

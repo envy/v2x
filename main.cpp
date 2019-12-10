@@ -124,8 +124,9 @@ void Main::draw_background()
 
 void Main::draw_data()
 {
-	ms.draw_station_list();
-	ms.draw_details();
+	//ms.draw_station_list();
+	//ms.draw_details();
+	ms.draw_map();
 }
 
 void Main::write_text(float x, float y, const sf::Color &color, const std::string &text)
@@ -243,6 +244,12 @@ int main(int argc, char *argv[]) {
 	m.ms.add_msg(muehlenpfordt_x_rebenring_spatem, sizeof(muehlenpfordt_x_rebenring_spatem));
 
 	m.ms.add_msg(hagenmarkt_mapem, sizeof(hagenmarkt_mapem));
+
+	m.ms.add_msg(hamburger_x_rebenring_mapem, sizeof(hamburger_x_rebenring_mapem));
+	m.ms.add_msg(hamburger_x_rebenring_spatem, sizeof(hamburger_x_rebenring_spatem));
+
+	m.ms.add_msg(pockels_x_rebenring_mapem, sizeof(pockels_x_rebenring_mapem));
+	m.ms.add_msg(pockels_x_rebenring_spatem, sizeof(pockels_x_rebenring_spatem));
 
 	//m.ms.add_msg({mapem2, sizeof(mapem2)});
 
