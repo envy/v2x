@@ -21,14 +21,14 @@ Proxy::~Proxy()
 	disconnect();
 }
 
-int Proxy::connect(char *caddr, int port)
+bool Proxy::connect(char *caddr, int port)
 {
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock < 0)
 	{
 		std::cerr << "error creating socket" << std::endl;
-		return -1;
+		return false;
 	}
 
 	//int flags = 1;
@@ -43,10 +43,10 @@ int Proxy::connect(char *caddr, int port)
 	if (::connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0)
 	{
 		std::cerr << "error connecting: " << strerror(errno) << std::endl;
-		return -2;
+		return false;
 	}
 
-	return 0;
+	return true;
 }
 
 int Proxy::reliable_read(uint8_t *buf, uint32_t len)

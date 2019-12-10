@@ -177,8 +177,6 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 		std::cout << "more than one intersection in mapem!" << std::endl;
 	}
 
-
-
 	if (data->ie == nullptr)
 	{
 		data->ie = new IntersectionEntity(in->refPoint.Long, in->refPoint.lat);
@@ -273,6 +271,7 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 					}
 
 					bool is_stopline = false;
+					std::vector<NodeAttributeXY_t> attributes;
 					if (node->attributes != nullptr)
 					{
 						if (node->attributes->localNode != nullptr)
@@ -280,18 +279,7 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 							auto &lnl = node->attributes->localNode;
 							for (uint32_t lnl_i = 0; lnl_i < lnl->list.count; ++lnl_i)
 							{
-								auto ln = lnl->list.array[lnl_i];
-								switch (*ln)
-								{
-									case NodeAttributeXY_stopLine:
-									{
-										is_stopline = true;
-										break;
-									}
-									default:
-										std::cout << "TODO: unhandled node attribute: " << *ln << std::endl;
-										break;
-								}
+								attributes.emplace_back(*lnl->list.array[lnl_i]);
 							}
 						}
 
@@ -301,7 +289,7 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 						}
 					}
 
-					data->ie->add_node(lane->laneID, next_x, next_y, is_stopline);
+					data->ie->add_node(lane->laneID, next_x, next_y, attributes);
 				}
 			}
 				break;

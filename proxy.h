@@ -13,7 +13,7 @@ class Proxy
 	public:
 		Proxy();
 		~Proxy();
-		int connect(char *caddr, int port);
+		bool connect(char *caddr, int port);
 		int get_packet(uint8_t *buf, uint32_t buflen);
 		int send_packet(uint8_t *buf, uint32_t len);
 		void disconnect();

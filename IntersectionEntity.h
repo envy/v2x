@@ -19,18 +19,24 @@ struct Node
 public:
 	int64_t x { 0 };
 	int64_t y { 0 };
-	bool is_stopline { false };
+	std::vector<NodeAttributeXY_t> attributes;
+	bool is(NodeAttributeXY_t attr)
+	{
+		return std::find(attributes.begin(), attributes.end(), attr) != attributes.end();
+	}
 };
 
-struct LaneConnection
+class LaneConnection : public sf::Drawable
 {
 public:
 	LaneID_t to_id { 0 };
 	SignalGroupID_t signal_group { 0 };
 	sf::VertexArray va {};
+
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 };
 
-class Lane
+class Lane : public sf::Drawable
 {
 private:
 public:
@@ -38,6 +44,8 @@ public:
 	uint64_t width { 0 };
 	std::vector<Node> nodes;
 	std::vector<LaneConnection> connections;
+
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 };
 
 
@@ -62,7 +70,7 @@ public:
 	IntersectionEntity(int64_t ref_x, int64_t ref_y) : ref_x(ref_x), ref_y(ref_y) {}
 	void build_geometry();
 	void add_lane(LaneID_t id, uint64_t width, LaneAttributes &attr);
-	void add_node(LaneID_t lane_id, int64_t x, int64_t y, bool is_stopline);
+	void add_node(LaneID_t lane_id, int64_t x, int64_t y, std::vector<NodeAttributeXY_t> &attributes);
 	void add_connection(LaneID_t start, LaneID_t end, const SignalGroupID_t *sg);
 	void set_signal_group_state(SignalGroupID_t id, MovementPhaseState_t state);
 };

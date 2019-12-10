@@ -14,7 +14,7 @@ void IntersectionEntity::add_lane(LaneID_t id, uint64_t width, LaneAttributes_t 
 	lanes[id] = std::move(l);
 }
 
-void IntersectionEntity::add_node(LaneID_t lane_id, int64_t x, int64_t y, bool is_stopline)
+void IntersectionEntity::add_node(LaneID_t lane_id, int64_t x, int64_t y, std::vector<NodeAttributeXY_t> &attributes)
 {
 	auto &lane = lanes[lane_id];
 	if (lane.nodes.empty())
@@ -23,7 +23,7 @@ void IntersectionEntity::add_node(LaneID_t lane_id, int64_t x, int64_t y, bool i
 		Node n;
 		n.x = ref_x + x;
 		n.y = ref_y + y;
-		n.is_stopline = is_stopline;
+		n.attributes = std::move(attributes);
 		lane.nodes.emplace_back(std::move(n));
 	}
 	else
@@ -33,7 +33,7 @@ void IntersectionEntity::add_node(LaneID_t lane_id, int64_t x, int64_t y, bool i
 		Node n;
 		n.x = prev_node.x + x;
 		n.y = prev_node.y + y;
-		n.is_stopline = is_stopline;
+		n.attributes = std::move(attributes);
 		lane.nodes.emplace_back(std::move(n));
 	}
 }
@@ -49,14 +49,6 @@ void IntersectionEntity::build_geometry()
 	while (lit != lanes.end())
 	{
 		auto &laneobj = lit->second;
-
-		/*
-		if (laneobj.attr.laneType.present != LaneTypeAttributes_PR_vehicle)
-		{
-			++lit;
-			continue;
-		}
-		//*/
 
 		sf::VertexArray lane(sf::TrianglesStrip);
 		sf::VertexArray lane_outline(sf::TrianglesStrip);
@@ -104,10 +96,11 @@ void IntersectionEntity::build_geometry()
 			auto start = sf::Vector2f(prev_x, prev_y);
 			auto end = sf::Vector2f(x, y);
 			auto dir = end-start;
+			auto ndir = Utils::normalize(dir);
 			auto off = Utils::ortho(dir) * half_width; // FIXME: this is not correct as 150cm does not equal the lat/long the vector is supposed to be doing here
 
-			auto ostart = start - Utils::normalize(dir) * 1.1f;
-			auto oend = end + Utils::normalize(dir) * 1.1f;
+			auto ostart = start - ndir * 1.1f;
+			auto oend = end + ndir * 1.1f;
 			auto ooff = Utils::ortho(dir) * half_width * 1.1f;
 
 			if (node_counter == 0)
@@ -116,6 +109,26 @@ void IntersectionEntity::build_geometry()
 			}
 			else
 			{
+				if (node_counter == 1)
+				{
+					if (Utils::is_egress_lane(laneobj.attr.directionalUse))
+					{
+						auto astart = start + ndir * 100.0f / _main->get_scale();
+						auto aend = ndir * 300.0f / _main->get_scale();
+						auto s = astart + aend;
+						auto e = -aend;
+						sf::VertexArray va = Utils::draw_arrow(s, e);
+						lane_markings.emplace_back(std::move(va));
+					}
+					if (Utils::is_ingress_lane(laneobj.attr.directionalUse))
+					{
+						auto astart = start + ndir * 100.0f / _main->get_scale();
+						auto aend = ndir * 300.0f / _main->get_scale();
+						sf::VertexArray va = Utils::draw_arrow(astart, aend);
+						lane_markings.emplace_back(std::move(va));
+					}
+				}
+
 				lane.append(sf::Vertex(start - off, this_lane_color));
 				lane.append(sf::Vertex(start + off, this_lane_color));
 
@@ -132,7 +145,7 @@ void IntersectionEntity::build_geometry()
 				}
 			}
 
-			if (node->is_stopline)
+			if (node->is(NodeAttributeXY_stopLine))
 			{
 				auto nextnode = node + 1;
 				if (nextnode != laneobj.nodes.end())
@@ -153,6 +166,22 @@ void IntersectionEntity::build_geometry()
 					stopline.append(sf::Vertex(local_end - local_off, sf::Color::White));
 					lane_markings.emplace_back(std::move(stopline));
 				}
+			}
+
+			if (node->is(NodeAttributeXY_mergePoint))
+			{
+				auto astart = start + ndir * 100.0f / _main->get_scale();
+				auto aend = ndir * 300.0f / _main->get_scale();
+				sf::VertexArray mp = Utils::draw_arrow(astart, aend, sf::Color::Blue);
+				lane_markings.emplace_back(std::move(mp));
+			}
+
+			if (node->is(NodeAttributeXY_divergePoint))
+			{
+				auto astart = start + ndir * 100.0f / _main->get_scale();
+				auto aend = ndir * 300.0f / _main->get_scale();
+				sf::VertexArray mp = Utils::draw_arrow(astart, aend, sf::Color::Red);
+				lane_markings.emplace_back(std::move(mp));
 			}
 
 			++node;
@@ -203,6 +232,11 @@ void IntersectionEntity::draw(sf::RenderTarget &target, sf::RenderStates states)
 	std::for_each(lane_geometries.begin(), lane_geometries.end(), [&target](const sf::VertexArray &va) {
 		target.draw(va);
 	});
+	/*
+	std::for_each(lane_nodes.begin(), lane_nodes.end(), [&target](const sf::VertexArray &va) {
+		target.draw(va);
+	});
+	//*/
 	std::for_each(lane_markings.begin(), lane_markings.end(), [&target](const sf::VertexArray &va) {
 		target.draw(va);
 	});
@@ -211,7 +245,7 @@ void IntersectionEntity::draw(sf::RenderTarget &target, sf::RenderStates states)
 	std::for_each(lanes.begin(), lanes.end(), [&target](const std::pair<const LaneID_t, Lane> &d) {
 		auto &l = d.second;
 		std::for_each(l.connections.begin(), l.connections.end(), [&target](const LaneConnection &lc) {
-			target.draw(lc.va);
+			target.draw(lc);
 		});
 	});
 }
@@ -266,6 +300,10 @@ void IntersectionEntity::set_signal_group_state(SignalGroupID_t id, MovementPhas
 						lcit->va[0].color = sf::Color(50, 50, 50);
 						lcit->va[1].color = sf::Color(50, 50, 50);
 						break;
+					case MovementPhaseState_caution_Conflicting_Traffic:
+						lcit->va[0].color = sf::Color(255, 165, 0);
+						lcit->va[1].color = sf::Color(255, 165, 0);
+						break;
 					default:
 						std::cout << "TODO: unhandled movement phase state " << state << std::endl;
 				}
@@ -274,4 +312,14 @@ void IntersectionEntity::set_signal_group_state(SignalGroupID_t id, MovementPhas
 		}
 		++lit;
 	}
+}
+
+void LaneConnection::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
+	target.draw(va);
+}
+
+void Lane::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
+
 }

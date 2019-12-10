@@ -20,6 +20,7 @@ public:
 	static sf::Vector2f normalize(sf::Vector2f &a);
 	static float length(sf::Vector2f &a);
 	static sf::Vector2<int32_t> lat_lon_to_x_y(double lat, double lon, uint8_t zoom);
+	static sf::VertexArray draw_arrow(sf::Vector2f &start, sf::Vector2f &dir, sf::Color color = sf::Color::White);
 };
 
 

@@ -174,7 +174,7 @@ void Main::key_handler()
 	}
 
 	bool _key_pressed = false;
-#define MOVE_STEP 10
+#define MOVE_STEP 25
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && keyclock.getElapsedTime().asMilliseconds() >= 100)
 	{
 		_key_pressed = true;
@@ -273,17 +273,16 @@ Main::Main(char *addr, int port, StationID_t stationId) : mac(), last_key()
 	station_id = stationId;
 
 	if (p.connect(addr, port)) {
-		throw std::exception();
+		//throw std::exception();
+		reader = std::thread([this] {
+			reader_thread();
+		});
 	}
 
 	if (!font.loadFromFile("FiraCode-Regular.ttf"))
 	{
 		throw std::exception();
 	}
-
-	reader = std::thread([this] {
-		reader_thread();
-	});
 
 	window = new sf::RenderWindow(sf::VideoMode(1920, 1080), "v2x");
 	window->setVerticalSyncEnabled(true);
