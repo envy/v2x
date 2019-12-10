@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <asn1-src/IntersectionGeometryList.h>
 
 #include "IntersectionGeometryList.h"
 #include "IntersectionGeometry.h"
@@ -159,8 +160,24 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 		return;
 	}
 
+	if (data->mapem->map.layerID != nullptr)
+	{
+		std::cout << "this mapem has a layer and is id " << *data->mapem->map.layerID;
+		if (data->mapem->map.layerType != nullptr)
+		{
+			std::cout << " and type " << *data->mapem->map.layerType;
+		}
+		std::cout << std::endl;
+	}
+
 	// We only draw the first intersection
 	auto in = data->mapem->map.intersections->list.array[0];
+	if (data->mapem->map.intersections->list.count > 1)
+	{
+		std::cout << "more than one intersection in mapem!" << std::endl;
+	}
+
+
 
 	if (data->ie == nullptr)
 	{

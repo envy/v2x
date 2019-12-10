@@ -243,7 +243,7 @@ int main(int argc, char *argv[]) {
 	m.ms.add_msg(muehlenpfordt_x_rebenring_mapem, sizeof(muehlenpfordt_x_rebenring_mapem));
 	m.ms.add_msg(muehlenpfordt_x_rebenring_spatem, sizeof(muehlenpfordt_x_rebenring_spatem));
 
-	m.ms.add_msg(hagenmarkt_mapem, sizeof(hagenmarkt_mapem));
+	m.ms.add_msg(mittelweg_x_rebenring_mapem, sizeof(mittelweg_x_rebenring_mapem));
 
 	m.ms.add_msg(hamburger_x_rebenring_mapem, sizeof(hamburger_x_rebenring_mapem));
 	m.ms.add_msg(hamburger_x_rebenring_spatem, sizeof(hamburger_x_rebenring_spatem));
