@@ -69,6 +69,25 @@ void IntersectionEntity::build_geometry()
 		x = Main::get_center_x() + (ref_x - _main->get_origin_x()) / _main->get_scale();
 		y = Main::get_center_y() - (ref_y - _main->get_origin_y()) / _main->get_scale();
 
+		auto this_lane_color = sf::Color::White;
+		switch (laneobj.attr.laneType.present)
+		{
+			case LaneTypeAttributes_PR_vehicle:
+				this_lane_color = lane_color;
+				break;
+			case LaneTypeAttributes_PR_trackedVehicle:
+				this_lane_color = tram_lane_color;
+				break;
+			case LaneTypeAttributes_PR_crosswalk:
+				this_lane_color = pedestrian_lane_color;
+				break;
+			case LaneTypeAttributes_PR_bikeLane:
+				this_lane_color = pedestrian_lane_color; //FIXME: own color for bike lane
+				break;
+			default:
+				std::cout << "TODO: unknown lane type attribute: " << laneobj.attr.laneType.present << std::endl;
+		}
+
 		auto node = laneobj.nodes.begin();
 		auto node_counter = 0;
 		while (node != laneobj.nodes.end())
@@ -97,16 +116,16 @@ void IntersectionEntity::build_geometry()
 			}
 			else
 			{
-				lane.append(sf::Vertex(start - off, lane_color));
-				lane.append(sf::Vertex(start + off, lane_color));
+				lane.append(sf::Vertex(start - off, this_lane_color));
+				lane.append(sf::Vertex(start + off, this_lane_color));
 
 				lane_outline.append(sf::Vertex(ostart - ooff, lane_outer_color));
 				lane_outline.append(sf::Vertex(ostart + ooff, lane_outer_color));
 
 				if (node + 1 == laneobj.nodes.end())
 				{
-					lane.append(sf::Vertex(end - off, lane_color));
-					lane.append(sf::Vertex(end + off, lane_color));
+					lane.append(sf::Vertex(end - off, this_lane_color));
+					lane.append(sf::Vertex(end + off, this_lane_color));
 
 					lane_outline.append(sf::Vertex(oend - ooff, lane_outer_color));
 					lane_outline.append(sf::Vertex(oend + ooff, lane_outer_color));

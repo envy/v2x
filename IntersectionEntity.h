@@ -48,6 +48,8 @@ private:
 	std::map<LaneID_t, Lane> lanes;
 	sf::Color lane_color { sf::Color(100, 100, 100) };
 	sf::Color lane_outer_color { sf::Color(200, 200, 200) };
+	sf::Color tram_lane_color { sf::Color(210, 180, 140) };
+	sf::Color pedestrian_lane_color { sf::Color(135, 206, 235) };
 
 	std::vector<sf::VertexArray> lane_geometries;
 	std::vector<sf::VertexArray> lane_outline_geometries;
