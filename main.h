@@ -14,7 +14,8 @@ private:
 	Proxy p;
 
 	float scale { 25 };
-	int64_t ox, oy;
+	int64_t ox { 0 };
+	int64_t oy { 0 };
 	uint8_t mac[6];
 	StationID_t station_id;
 

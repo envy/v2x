@@ -5,6 +5,7 @@
 #include <map>
 #include <tuple>
 #include <cstdint>
+#include <iostream>
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
 
@@ -44,6 +45,9 @@ public:
 	LaneAttributes_t attr {};
 	std::vector<Node> nodes;
 	std::vector<LaneConnection> connections;
+	sf::Drawable *ingress_arrow { new sf::VertexArray(sf::LineStrip, 5) };
+	sf::Drawable *egress_arrow { new sf::VertexArray(sf::LineStrip, 5) };
+	//std::vector<sf::VertexArray> lane_markings;
 
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 };
@@ -61,7 +65,6 @@ private:
 
 	std::vector<sf::VertexArray> lane_geometries;
 	std::vector<sf::VertexArray> lane_outline_geometries;
-	std::vector<sf::VertexArray> lane_markings;
 	std::vector<sf::VertexArray> lane_nodes;
 
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;

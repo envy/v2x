@@ -90,6 +90,20 @@ void send_denm_thread(uint8_t mac[6], StationID_t id, Proxy *p)
 		usleep(1000*1000);
 	}
 }
+void insert_maps_thread(MessageSink *ms)
+{
+	while (true)
+	{
+		ms->add_msg(muehlenpfordt_x_rebenring_mapem, sizeof(muehlenpfordt_x_rebenring_mapem));
+
+		//ms->add_msg(mittelweg_x_rebenring_mapem, sizeof(mittelweg_x_rebenring_mapem));
+
+		//ms->add_msg(hamburger_x_rebenring_mapem, sizeof(hamburger_x_rebenring_mapem));
+
+		//ms->add_msg(pockels_x_rebenring_mapem, sizeof(pockels_x_rebenring_mapem));
+		usleep(100*1000);
+	}
+}
 
 void Main::reader_thread()
 {
@@ -257,6 +271,8 @@ int main(int argc, char *argv[]) {
 
 	// m.ms.set_origin(522732617, 105252691); // IZ
 	m.set_origin(522750000, 105244000);
+
+	std::thread t(insert_maps_thread, &m.ms);
 
 	m.run();
 

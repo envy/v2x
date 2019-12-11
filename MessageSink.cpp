@@ -201,7 +201,7 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 	{
 		auto lane = in->laneSet.list.array[_l];
 
-		uint64_t width = 300;
+		uint64_t width = 300; // Default is 300 cm
 		if (in->laneWidth != nullptr)
 		{
 			width = (uint64_t)*in->laneWidth;
@@ -296,7 +296,6 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 								attributes.emplace_back(*lnl->list.array[lnl_i]);
 							}
 						}
-
 
 						if (node->attributes->data != nullptr)
 						{
@@ -491,11 +490,6 @@ void MessageSink::draw_station_list()
 
 void MessageSink::draw_intersection(station_msgs_t *data)
 {
-	sf::CircleShape snode(5);
-	snode.setFillColor(sf::Color::White);
-	snode.setPosition(_main->get_center_x(), _main->get_center_y());
-	_main->get_window()->draw(snode);
-
 	if (data->ie != nullptr)
 	{
 		data->ie->build_geometry();
@@ -553,6 +547,11 @@ void MessageSink::draw_details()
 void MessageSink::draw_map()
 {
 	std::shared_lock lock(data_lock);
+
+	sf::CircleShape snode(5);
+	snode.setFillColor(sf::Color::White);
+	snode.setPosition(_main->get_center_x(), _main->get_center_y());
+	_main->get_window()->draw(snode);
 
 	auto it = msgs.begin();
 	while (it != msgs.end())

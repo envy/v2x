@@ -10,6 +10,8 @@ void IntersectionEntity::add_lane(LaneID_t id, LaneAttributes_t &attr)
 {
 	Lane l;
 	l.attr = attr;
+	// FIXME: LaneAttributes contain a BITSTRING in a substruct which holds a pointer to a buffer
+	// FIXME: This buffer gets deleted, when a new MAPEM is received.
 	lanes[id] = std::move(l);
 }
 
@@ -47,7 +49,6 @@ void IntersectionEntity::build_geometry()
 	}
 	lane_outline_geometries.clear();
 	lane_geometries.clear();
-	lane_markings.clear();
 	lane_nodes.clear();
 
 	auto lit = lanes.begin();
@@ -124,15 +125,14 @@ void IntersectionEntity::build_geometry()
 						auto aend = ndir * 300.0f / _main->get_scale();
 						auto s = astart + aend;
 						auto e = -aend;
-						sf::VertexArray va = Utils::draw_arrow(s, e);
-						lane_markings.emplace_back(std::move(va));
+						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.egress_arrow), s, e);
+
 					}
 					if (Utils::is_ingress_lane(laneobj.attr.directionalUse))
 					{
 						auto astart = start + ndir * 100.0f / _main->get_scale();
 						auto aend = ndir * 300.0f / _main->get_scale();
-						sf::VertexArray va = Utils::draw_arrow(astart, aend);
-						lane_markings.emplace_back(std::move(va));
+						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), astart, aend);
 					}
 				}
 
@@ -171,7 +171,7 @@ void IntersectionEntity::build_geometry()
 					stopline.append(sf::Vertex(local_start + local_off, sf::Color::White));
 					stopline.append(sf::Vertex(local_end + local_off , sf::Color::White));
 					stopline.append(sf::Vertex(local_end - local_off, sf::Color::White));
-					lane_markings.emplace_back(std::move(stopline));
+					//laneobj.lane_markings.emplace_back(std::move(stopline));
 				}
 			}
 
@@ -179,16 +179,16 @@ void IntersectionEntity::build_geometry()
 			{
 				auto astart = end + ndir * 100.0f / _main->get_scale();
 				auto aend = ndir * 300.0f / _main->get_scale();
-				sf::VertexArray mp = Utils::draw_arrow(astart, aend, sf::Color::Blue);
-				lane_markings.emplace_back(std::move(mp));
+				//sf::VertexArray mp = Utils::draw_arrow(astart, aend, sf::Color::Blue);
+				//laneobj.lane_markings.emplace_back(std::move(mp));
 			}
 
 			if (node->is(NodeAttributeXY_divergePoint))
 			{
 				auto astart = end + ndir * 100.0f / _main->get_scale();
 				auto aend = ndir * 300.0f / _main->get_scale();
-				sf::VertexArray mp = Utils::draw_arrow(astart, aend, sf::Color::Red);
-				lane_markings.emplace_back(std::move(mp));
+				//sf::VertexArray mp = Utils::draw_arrow(astart, aend, sf::Color::Red);
+				//laneobj.lane_markings.emplace_back(std::move(mp));
 			}
 
 			++node;
@@ -249,16 +249,11 @@ void IntersectionEntity::draw(sf::RenderTarget &target, sf::RenderStates states)
 		target.draw(va);
 	});
 	//*/
-	std::for_each(lane_markings.begin(), lane_markings.end(), [&target](const sf::VertexArray &va) {
-		target.draw(va);
-	});
 
 	// connections
 	std::for_each(lanes.begin(), lanes.end(), [&target](const std::pair<const LaneID_t, Lane> &d) {
 		auto &l = d.second;
-		std::for_each(l.connections.begin(), l.connections.end(), [&target](const LaneConnection &lc) {
-			target.draw(lc);
-		});
+		target.draw(l);
 	});
 }
 
@@ -334,5 +329,10 @@ void LaneConnection::draw(sf::RenderTarget &target, sf::RenderStates states) con
 
 void Lane::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
+	target.draw(*ingress_arrow);
+	target.draw(*egress_arrow);
 
+	std::for_each(connections.begin(), connections.end(), [&target](const LaneConnection &lc) {
+		target.draw(lc);
+	});
 }
