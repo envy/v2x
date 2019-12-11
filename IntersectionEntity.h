@@ -42,6 +42,10 @@ class Lane : public sf::Drawable
 {
 private:
 public:
+	~Lane() override;
+	Lane() = default;
+	Lane(Lane &&l) noexcept;
+	Lane &operator=(Lane &&l) noexcept;
 	LaneAttributes_t attr {};
 	std::vector<Node> nodes;
 	std::vector<LaneConnection> connections;

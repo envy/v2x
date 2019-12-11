@@ -6,12 +6,70 @@
 #include <iostream>
 #include <cmath>
 
+Lane::~Lane()
+{
+	// FIXME: refer to fixme above
+	delete[] attr.directionalUse.buf;
+	delete ingress_arrow;
+	delete egress_arrow;
+}
+
+Lane::Lane(Lane &&l) noexcept
+{
+	attr = l.attr;
+	l.attr.directionalUse.buf = nullptr;
+	ingress_arrow = l.ingress_arrow;
+	l.ingress_arrow = nullptr;
+	egress_arrow = l.egress_arrow;
+	l.egress_arrow = nullptr;
+	connections = std::move(l.connections);
+	nodes = std::move(l.nodes);
+}
+
+Lane &Lane::operator=(Lane &&l) noexcept
+{
+	if (this == &l)
+	{
+		return *this;
+	}
+
+	delete[] attr.directionalUse.buf;
+	delete ingress_arrow;
+	delete egress_arrow;
+
+	attr = l.attr;
+	l.attr.directionalUse.buf = nullptr;
+	ingress_arrow = l.ingress_arrow;
+	l.ingress_arrow = nullptr;
+	egress_arrow = l.egress_arrow;
+	l.egress_arrow = nullptr;
+	connections = std::move(l.connections);
+	nodes = std::move(l.nodes);
+
+	return *this;
+}
+
+void Lane::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
+	target.draw(*ingress_arrow);
+	target.draw(*egress_arrow);
+
+	std::for_each(connections.begin(), connections.end(), [&target](const LaneConnection &lc) {
+		target.draw(lc);
+	});
+}
+
 void IntersectionEntity::add_lane(LaneID_t id, LaneAttributes_t &attr)
 {
 	Lane l;
-	l.attr = attr;
 	// FIXME: LaneAttributes contain a BITSTRING in a substruct which holds a pointer to a buffer
 	// FIXME: This buffer gets deleted, when a new MAPEM is received.
+	// FIXME: find a nicer way than this:
+	delete[] l.attr.directionalUse.buf; // nullptr check unnecessary // FIXME: see fixme in dtor
+	l.attr = attr;
+	l.attr.directionalUse.buf = new uint8_t[attr.directionalUse.size];
+	memcpy(l.attr.directionalUse.buf, attr.directionalUse.buf, l.attr.directionalUse.size);
+	// FIXME: copy missing for LaneSharing and LaneTypeAttributes
 	lanes[id] = std::move(l);
 }
 
@@ -325,14 +383,4 @@ void IntersectionEntity::set_signal_group_state(SignalGroupID_t id, MovementPhas
 void LaneConnection::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
 	target.draw(va);
-}
-
-void Lane::draw(sf::RenderTarget &target, sf::RenderStates states) const
-{
-	target.draw(*ingress_arrow);
-	target.draw(*egress_arrow);
-
-	std::for_each(connections.begin(), connections.end(), [&target](const LaneConnection &lc) {
-		target.draw(lc);
-	});
 }
