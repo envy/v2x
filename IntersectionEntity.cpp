@@ -6,15 +6,14 @@
 #include <iostream>
 #include <cmath>
 
-void IntersectionEntity::add_lane(LaneID_t id, uint64_t width, LaneAttributes_t &attr)
+void IntersectionEntity::add_lane(LaneID_t id, LaneAttributes_t &attr)
 {
 	Lane l;
-	l.width = width;
 	l.attr = attr;
 	lanes[id] = std::move(l);
 }
 
-void IntersectionEntity::add_node(LaneID_t lane_id, int64_t x, int64_t y, std::vector<NodeAttributeXY_t> &attributes)
+void IntersectionEntity::add_node(LaneID_t lane_id, int64_t x, int64_t y, uint64_t width, std::vector<NodeAttributeXY_t> &attributes)
 {
 	auto &lane = lanes[lane_id];
 	if (lane.nodes.empty())
@@ -23,6 +22,7 @@ void IntersectionEntity::add_node(LaneID_t lane_id, int64_t x, int64_t y, std::v
 		Node n;
 		n.x = ref_x + x;
 		n.y = ref_y + y;
+		n.width = width;
 		n.attributes = std::move(attributes);
 		lane.nodes.emplace_back(std::move(n));
 	}
@@ -33,6 +33,7 @@ void IntersectionEntity::add_node(LaneID_t lane_id, int64_t x, int64_t y, std::v
 		Node n;
 		n.x = prev_node.x + x;
 		n.y = prev_node.y + y;
+		n.width = width;
 		n.attributes = std::move(attributes);
 		lane.nodes.emplace_back(std::move(n));
 	}
@@ -40,6 +41,10 @@ void IntersectionEntity::add_node(LaneID_t lane_id, int64_t x, int64_t y, std::v
 
 void IntersectionEntity::build_geometry()
 {
+	if (_main == nullptr)
+	{
+		return;
+	}
 	lane_outline_geometries.clear();
 	lane_geometries.clear();
 	lane_markings.clear();
@@ -54,9 +59,6 @@ void IntersectionEntity::build_geometry()
 		sf::VertexArray lane_outline(sf::TrianglesStrip);
 		sf::VertexArray lane_node_strip(sf::LineStrip);
 		float prev_x, prev_y, x, y;
-
-		float width = (laneobj.width - 100) / _main->get_scale();
-		float half_width = width / 2.0f;
 
 		x = Main::get_center_x() + (ref_x - _main->get_origin_x()) / _main->get_scale();
 		y = Main::get_center_y() - (ref_y - _main->get_origin_y()) / _main->get_scale();
@@ -80,10 +82,15 @@ void IntersectionEntity::build_geometry()
 				std::cout << "TODO: unknown lane type attribute: " << laneobj.attr.laneType.present << std::endl;
 		}
 
+		// TODO: lanesharing seems to be always zeroed out
+		//printf("lane sharing buffer: [0]: 0x%02x  [1]: 0x%02x\n", laneobj.attr.sharedWith.buf[0], laneobj.attr.sharedWith.buf[1]);
+
 		auto node = laneobj.nodes.begin();
 		auto node_counter = 0;
 		while (node != laneobj.nodes.end())
 		{
+			float width = (node->width) / _main->get_scale();
+			float half_width = width / 2.0f;
 			int64_t nx = node->x;
 			int64_t ny = node->y;
 			prev_x = x;
@@ -170,7 +177,7 @@ void IntersectionEntity::build_geometry()
 
 			if (node->is(NodeAttributeXY_mergePoint))
 			{
-				auto astart = start + ndir * 100.0f / _main->get_scale();
+				auto astart = end + ndir * 100.0f / _main->get_scale();
 				auto aend = ndir * 300.0f / _main->get_scale();
 				sf::VertexArray mp = Utils::draw_arrow(astart, aend, sf::Color::Blue);
 				lane_markings.emplace_back(std::move(mp));
@@ -178,7 +185,7 @@ void IntersectionEntity::build_geometry()
 
 			if (node->is(NodeAttributeXY_divergePoint))
 			{
-				auto astart = start + ndir * 100.0f / _main->get_scale();
+				auto astart = end + ndir * 100.0f / _main->get_scale();
 				auto aend = ndir * 300.0f / _main->get_scale();
 				sf::VertexArray mp = Utils::draw_arrow(astart, aend, sf::Color::Red);
 				lane_markings.emplace_back(std::move(mp));
@@ -197,6 +204,11 @@ void IntersectionEntity::build_geometry()
 		while (cit != laneobj.connections.end())
 		{
 			// connections are always from one first node to another first node of a lane
+			if (laneobj.nodes.empty())
+			{
+				++cit;
+				continue;
+			}
 			auto &firstnode = laneobj.nodes[0];
 			auto &othernode = lanes[cit->to_id].nodes[0];
 			auto first_x = Main::get_center_x() + (firstnode.x - _main->get_origin_x()) / _main->get_scale();
@@ -307,6 +319,7 @@ void IntersectionEntity::set_signal_group_state(SignalGroupID_t id, MovementPhas
 					default:
 						std::cout << "TODO: unhandled movement phase state " << state << std::endl;
 				}
+				// No return here as there might be multiple connections with the smae signal group
 			}
 			++lcit;
 		}

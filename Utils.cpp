@@ -1,11 +1,19 @@
-#include <asn1-src/MovementEventList.h>
 #include <cmath>
+#include <iostream>
 #include "Utils.h"
 
 #include "IntersectionState.h"
 #include "MovementState.h"
 #include "MovementEvent.h"
+#include "MovementList.h"
+#include "MovementEventList.h"
 #include "main.h"
+
+/*
+ * ASN.1 BITSTRINGs are weird.
+ * Bit 0 is not the least significant bit, but the most significant, so the order is reversed.
+ * Also, we only get
+ */
 
 bool Utils::is_ingress_lane(LaneDirection_t dir)
 {
@@ -16,6 +24,18 @@ bool Utils::is_egress_lane(LaneDirection_t dir)
 {
 	return (dir.buf[0] & (1u << (7-LaneDirection_egressPath))) > 0;
 }
+
+bool Utils::has_individual_vehicle_traffic(LaneSharing_t s) {}
+
+bool Utils::has_tracked_vehicle_traffic(LaneSharing_t s)
+{
+	return (s.buf[0] & (1u << (7-LaneSharing_trackedVehicleTraffic-8))) > 0;
+}
+
+bool Utils::has_bus_vehicle_traffic(LaneSharing_t s) {}
+bool Utils::has_taxi_vehicle_traffic(LaneSharing_t s) {}
+bool Utils::has_pedestrian_traffic(LaneSharing_t s) {}
+bool Utils::has_cyclist_traffic(LaneSharing_t s) {}
 
 MovementPhaseState_t Utils::get_movement_phase_for_signal_group(SPATEM_t *spatem, SignalGroupID_t &id)
 {
@@ -28,24 +48,31 @@ MovementPhaseState_t Utils::get_movement_phase_for_signal_group(SPATEM_t *spatem
 	auto intersection = spatem->spat.intersections.list.array[0];
 
 	// make a guess where it is
-	auto sg = intersection->states.list.array[id-1];
-	if (sg == nullptr)
+	if (id < intersection->states.list.count)
 	{
-		return MovementPhaseState_unavailable;
-	}
+		auto sg = intersection->states.list.array[id-1];
+		if (sg == nullptr)
+		{
+			return MovementPhaseState_unavailable;
+		}
 
-	if (sg->signalGroup == id)
-	{
-		if (sg->state_time_speed.list.count == 0)
+		if (sg->signalGroup == id)
 		{
-			return MovementPhaseState_unavailable;
+			if (sg->state_time_speed.list.count == 0)
+			{
+				return MovementPhaseState_unavailable;
+			}
+			auto state = sg->state_time_speed.list.array[0];
+			if (state == nullptr)
+			{
+				return MovementPhaseState_unavailable;
+			}
+			if (state->timing != nullptr)
+			{
+				std::cout << "TODO: state->timing" << std::endl;
+			}
+			return state->eventState;
 		}
-		auto state = sg->state_time_speed.list.array[0];
-		if (state == nullptr)
-		{
-			return MovementPhaseState_unavailable;
-		}
-		return state->eventState;
 	}
 
 	// not where we thought it is, find it
@@ -66,6 +93,10 @@ MovementPhaseState_t Utils::get_movement_phase_for_signal_group(SPATEM_t *spatem
 			if (state == nullptr)
 			{
 				return MovementPhaseState_unavailable;
+			}
+			if (state->timing != nullptr)
+			{
+				std::cout << "TODO: state->timing" << std::endl;
 			}
 			return state->eventState;
 		}

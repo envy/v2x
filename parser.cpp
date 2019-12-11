@@ -75,6 +75,15 @@ int btp_offset(uint8_t *buf, uint32_t len)
 	auto *g = (geonetworking_t *)e->data;
 	switch (g->common_header.type.raw)
 	{
+		case GEONET_TYPE_GAC_CIRCLE:
+		case GEONET_TYPE_GAC_ELLIPSE:
+		case GEONET_TYPE_GAC_RECT:
+		case GEONET_TYPE_GBC_CIRCLE:
+		case GEONET_TYPE_GBC_ELLIPSE:
+		case GEONET_TYPE_GBC_RECT:
+			return fix_offset + sizeof(geonet_gac_t);
+		case GEONET_TYPE_GUC:
+			return fix_offset + sizeof(geonet_guc_t);
 		case GEONET_TYPE_TSB_MHB:
 			return fix_offset + sizeof(geonet_tsb_mhb_t);
 		case GEONET_TYPE_TSB_SHB:

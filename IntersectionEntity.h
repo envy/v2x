@@ -19,6 +19,7 @@ struct Node
 public:
 	int64_t x { 0 };
 	int64_t y { 0 };
+	uint64_t width { 0 };
 	std::vector<NodeAttributeXY_t> attributes;
 	bool is(NodeAttributeXY_t attr)
 	{
@@ -41,7 +42,6 @@ class Lane : public sf::Drawable
 private:
 public:
 	LaneAttributes_t attr {};
-	uint64_t width { 0 };
 	std::vector<Node> nodes;
 	std::vector<LaneConnection> connections;
 
@@ -69,8 +69,8 @@ private:
 public:
 	IntersectionEntity(int64_t ref_x, int64_t ref_y) : ref_x(ref_x), ref_y(ref_y) {}
 	void build_geometry();
-	void add_lane(LaneID_t id, uint64_t width, LaneAttributes &attr);
-	void add_node(LaneID_t lane_id, int64_t x, int64_t y, std::vector<NodeAttributeXY_t> &attributes);
+	void add_lane(LaneID_t id, LaneAttributes &attr);
+	void add_node(LaneID_t lane_id, int64_t x, int64_t y, uint64_t width, std::vector<NodeAttributeXY_t> &attributes);
 	void add_connection(LaneID_t start, LaneID_t end, const SignalGroupID_t *sg);
 	void set_signal_group_state(SignalGroupID_t id, MovementPhaseState_t state);
 };

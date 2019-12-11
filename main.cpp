@@ -240,6 +240,7 @@ int main(int argc, char *argv[]) {
 	Main m(argv[1], port, 1337);
 	_main = &m;
 
+	/*
 	m.ms.add_msg(muehlenpfordt_x_rebenring_mapem, sizeof(muehlenpfordt_x_rebenring_mapem));
 	m.ms.add_msg(muehlenpfordt_x_rebenring_spatem, sizeof(muehlenpfordt_x_rebenring_spatem));
 
@@ -251,6 +252,7 @@ int main(int argc, char *argv[]) {
 	m.ms.add_msg(pockels_x_rebenring_mapem, sizeof(pockels_x_rebenring_mapem));
 	m.ms.add_msg(pockels_x_rebenring_spatem, sizeof(pockels_x_rebenring_spatem));
 
+	//*/
 	//m.ms.add_msg({mapem2, sizeof(mapem2)});
 
 	// m.ms.set_origin(522732617, 105252691); // IZ

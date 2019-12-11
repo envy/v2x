@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sstream>
 #include <asn1-src/IntersectionGeometryList.h>
+#include <asn1-src/MovementEventList.h>
 
 #include "IntersectionGeometryList.h"
 #include "IntersectionGeometry.h"
@@ -35,9 +36,12 @@
 #include "Offset-B16.h"
 #include "MovementPhaseState.h"
 #include "MovementState.h"
+#include "MovementEventList.h"
+#include "MovementEvent.h"
 #include "NodeAttributeSetXY.h"
 #include "NodeAttributeXYList.h"
 #include "NodeAttributeXY.h"
+#include "TimeChangeDetails.h"
 
 MessageSink::MessageSink()
 {
@@ -203,7 +207,18 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 			width = (uint64_t)*in->laneWidth;
 		}
 
-		data->ie->add_lane(lane->laneID, width, lane->laneAttributes);
+		data->ie->add_lane(lane->laneID, lane->laneAttributes);
+
+		/*
+		if (lane->ingressApproach != nullptr)
+		{
+			std::cout << "TODO: lane->ingressApproach " << *lane->ingressApproach << std::endl;
+		}
+		if (lane->egressApproach != nullptr)
+		{
+			std::cout << "TODO: lane->egressApproach " << *lane->egressApproach << std::endl;
+		}
+		//*/
 
 		// nodes
 		switch(lane->nodeList.present)
@@ -270,7 +285,6 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 							continue;
 					}
 
-					bool is_stopline = false;
 					std::vector<NodeAttributeXY_t> attributes;
 					if (node->attributes != nullptr)
 					{
@@ -283,13 +297,20 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 							}
 						}
 
+
 						if (node->attributes->data != nullptr)
 						{
 							std::cout << "TODO: node->attributes->data" << std::endl;
 						}
+						if (node->attributes->dWidth != nullptr)
+						{
+							// FIXME: Is this a delta or not?
+							//width = (uint64_t)(width + *node->attributes->dWidth);
+							width = (uint64_t)(*node->attributes->dWidth);
+						}
 					}
 
-					data->ie->add_node(lane->laneID, next_x, next_y, attributes);
+					data->ie->add_node(lane->laneID, next_x, next_y, width, attributes);
 				}
 			}
 				break;
@@ -311,6 +332,10 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 				{
 					std::cout << "TODO: con->connectingLane.maneuver" << std::endl;
 				}
+				if (con->remoteIntersection != nullptr)
+				{
+					std::cout << "TODO: con->remoteIntersection" << std::endl;
+				}
 			}
 		}
 	}
@@ -331,7 +356,12 @@ void MessageSink::parse_spatem(station_msgs_t *data)
 		for (uint32_t mst = 0; mst < in->states.list.count; ++mst)
 		{
 			auto ms = in->states.list.array[mst];
-			data->ie->set_signal_group_state(ms->signalGroup, Utils::get_movement_phase_for_signal_group(data->spatem, ms->signalGroup));
+			data->ie->set_signal_group_state(ms->signalGroup, ms->state_time_speed.list.array[0]->eventState);
+			if (ms->state_time_speed.list.array[0]->timing != nullptr)
+			{
+				auto t = ms->state_time_speed.list.array[0]->timing;
+				//xer_fprint(stdout, &asn_DEF_TimeChangeDetails, t);
+			}
 		}
 	}
 

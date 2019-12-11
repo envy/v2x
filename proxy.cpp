@@ -83,6 +83,14 @@ int Proxy::get_packet(uint8_t *buf, uint32_t buflen)
 		case GEONET_TYPE_GUC:
 			payload_length += sizeof(geonet_guc_t);
 			break;
+		case GEONET_TYPE_GAC_CIRCLE:
+		case GEONET_TYPE_GAC_ELLIPSE:
+		case GEONET_TYPE_GAC_RECT:
+		case GEONET_TYPE_GBC_CIRCLE:
+		case GEONET_TYPE_GBC_ELLIPSE:
+		case GEONET_TYPE_GBC_RECT:
+			payload_length += sizeof(geonet_gac_t);
+			break;
 		case GEONET_TYPE_TSB_MHB:
 			payload_length += sizeof(geonet_tsb_mhb_t);
 			break;
