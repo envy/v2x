@@ -187,10 +187,10 @@ void Main::key_handler()
 		key_pressed(sf::Keyboard::V);
 		ms.set_show_visu(!ms.get_show_visu());
 	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::H))
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::M))
 	{
-		key_pressed(sf::Keyboard::H);
-		ms.set_visu_only_vehicles(!ms.get_visu_only_vehicles());
+		key_pressed(sf::Keyboard::M);
+		draw_map = !draw_map;
 	}
 
 	bool _key_pressed = false;
@@ -346,7 +346,7 @@ void Main::run()
 
 		draw_data();
 
-		write_text(20, 0, sf::Color::White, "Quit S-Q | Visualize (only veHicles) | Zoom QE");
+		write_text(20, 0, sf::Color::White, "quit S-Q | toogle Map | toggle Visu | zoom QE");
 
 		window->display();
 	}

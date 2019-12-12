@@ -541,6 +541,18 @@ void MessageSink::draw_details()
 	_main->write_text(200, 30, sf::Color::White, ss.str());
 }
 
+void MessageSink::draw_cam(station_msgs_t *data)
+{
+	sf::CircleShape c(200 / _main->get_scale());
+	auto lat = data->cam->cam.camParameters.basicContainer.referencePosition.latitude;
+	auto lon = data->cam->cam.camParameters.basicContainer.referencePosition.longitude;
+	auto x = Main::get_center_x() + (lon - _main->get_origin_x()) / _main->get_scale();
+	auto y = Main::get_center_y() - (lat - _main->get_origin_y()) / _main->get_scale();
+	c.setPosition(x, y);
+	c.setFillColor(sf::Color::Blue);
+	_main->get_window()->draw(c);
+}
+
 void MessageSink::draw_map()
 {
 	std::shared_lock lock(data_lock);
@@ -557,6 +569,10 @@ void MessageSink::draw_map()
 		if (data->mapem != nullptr)
 		{
 			draw_intersection(data);
+		}
+		if (data->cam != nullptr)
+		{
+			draw_cam(data);
 		}
 		++it;
 	}

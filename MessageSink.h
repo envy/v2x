@@ -97,6 +97,7 @@ public:
 	void draw_station_list();
 	void draw_details();
 	void draw_map();
+	void draw_cam(station_msgs_t *data);
 	void draw_intersection(station_msgs_t *data);
 };
 
