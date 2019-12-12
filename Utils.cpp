@@ -120,6 +120,23 @@ float Utils::length(sf::Vector2f &a)
 	return sqrt(a.x*a.x + a.y*a.y);
 }
 
+float Utils::timemark_to_seconds(TimeMark_t &t)
+{
+	auto now = std::chrono::system_clock::now();
+	auto nowt = now.time_since_epoch();
+	auto hours = std::chrono::duration_cast<std::chrono::hours>(nowt);
+	nowt -= hours;
+	auto min = std::chrono::duration_cast<std::chrono::minutes>(nowt);
+	nowt -= min;
+	auto sec = std::chrono::duration_cast<std::chrono::seconds>(nowt);
+	nowt -= sec;
+	auto mil = std::chrono::duration_cast<std::chrono::milliseconds>(nowt);
+
+	auto ms = min.count() * 60 * 1000 + sec.count() * 1000 + mil.count();
+
+	return (t * 100.0f - ms) / 1000.0f;
+}
+
 sf::Vector2<int32_t> Utils::lat_lon_to_x_y(double lat, double lon, uint8_t zoom)
 {
 #define TILE 256

@@ -350,7 +350,7 @@ void Main::run()
 		//draw_background();
 
 		draw_data();
-		write_text(20, 0, sf::Color::White, "quit S-Q | toogle Map | toggle Visu | zoom QE");
+		write_text(20, 0, sf::Color::White, "quit S-Q | toggle Map | toggle Visu | zoom QE");
 
 		// DO NOT DRAW AFTER THIS LINE
 		background.display();

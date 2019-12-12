@@ -21,6 +21,8 @@
 #include "IntersectionReferenceID.h"
 #include "IntersectionID.h"
 #include "LaneList.h"
+#include "TimeChangeDetails.h"
+#include "Utils.h"
 
 std::string Formatter::format_mac(uint8_t mac[6])
 {
@@ -400,6 +402,25 @@ std::string Formatter::dump_spatem(SPATEM_t *spatem)
 				}
 				auto state = signal->state_time_speed.list.array[k];
 				ss << format_event_state(state->eventState);
+
+				if (state->timing != nullptr)
+				{
+					ss.precision(0);
+					ss << std::fixed;
+					if (state->timing->likelyTime != nullptr)
+					{
+						ss << " ~" << Utils::timemark_to_seconds(*state->timing->likelyTime) << " s";
+						ss << "  C: " << *state->timing->confidence;
+					}
+					else
+					{
+						ss << " >" << Utils::timemark_to_seconds(state->timing->minEndTime) << " s";
+						if (state->timing->maxEndTime != nullptr)
+						{
+							ss << " <" << Utils::timemark_to_seconds(*state->timing->maxEndTime) << " s";
+						}
+					}
+				}
 			}
 			ss << std::endl;
 		}
