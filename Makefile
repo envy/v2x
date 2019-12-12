@@ -38,13 +38,13 @@ APP_O_FILES := $(APP_CXX_FILES:.cpp=.o)
 
 all: app
 
-asn: $(ASN_FILES)
+asn_mod: $(ASN_FILES)
 	rm -f asn1-src/*
 	$(ASN1) $(ASN_FLAGS) -D $(ASN_DEST) $(ASN_FILES)
 	$(eval ASN_C_FILES := $(wildcard asn1-src/*.c))
 	$(eval ASN_H_FILES := $(wildcard asn1-src/*.h))
 
-asn_orig: $(ASN_ORIG_FILES)
+asn: $(ASN_ORIG_FILES)
 	rm -f asn1-src/*
 	$(ASN1) $(ASN_FLAGS) -D $(ASN_DEST) $(ASN_ORIG_FILES)
 	$(eval ASN_C_FILES := $(wildcard asn1-src/*.c))
