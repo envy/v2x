@@ -9,6 +9,7 @@ class Main
 {
 private:
 	sf::RenderWindow *window;
+	sf::RenderTexture background, foreground;
 	sf::Font font;
 	sf::Clock keyclock;
 	Proxy p;

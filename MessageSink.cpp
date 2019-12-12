@@ -485,16 +485,16 @@ void MessageSink::draw_station_list()
 	}
 }
 
-void MessageSink::draw_intersection(station_msgs_t *data)
+void MessageSink::draw_intersection(sf::RenderTarget &target,station_msgs_t *data)
 {
 	if (data->ie != nullptr)
 	{
 		data->ie->build_geometry();
-		_main->get_window()->draw(*data->ie);
+		target.draw(*data->ie);
 	}
 }
 
-void MessageSink::draw_details()
+void MessageSink::draw_details(sf::RenderTarget &target)
 {
 	std::shared_lock lock(data_lock);
 
@@ -516,7 +516,7 @@ void MessageSink::draw_details()
 
 	if (data->mapem != nullptr && _show_visu)
 	{
-		draw_intersection(data);
+		draw_intersection(target, data);
 		return;
 	}
 
@@ -541,26 +541,26 @@ void MessageSink::draw_details()
 	_main->write_text(200, 30, sf::Color::White, ss.str());
 }
 
-void MessageSink::draw_cam(station_msgs_t *data)
+void MessageSink::draw_cam(sf::RenderTarget &target,station_msgs_t *data)
 {
-	sf::CircleShape c(200 / _main->get_scale());
+	sf::CircleShape c(100 / _main->get_scale());
 	auto lat = data->cam->cam.camParameters.basicContainer.referencePosition.latitude;
 	auto lon = data->cam->cam.camParameters.basicContainer.referencePosition.longitude;
 	auto x = Main::get_center_x() + (lon - _main->get_origin_x()) / _main->get_scale();
 	auto y = Main::get_center_y() - (lat - _main->get_origin_y()) / _main->get_scale();
 	c.setPosition(x, y);
 	c.setFillColor(sf::Color::Blue);
-	_main->get_window()->draw(c);
+	target.draw(c);
 }
 
-void MessageSink::draw_map()
+void MessageSink::draw_map(sf::RenderTarget &background, sf::RenderTarget &foreground)
 {
 	std::shared_lock lock(data_lock);
 
 	sf::CircleShape snode(5);
 	snode.setFillColor(sf::Color::White);
 	snode.setPosition(_main->get_center_x(), _main->get_center_y());
-	_main->get_window()->draw(snode);
+	foreground.draw(snode);
 
 	auto it = msgs.begin();
 	while (it != msgs.end())
@@ -568,11 +568,11 @@ void MessageSink::draw_map()
 		auto data = it->second;
 		if (data->mapem != nullptr)
 		{
-			draw_intersection(data);
+			draw_intersection(background, data);
 		}
 		if (data->cam != nullptr)
 		{
-			draw_cam(data);
+			draw_cam(foreground, data);
 		}
 		++it;
 	}

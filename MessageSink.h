@@ -95,10 +95,10 @@ public:
 	void set_visu_only_vehicles(bool show);
 	bool get_visu_only_vehicles();
 	void draw_station_list();
-	void draw_details();
-	void draw_map();
-	void draw_cam(station_msgs_t *data);
-	void draw_intersection(station_msgs_t *data);
+	void draw_details(sf::RenderTarget &target);
+	void draw_map(sf::RenderTarget &background, sf::RenderTarget &foreground);
+	void draw_cam(sf::RenderTarget &target, station_msgs_t *data);
+	void draw_intersection(sf::RenderTarget &target, station_msgs_t *data);
 };
 
 #endif //V2X_MESSAGESINK_H

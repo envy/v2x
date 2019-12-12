@@ -140,12 +140,12 @@ void Main::draw_data()
 {
 	if (draw_map)
 	{
-		ms.draw_map();
+		ms.draw_map(background, foreground);
 	}
 	else
 	{
 		ms.draw_station_list();
-		ms.draw_details();
+		ms.draw_details(background);
 	}
 }
 
@@ -157,7 +157,7 @@ void Main::write_text(float x, float y, const sf::Color &color, const std::strin
 	t.setFillColor(color);
 	t.setPosition(x, y);
 	t.setString(text);
-	window->draw(t);
+	foreground.draw(t);
 }
 
 void Main::key_pressed(sf::Keyboard::Key k)
@@ -310,6 +310,8 @@ Main::Main(char *addr, int port, StationID_t stationId) : mac(), last_key()
 
 	window = new sf::RenderWindow(sf::VideoMode(1920, 1080), "v2x");
 	window->setVerticalSyncEnabled(true);
+	background.create(1920, 1080);
+	foreground.create(1920, 1080);
 }
 
 Main::~Main()
@@ -341,13 +343,22 @@ void Main::run()
 		}
 
 		window->clear(sf::Color::Black);
+		background.clear(sf::Color::Transparent);
+		foreground.clear(sf::Color::Transparent);
+		// DO NOT DRAW BEFORE THIS LINE
 
 		//draw_background();
 
 		draw_data();
-
 		write_text(20, 0, sf::Color::White, "quit S-Q | toogle Map | toggle Visu | zoom QE");
 
+		// DO NOT DRAW AFTER THIS LINE
+		background.display();
+		foreground.display();
+		sf::Sprite bg(background.getTexture());
+		sf::Sprite fg(foreground.getTexture());
+		window->draw(bg);
+		window->draw(fg);
 		window->display();
 	}
 }

@@ -296,9 +296,11 @@ void IntersectionEntity::build_geometry()
 
 void IntersectionEntity::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
+	/*
 	std::for_each(lane_outline_geometries.begin(), lane_outline_geometries.end(), [&target](const sf::VertexArray &va) {
 		target.draw(va);
 	});
+	//*/
 	std::for_each(lane_geometries.begin(), lane_geometries.end(), [&target](const sf::VertexArray &va) {
 		target.draw(va);
 	});
