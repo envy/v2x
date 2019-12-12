@@ -108,12 +108,12 @@ void insert_maps_thread(MessageSink *ms)
 void Main::reader_thread()
 {
 #define BUFSIZE 2048
-	uint8_t *buf = (uint8_t *)calloc(1, BUFSIZE);
-	uint32_t buflen = BUFSIZE;
-	while((buflen = p.get_packet(buf, buflen)) >= 0)
+	auto buf = new uint8_t[BUFSIZE];
+	int32_t read = 0;
+	while((read = p.get_packet(buf, BUFSIZE)) >= 0)
 	{
-		ms.add_msg(buf, buflen);
-		buflen = sizeof(BUFSIZE);
+		ms.add_msg(buf, (uint32_t) read);
+		buf = new uint8_t[BUFSIZE];
 	}
 }
 
@@ -138,9 +138,15 @@ void Main::draw_background()
 
 void Main::draw_data()
 {
-	//ms.draw_station_list();
-	//ms.draw_details();
-	ms.draw_map();
+	if (draw_map)
+	{
+		ms.draw_map();
+	}
+	else
+	{
+		ms.draw_station_list();
+		ms.draw_details();
+	}
 }
 
 void Main::write_text(float x, float y, const sf::Color &color, const std::string &text)
@@ -272,7 +278,7 @@ int main(int argc, char *argv[]) {
 	// m.ms.set_origin(522732617, 105252691); // IZ
 	m.set_origin(522750000, 105244000);
 
-	std::thread t(insert_maps_thread, &m.ms);
+	//std::thread t(insert_maps_thread, &m.ms);
 
 	m.run();
 

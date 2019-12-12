@@ -12,11 +12,35 @@
 #include "parser.h"
 #include "IntersectionEntity.h"
 
-typedef struct
+class Array
 {
+	public:
 	uint8_t *buf { nullptr };
 	uint32_t len { 0 };
-} array_t;
+	Array(uint8_t *buf, uint32_t len) : buf(buf), len(len) {}
+	~Array()
+	{
+		delete[] buf;
+	}
+	Array(Array &&a) noexcept
+	{
+		buf = a.buf;
+		delete[] a.buf;
+		len = a.len;
+		a.len = 0;
+	}
+	Array &operator=(Array &&a) noexcept
+	{
+		delete[] buf;
+
+		buf = a.buf;
+		delete[] a.buf;
+		len = a.len;
+		a.len = 0;
+
+		return *this;
+	}
+};
 
 typedef struct
 {
@@ -30,7 +54,7 @@ typedef struct
 
 class MessageSink {
 private:
-	std::queue<array_t> incoming;
+	std::queue<Array> incoming;
 	std::map<StationID_t, station_msgs_t *> msgs;
 	std::mutex queue_lock;
 	std::shared_mutex data_lock;
@@ -47,7 +71,7 @@ private:
 	bool _visu_only_vehicles;
 
 	void process_incoming();
-	void process_msg(array_t arr);
+	void process_msg(Array &arr);
 
 	void parse_mapem(station_msgs_t *data);
 	void parse_spatem(station_msgs_t *data);

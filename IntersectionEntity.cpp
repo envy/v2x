@@ -342,6 +342,9 @@ void IntersectionEntity::set_signal_group_state(SignalGroupID_t id, MovementPhas
 			{
 				switch (state)
 				{
+					case MovementPhaseState_unavailable:
+						lcit->va[0].color = sf::Color::Black;
+						lcit->va[1].color = sf::Color::Black;
 					case MovementPhaseState_stop_Then_Proceed:
 					case MovementPhaseState_stop_And_Remain:
 						lcit->va[0].color = sf::Color::Red;

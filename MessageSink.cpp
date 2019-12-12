@@ -68,7 +68,7 @@ MessageSink::~MessageSink()
 	processor.join();
 }
 
-void MessageSink::process_msg(array_t arr)
+void MessageSink::process_msg(Array &arr)
 {
 	std::unique_lock lock(data_lock);
 	uint32_t start;
@@ -363,14 +363,12 @@ void MessageSink::parse_spatem(station_msgs_t *data)
 			}
 		}
 	}
-
 }
 
 void MessageSink::process_incoming()
 {
 	while(process)
 	{
-		array_t msg;
 		{
 			std::unique_lock lock(queue_lock);
 			if (incoming.empty())
@@ -378,18 +376,17 @@ void MessageSink::process_incoming()
 				queue_cond.wait(lock);
 				continue;
 			}
-			msg = incoming.front();
+			Array &msg = incoming.front();
+			process_msg(msg);
 			incoming.pop();
 		}
-		process_msg(msg);
-		//free(msg.buf);
 	}
 }
 
 void MessageSink::add_msg(uint8_t *buf, uint32_t buflen)
 {
 	std::unique_lock qlock(queue_lock);
-	incoming.push({ buf, buflen});
+	incoming.emplace(buf, buflen);
 	queue_cond.notify_all();
 }
 

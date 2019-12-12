@@ -104,7 +104,7 @@ int Proxy::get_packet(uint8_t *buf, uint32_t buflen)
 	}
 
 	_read += reliable_read(buf + header_size, payload_length);
-	std::cout << "read packet with len " << _read << std::endl;
+	//std::cout << "read packet with len " << _read << std::endl;
 
 	return _read;
 }

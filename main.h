@@ -22,6 +22,8 @@ private:
 	bool is_pressed { false };
 	sf::Keyboard::Key last_key;
 
+	bool draw_map { false };
+
 	std::thread reader;
 	void reader_thread();
 	void key_handler();
