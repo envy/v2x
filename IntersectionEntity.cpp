@@ -51,8 +51,12 @@ Lane &Lane::operator=(Lane &&l) noexcept
 
 void Lane::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-	target.draw(*ingress_arrow);
-	target.draw(*egress_arrow);
+	if (ingress_arrow != nullptr)
+		target.draw(*ingress_arrow);
+	if (egress_arrow != nullptr)
+		target.draw(*egress_arrow);
+	if (stopline != nullptr)
+		target.draw(*stopline);
 
 	std::for_each(connections.begin(), connections.end(), [&target](const LaneConnection &lc) {
 		target.draw(lc);
@@ -179,18 +183,22 @@ void IntersectionEntity::build_geometry()
 				{
 					if (Utils::is_egress_lane(laneobj.attr.directionalUse))
 					{
-						auto astart = start + ndir * 100.0f / _main->get_scale();
-						auto aend = ndir * 300.0f / _main->get_scale();
-						auto s = astart + aend;
-						auto e = -aend;
-						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.egress_arrow), s, e);
-
+						auto astart = start + ndir * 150.0f / _main->get_scale();
+						auto invdir = -ndir;
+						if (laneobj.egress_arrow == nullptr)
+						{
+							laneobj.egress_arrow = new sf::VertexArray(sf::Triangles, 3);
+						}
+						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.egress_arrow), astart, invdir);
 					}
 					if (Utils::is_ingress_lane(laneobj.attr.directionalUse))
 					{
 						auto astart = start + ndir * 100.0f / _main->get_scale();
-						auto aend = ndir * 300.0f / _main->get_scale();
-						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), astart, aend);
+						if (laneobj.ingress_arrow == nullptr)
+						{
+							laneobj.ingress_arrow = new sf::VertexArray(sf::Triangles, 3);
+						}
+						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), astart, ndir);
 					}
 				}
 
@@ -224,12 +232,18 @@ void IntersectionEntity::build_geometry()
 					auto local_dir = local_end - local_start;
 					auto local_off = Utils::ortho(local_dir) * half_width; // FIXME: this is not correct as 150cm does not equal the lat/long the vector is supposed to be doing here
 					local_end = (local_start + Utils::normalize(local_dir) * 30.0f/_main->get_scale());
-					sf::VertexArray stopline(sf::Quads);
-					stopline.append(sf::Vertex(local_start - local_off, sf::Color::White));
-					stopline.append(sf::Vertex(local_start + local_off, sf::Color::White));
-					stopline.append(sf::Vertex(local_end + local_off , sf::Color::White));
-					stopline.append(sf::Vertex(local_end - local_off, sf::Color::White));
-					//laneobj.lane_markings.emplace_back(std::move(stopline));
+					if (laneobj.stopline == nullptr)
+					{
+						laneobj.stopline = new sf::VertexArray(sf::Quads, 4);
+						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[0].color = sf::Color::White;
+						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[1].color = sf::Color::White;
+						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[2].color = sf::Color::White;
+						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[3].color = sf::Color::White;
+					}
+					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[0].position = local_start - local_off;
+					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[1].position = local_start + local_off;
+					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[2].position = local_end + local_off;
+					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[3].position = local_end - local_off;
 				}
 			}
 
@@ -320,6 +334,7 @@ void IntersectionEntity::draw(sf::RenderTarget &target, sf::RenderStates states)
 void IntersectionEntity::add_connection(LaneID_t start, LaneID_t end, const SignalGroupID_t *sg)
 {
 	LaneConnection c;
+	c.from_id = start;
 	c.to_id = end;
 	if (sg != nullptr)
 	{
@@ -329,6 +344,8 @@ void IntersectionEntity::add_connection(LaneID_t start, LaneID_t end, const Sign
 	{
 		c.signal_group = -1;
 	}
+	c.from_node = &lanes[start].nodes[0];
+	c.to_node = &lanes[end].nodes[1];
 	lanes[start].connections.emplace_back(std::move(c));
 }
 
@@ -342,42 +359,8 @@ void IntersectionEntity::set_signal_group_state(SignalGroupID_t id, MovementPhas
 		{
 			if (lcit->signal_group == id && lcit->va.getVertexCount() > 0)
 			{
-				switch (state)
-				{
-					case MovementPhaseState_unavailable:
-						lcit->va[0].color = sf::Color::Black;
-						lcit->va[1].color = sf::Color::Black;
-					case MovementPhaseState_stop_Then_Proceed:
-					case MovementPhaseState_stop_And_Remain:
-						lcit->va[0].color = sf::Color::Red;
-						lcit->va[1].color = sf::Color::Red;
-						break;
-					case MovementPhaseState_permissive_Movement_Allowed:
-					case MovementPhaseState_protected_Movement_Allowed:
-						lcit->va[0].color = sf::Color::Green;
-						lcit->va[1].color = sf::Color::Green;
-						break;
-					case MovementPhaseState_pre_Movement:
-						lcit->va[0].color = sf::Color::Yellow;
-						lcit->va[1].color = sf::Color::Red;
-						break;
-					case MovementPhaseState_permissive_clearance:
-					case MovementPhaseState_protected_clearance:
-						lcit->va[0].color = sf::Color::Yellow;
-						lcit->va[1].color = sf::Color::Yellow;
-						break;
-					case MovementPhaseState_dark:
-						lcit->va[0].color = sf::Color(50, 50, 50);
-						lcit->va[1].color = sf::Color(50, 50, 50);
-						break;
-					case MovementPhaseState_caution_Conflicting_Traffic:
-						lcit->va[0].color = sf::Color(255, 165, 0);
-						lcit->va[1].color = sf::Color(255, 165, 0);
-						break;
-					default:
-						std::cout << "TODO: unhandled movement phase state " << state << std::endl;
-				}
-				// No return here as there might be multiple connections with the smae signal group
+				lcit->set_state(state);
+				// No return here as there might be multiple connections with the same signal group
 			}
 			++lcit;
 		}
@@ -388,4 +371,48 @@ void IntersectionEntity::set_signal_group_state(SignalGroupID_t id, MovementPhas
 void LaneConnection::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
 	target.draw(va);
+}
+
+void LaneConnection::set_state(MovementPhaseState_t newstate)
+{
+	if (newstate == state)
+	{
+		return;
+	}
+
+	switch (newstate)
+	{
+		case MovementPhaseState_unavailable:
+			va[0].color = sf::Color::Black;
+			va[1].color = sf::Color::Black;
+		case MovementPhaseState_stop_Then_Proceed:
+		case MovementPhaseState_stop_And_Remain:
+			va[0].color = sf::Color::Red;
+			va[1].color = sf::Color::Red;
+			break;
+		case MovementPhaseState_permissive_Movement_Allowed:
+		case MovementPhaseState_protected_Movement_Allowed:
+			va[0].color = sf::Color::Green;
+			va[1].color = sf::Color::Green;
+			break;
+		case MovementPhaseState_pre_Movement:
+			va[0].color = sf::Color::Yellow;
+			va[1].color = sf::Color::Red;
+			break;
+		case MovementPhaseState_permissive_clearance:
+		case MovementPhaseState_protected_clearance:
+			va[0].color = sf::Color::Yellow;
+			va[1].color = sf::Color::Yellow;
+			break;
+		case MovementPhaseState_dark:
+			va[0].color = sf::Color(50, 50, 50);
+			va[1].color = sf::Color(50, 50, 50);
+			break;
+		case MovementPhaseState_caution_Conflicting_Traffic:
+			va[0].color = sf::Color(255, 165, 0);
+			va[1].color = sf::Color(255, 165, 0);
+			break;
+		default:
+			std::cout << "TODO: unhandled movement phase state " << state << std::endl;
+	}
 }

@@ -135,19 +135,14 @@ sf::Vector2<int32_t> Utils::lat_lon_to_x_y(double lat, double lon, uint8_t zoom)
 void Utils::draw_arrow(sf::VertexArray *va, sf::Vector2f &start, sf::Vector2f &dir, sf::Color color)
 {
 #define ARROW_SIZE 50.0f
-	auto end = start + dir;
 	auto ndir = Utils::normalize(dir);
+	auto down = ndir * ARROW_SIZE / _main->get_scale();
 	auto t = Utils::ortho(dir) * ARROW_SIZE / _main->get_scale();
-	auto al = start + (ndir * ARROW_SIZE / _main->get_scale()) + t;
-	auto ar = start + (ndir * ARROW_SIZE / _main->get_scale()) - t;
-	(*va)[0].position = end;
+	auto left = start + down + t;
+	auto right = start + down - t;
+	(*va)[0].position = start;
 	(*va)[0].color = color;
-	(*va)[1].position = start;
+	(*va)[1].position = left;
 	(*va)[1].color = color;
-	(*va)[2].position = al;
-	(*va)[2].color = color;
-	(*va)[3].position = ar;
-	(*va)[3].color = color;
-	(*va)[4].position = start;
-	(*va)[4].color = color;
+	(*va)[2].position = right;
 }

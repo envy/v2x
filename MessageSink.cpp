@@ -355,11 +355,19 @@ void MessageSink::parse_spatem(station_msgs_t *data)
 		for (uint32_t mst = 0; mst < in->states.list.count; ++mst)
 		{
 			auto ms = in->states.list.array[mst];
+			if (ms->state_time_speed.list.count == 0)
+			{
+				continue;
+			}
 			data->ie->set_signal_group_state(ms->signalGroup, ms->state_time_speed.list.array[0]->eventState);
 			if (ms->state_time_speed.list.array[0]->timing != nullptr)
 			{
 				auto t = ms->state_time_speed.list.array[0]->timing;
 				//xer_fprint(stdout, &asn_DEF_TimeChangeDetails, t);
+			}
+			if (ms->state_time_speed.list.count > 1)
+			{
+				std::cout << "TODO: spat has multiple states" << std::endl;
 			}
 		}
 	}

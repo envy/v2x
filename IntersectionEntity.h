@@ -32,9 +32,14 @@ class LaneConnection : public sf::Drawable
 {
 public:
 	LaneID_t to_id { 0 };
+	LaneID_t from_id { 0 };
+	Node *to_node { nullptr };
+	Node *from_node { nullptr };
 	SignalGroupID_t signal_group { 0 };
+	MovementPhaseState_t state { MovementPhaseState_unavailable };
 	sf::VertexArray va {};
 
+	void set_state(MovementPhaseState_t newstate);
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 };
 
@@ -49,9 +54,9 @@ public:
 	LaneAttributes_t attr {};
 	std::vector<Node> nodes;
 	std::vector<LaneConnection> connections;
-	sf::Drawable *ingress_arrow { new sf::VertexArray(sf::LineStrip, 5) };
-	sf::Drawable *egress_arrow { new sf::VertexArray(sf::LineStrip, 5) };
-	//std::vector<sf::VertexArray> lane_markings;
+	sf::Drawable *ingress_arrow { nullptr };
+	sf::Drawable *egress_arrow { nullptr };
+	sf::Drawable *stopline { nullptr };
 
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 };

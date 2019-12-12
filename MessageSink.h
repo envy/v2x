@@ -25,7 +25,7 @@ class Array
 	Array(Array &&a) noexcept
 	{
 		buf = a.buf;
-		delete[] a.buf;
+		a.buf = nullptr;
 		len = a.len;
 		a.len = 0;
 	}
@@ -34,7 +34,7 @@ class Array
 		delete[] buf;
 
 		buf = a.buf;
-		delete[] a.buf;
+		a.buf = nullptr;
 		len = a.len;
 		a.len = 0;
 
