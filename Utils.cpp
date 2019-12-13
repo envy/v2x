@@ -171,13 +171,13 @@ void Utils::draw_arrow(sf::VertexArray *va, sf::Vector2f &start, sf::Vector2f &d
 }
 
 /**
- *
- * @param lat
- * @param lon
- * @param x_m
- * @param y_m
- * @param out_lat
- * @param out_lon
+ * See https://gis.stackexchange.com/a/2980
+ * @param lat Latitude in 1/10 microdegree (Y direction)
+ * @param lon Longitude in 1/10 microdegree (X direction)
+ * @param x_cm Centimeter offset in X direction
+ * @param y_cm Centimeter offset in Y direction
+ * @param out_lat Resulting latitude in 1/10 microdegree
+ * @param out_lon Resulting longitude in 1/10 microdegree
  */
 void Utils::lat_lon_move(int64_t lat, int64_t lon, int64_t x_cm, int64_t y_cm, int64_t &out_lat, int64_t &out_lon)
 {
