@@ -24,9 +24,14 @@ make
 How to run
 ----------
 
-Run from main directory as it need to find the font.
+Run from main directory as it needs to find the font.
 You have to specify the IP, *not* the hostname!
 
 ```bash
 ./app <ip of itsg5proxy>
 ```
+
+External files
+--------------
+
+ASN.1 files have been obtained from [here](https://forge.etsi.org/rep/LIBS/LibIts/tree/STF525/asn1).

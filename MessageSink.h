@@ -20,7 +20,7 @@ class Array
 	Array(uint8_t *buf, uint32_t len) : buf(buf), len(len) {}
 	~Array()
 	{
-		delete[] buf;
+		//delete[] buf;
 	}
 	Array(Array &&a) noexcept
 	{

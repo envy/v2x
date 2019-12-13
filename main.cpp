@@ -217,12 +217,12 @@ void Main::key_handler()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::E) && keyclock.getElapsedTime().asMilliseconds() >= 100)
 	{
 		_key_pressed = true;
-		zoom(-1.0f);
+		zoom(-5.0f);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q) && keyclock.getElapsedTime().asMilliseconds() >= 100)
 	{
 		_key_pressed = true;
-		zoom(1.0);
+		zoom(5.0);
 	}
 
 	if (_key_pressed)
@@ -260,7 +260,9 @@ int main(int argc, char *argv[]) {
 	Main m(argv[1], port, 1337);
 	_main = &m;
 
-	/*
+	//m.ms.add_msg(unknown_cam, sizeof(unknown_cam));
+
+	///*
 	m.ms.add_msg(muehlenpfordt_x_rebenring_mapem, sizeof(muehlenpfordt_x_rebenring_mapem));
 	m.ms.add_msg(muehlenpfordt_x_rebenring_spatem, sizeof(muehlenpfordt_x_rebenring_spatem));
 
@@ -274,6 +276,45 @@ int main(int argc, char *argv[]) {
 
 	//*/
 	//m.ms.add_msg({mapem2, sizeof(mapem2)});
+
+	m.ms.add_msg(mapem_20, sizeof(mapem_20));
+	m.ms.add_msg(mapem_22, sizeof(mapem_22));
+
+	m.ms.add_msg(cam_20, sizeof(cam_20));
+	m.ms.add_msg(cam_22, sizeof(cam_22));
+
+	m.ms.add_msg(mapem_1186764, sizeof(mapem_1186764));
+
+	m.ms.add_msg(mapem_1187272, sizeof(mapem_1187272));
+	m.ms.add_msg(mapem_1187284, sizeof(mapem_1187284));
+
+	m.ms.add_msg(mapem_1187572, sizeof(mapem_1187572));
+	m.ms.add_msg(mapem_1187592, sizeof(mapem_1187592));
+
+	m.ms.add_msg(mapem_1187604, sizeof(mapem_1187604));
+	m.ms.add_msg(mapem_1187628, sizeof(mapem_1187628));
+
+	m.ms.add_msg(mapem_1187788, sizeof(mapem_1187788));
+
+	m.ms.add_msg(mapem_1187904, sizeof(mapem_1187904));
+	m.ms.add_msg(mapem_1187932, sizeof(mapem_1187932));
+	m.ms.add_msg(mapem_1187936, sizeof(mapem_1187936));
+	m.ms.add_msg(mapem_1187968, sizeof(mapem_1187968));
+	m.ms.add_msg(mapem_1187972, sizeof(mapem_1187972));
+	m.ms.add_msg(mapem_1187976, sizeof(mapem_1187976));
+	m.ms.add_msg(mapem_1187996, sizeof(mapem_1187996));
+
+	m.ms.add_msg(mapem_1188000, sizeof(mapem_1188000));
+	m.ms.add_msg(mapem_1188036, sizeof(mapem_1188036));
+	m.ms.add_msg(mapem_1188040, sizeof(mapem_1188040));
+	m.ms.add_msg(mapem_1188044, sizeof(mapem_1188044));
+	m.ms.add_msg(mapem_1188048, sizeof(mapem_1188048));
+	m.ms.add_msg(mapem_1188052, sizeof(mapem_1188052));
+
+	m.ms.add_msg(mapem_1188236, sizeof(mapem_1188236));
+	m.ms.add_msg(mapem_1188248, sizeof(mapem_1188248));
+	m.ms.add_msg(mapem_1188920, sizeof(mapem_1188920));
+	m.ms.add_msg(mapem_1188928, sizeof(mapem_1188928));
 
 	// m.ms.set_origin(522732617, 105252691); // IZ
 	m.set_origin(522750000, 105244000);

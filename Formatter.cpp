@@ -149,7 +149,7 @@ std::string Formatter::format_speed_value(SpeedValue_t val)
 	if (val == SpeedValue_unavailable) {
 		return "unavailable";
 	}
-	ss << val << " cm/s (" << val / 100 << " m/s; " << val * 3.6 << " km/h)";
+	ss << val << " cm/s (" << val / 100 << " m/s; " << (val/100) * 3.6 << " km/h)";
 	return ss.str();
 }
 
@@ -420,6 +420,11 @@ std::string Formatter::dump_spatem(SPATEM_t *spatem)
 							ss << " <" << Utils::timemark_to_seconds(*state->timing->maxEndTime) << " s";
 						}
 					}
+				}
+
+				if (state->speeds != nullptr)
+				{
+					ss << "  TODO SPEEDS";
 				}
 			}
 			ss << std::endl;

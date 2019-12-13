@@ -303,9 +303,10 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 						}
 						if (node->attributes->dWidth != nullptr)
 						{
-							// FIXME: Is this a delta or not?
-							//width = (uint64_t)(width + *node->attributes->dWidth);
-							width = (uint64_t)(*node->attributes->dWidth);
+							// FIXME: Is this a delta or not? Yes it is
+							// FIXME: check if new widht would cause underflow
+							width = (uint64_t)(width + *node->attributes->dWidth);
+							//width = (uint64_t)(*node->attributes->dWidth);
 						}
 					}
 
