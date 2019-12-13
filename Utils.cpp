@@ -17,22 +17,28 @@
 
 bool Utils::is_ingress_lane(LaneDirection_t dir)
 {
-	return (dir.buf[0] & (1u << (7-LaneDirection_ingressPath))) > 0;
+	return (dir.buf[0] & (1u << (7u-LaneDirection_ingressPath))) > 0;
 }
 
 bool Utils::is_egress_lane(LaneDirection_t dir)
 {
-	return (dir.buf[0] & (1u << (7-LaneDirection_egressPath))) > 0;
+	return (dir.buf[0] & (1u << (7u-LaneDirection_egressPath))) > 0;
 }
 
-bool Utils::has_individual_vehicle_traffic(LaneSharing_t s) {}
+bool Utils::has_individual_vehicle_traffic(LaneSharing_t s)
+{
+	return (s.buf[0] & (1u << (9u-LaneSharing_individualMotorizedVehicleTraffic))) > 0;
+}
 
 bool Utils::has_tracked_vehicle_traffic(LaneSharing_t s)
 {
-	return (s.buf[0] & (1u << (7-LaneSharing_trackedVehicleTraffic-8))) > 0;
+	return (s.buf[0] & (1u << (9u-LaneSharing_trackedVehicleTraffic))) > 0;
 }
 
-bool Utils::has_bus_vehicle_traffic(LaneSharing_t s) {}
+bool Utils::has_bus_vehicle_traffic(LaneSharing_t s)
+{
+	return (s.buf[0] & (1u << (9u-LaneSharing_busVehicleTraffic))) > 0;
+}
 bool Utils::has_taxi_vehicle_traffic(LaneSharing_t s) {}
 bool Utils::has_pedestrian_traffic(LaneSharing_t s) {}
 bool Utils::has_cyclist_traffic(LaneSharing_t s) {}
@@ -162,4 +168,22 @@ void Utils::draw_arrow(sf::VertexArray *va, sf::Vector2f &start, sf::Vector2f &d
 	(*va)[1].position = left;
 	(*va)[1].color = color;
 	(*va)[2].position = right;
+}
+
+/**
+ *
+ * @param lat
+ * @param lon
+ * @param x_m
+ * @param y_m
+ * @param out_lat
+ * @param out_lon
+ */
+void Utils::lat_lon_move(int64_t lat, int64_t lon, int64_t x_cm, int64_t y_cm, int64_t &out_lat, int64_t &out_lon)
+{
+#define EARTH_RAD 637813700.0 // centimeter at equator
+	double dlat = y_cm / EARTH_RAD;
+	double dlon = x_cm / (EARTH_RAD * cos(M_PI * (lat/10000000.0) / 180.0));
+	out_lat = (int64_t)(lat + (dlat * 180.0 / M_PI)*10000000);
+	out_lon = (int64_t)(lon + (dlon * 180.0 / M_PI)*10000000);
 }

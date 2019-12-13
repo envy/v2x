@@ -84,8 +84,9 @@ void IntersectionEntity::add_node(LaneID_t lane_id, int64_t x, int64_t y, uint64
 	{
 		//first node is referenced from ref-point
 		Node n;
-		n.x = ref_x + x;
-		n.y = ref_y + y;
+		//n.x = ref_x + x;
+		//n.y = ref_y + y;
+		Utils::lat_lon_move(ref_y, ref_x, x, y, n.y, n.x);
 		n.width = width;
 		n.attributes = std::move(attributes);
 		lane.nodes.emplace_back(std::move(n));
@@ -95,8 +96,9 @@ void IntersectionEntity::add_node(LaneID_t lane_id, int64_t x, int64_t y, uint64
 		//every other node is referenced from the previous node
 		auto &prev_node = lane.nodes[lane.nodes.size() - 1];
 		Node n;
-		n.x = prev_node.x + x;
-		n.y = prev_node.y + y;
+		//n.x = prev_node.x + x;
+		//n.y = prev_node.y + y;
+		Utils::lat_lon_move(prev_node.y, prev_node.x, x, y, n.y, n.x);
 		n.width = width;
 		n.attributes = std::move(attributes);
 		lane.nodes.emplace_back(std::move(n));
@@ -310,6 +312,13 @@ void IntersectionEntity::build_geometry()
 
 void IntersectionEntity::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
+	sf::CircleShape ref(100/_main->get_scale());
+	float x, y;
+	x = Main::get_center_x() + (ref_x - _main->get_origin_x()) / _main->get_scale();
+	y = Main::get_center_y() - (ref_y - _main->get_origin_y()) / _main->get_scale();
+	ref.setPosition(x, y);
+	ref.setFillColor(sf::Color::Cyan);
+	target.draw(ref);
 	/*
 	std::for_each(lane_outline_geometries.begin(), lane_outline_geometries.end(), [&target](const sf::VertexArray &va) {
 		target.draw(va);

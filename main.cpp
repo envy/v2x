@@ -277,8 +277,9 @@ int main(int argc, char *argv[]) {
 	//*/
 	//m.ms.add_msg({mapem2, sizeof(mapem2)});
 
-	m.ms.add_msg(mapem_20, sizeof(mapem_20));
-	m.ms.add_msg(mapem_22, sizeof(mapem_22));
+	///*
+	//m.ms.add_msg(mapem_20, sizeof(mapem_20));
+	//m.ms.add_msg(mapem_22, sizeof(mapem_22)); // duplicate of hbf
 
 	m.ms.add_msg(cam_20, sizeof(cam_20));
 	m.ms.add_msg(cam_22, sizeof(cam_22));
@@ -315,6 +316,7 @@ int main(int argc, char *argv[]) {
 	m.ms.add_msg(mapem_1188248, sizeof(mapem_1188248));
 	m.ms.add_msg(mapem_1188920, sizeof(mapem_1188920));
 	m.ms.add_msg(mapem_1188928, sizeof(mapem_1188928));
+	//*/
 
 	// m.ms.set_origin(522732617, 105252691); // IZ
 	m.set_origin(522750000, 105244000);
