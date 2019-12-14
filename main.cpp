@@ -105,6 +105,21 @@ void insert_maps_thread(MessageSink *ms)
 	}
 }
 
+void car_thread(MessageSink *ms)
+{
+	while (true)
+	{
+		ms->add_msg(unknown_cam_1, sizeof(unknown_cam_1));
+		sleep(1);
+		ms->add_msg(unknown_cam_2, sizeof(unknown_cam_2));
+		sleep(1);
+		ms->add_msg(unknown_cam_3, sizeof(unknown_cam_3));
+		sleep(1);
+		ms->add_msg(unknown_cam_4, sizeof(unknown_cam_4));
+		sleep(1);
+	}
+}
+
 void Main::reader_thread()
 {
 #define BUFSIZE 2048
@@ -260,8 +275,6 @@ int main(int argc, char *argv[]) {
 	Main m(argv[1], port, 1337);
 	_main = &m;
 
-	m.ms.add_msg(unknown_cam, sizeof(unknown_cam));
-
 	///*
 	m.ms.add_msg(muehlenpfordt_x_rebenring_mapem, sizeof(muehlenpfordt_x_rebenring_mapem));
 	m.ms.add_msg(muehlenpfordt_x_rebenring_spatem, sizeof(muehlenpfordt_x_rebenring_spatem));
@@ -275,9 +288,8 @@ int main(int argc, char *argv[]) {
 	m.ms.add_msg(pockels_x_rebenring_spatem, sizeof(pockels_x_rebenring_spatem));
 
 	//*/
-	//m.ms.add_msg({mapem2, sizeof(mapem2)});
 
-	/*
+	///*
 	//m.ms.add_msg(mapem_20, sizeof(mapem_20));
 	//m.ms.add_msg(mapem_22, sizeof(mapem_22)); // duplicate of hbf
 
@@ -322,6 +334,8 @@ int main(int argc, char *argv[]) {
 	m.set_origin(522750000, 105244000);
 
 	//std::thread t(insert_maps_thread, &m.ms);
+
+	std::thread t(car_thread, &m.ms);
 
 	m.run();
 
