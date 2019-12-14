@@ -45,7 +45,11 @@ class Array
 typedef struct
 {
 	uint64_t last { 0 };
-	CAM_t *cam { nullptr };
+	uint8_t cam_version { 0 };
+	union {
+		CAMv1_t *v1;
+		CAM_t *v2;
+	} cam { nullptr };
 	DENM_t *denm { nullptr };
 	SPATEM_t *spatem { nullptr };
 	MAPEM_t *mapem { nullptr };

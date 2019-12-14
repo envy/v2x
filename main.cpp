@@ -260,7 +260,7 @@ int main(int argc, char *argv[]) {
 	Main m(argv[1], port, 1337);
 	_main = &m;
 
-	//m.ms.add_msg(unknown_cam, sizeof(unknown_cam));
+	m.ms.add_msg(unknown_cam, sizeof(unknown_cam));
 
 	///*
 	m.ms.add_msg(muehlenpfordt_x_rebenring_mapem, sizeof(muehlenpfordt_x_rebenring_mapem));
@@ -277,7 +277,7 @@ int main(int argc, char *argv[]) {
 	//*/
 	//m.ms.add_msg({mapem2, sizeof(mapem2)});
 
-	///*
+	/*
 	//m.ms.add_msg(mapem_20, sizeof(mapem_20));
 	//m.ms.add_msg(mapem_22, sizeof(mapem_22)); // duplicate of hbf
 

@@ -120,13 +120,13 @@ void IntersectionEntity::build_geometry()
 	{
 		auto &laneobj = lit->second;
 
-		sf::VertexArray lane(sf::TrianglesStrip);
-		sf::VertexArray lane_outline(sf::TrianglesStrip);
+		sf::VertexArray lane(sf::TriangleStrip);
+		sf::VertexArray lane_outline(sf::TriangleStrip);
 		sf::VertexArray lane_node_strip(sf::LineStrip);
-		float prev_x, prev_y, x, y;
 
-		x = Main::get_center_x() + (ref_x - _main->get_origin_x()) / _main->get_scale();
-		y = Main::get_center_y() - (ref_y - _main->get_origin_y()) / _main->get_scale();
+		int64_t lx, ly, plx, ply;
+		lx = ref_x;
+		ly = ref_y;
 
 		auto this_lane_color = sf::Color::White;
 		switch (laneobj.attr.laneType.present)
@@ -154,26 +154,30 @@ void IntersectionEntity::build_geometry()
 		auto node_counter = 0;
 		while (node != laneobj.nodes.end())
 		{
-			float width = (node->width) / _main->get_scale();
+			float width = node->width;
 			float half_width = width / 2.0f;
 			int64_t nx = node->x;
 			int64_t ny = node->y;
-			prev_x = x;
-			prev_y = y;
-			x = Main::get_center_x() + (nx - _main->get_origin_x()) / _main->get_scale();
-			y = Main::get_center_y() - (ny - _main->get_origin_y()) / _main->get_scale();
 
-			lane_node_strip.append( sf::Vertex(sf::Vector2f(x, y), sf::Color::Cyan));
+			plx = lx;
+			ply = ly;
+			lx = nx;
+			ly = ny;
 
-			auto start = sf::Vector2f(prev_x, prev_y);
-			auto end = sf::Vector2f(x, y);
-			auto dir = end-start;
+			sf::Vector2<int64_t> start(plx, ply);
+			sf::Vector2<int64_t> end(lx, ly);
+			auto dir = end - start;
 			auto ndir = Utils::normalize(dir);
-			auto off = Utils::ortho(dir) * half_width; // FIXME: this is not correct as 150cm does not equal the lat/long the vector is supposed to be doing here
+			auto ortho = Utils::ortho(dir);
+			auto off = ortho * half_width;
 
+			lane_node_strip.append( sf::Vertex(Utils::to_screen(lx, ly), sf::Color::Cyan));
+
+			/*
 			auto ostart = start - ndir * 1.1f;
 			auto oend = end + ndir * 1.1f;
 			auto ooff = Utils::ortho(dir) * half_width * 1.1f;
+			//*/
 
 			if (node_counter == 0)
 			{
@@ -185,38 +189,45 @@ void IntersectionEntity::build_geometry()
 				{
 					if (Utils::is_egress_lane(laneobj.attr.directionalUse))
 					{
-						auto astart = start + ndir * 150.0f / _main->get_scale();
+						auto astart = start + ndir * 150.0f;
 						auto invdir = -ndir;
 						if (laneobj.egress_arrow == nullptr)
 						{
 							laneobj.egress_arrow = new sf::VertexArray(sf::Triangles, 3);
 						}
-						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.egress_arrow), astart, invdir);
+						auto screen_start = Utils::to_screen(astart);
+						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.egress_arrow), screen_start, invdir);
 					}
 					if (Utils::is_ingress_lane(laneobj.attr.directionalUse))
 					{
-						auto astart = start + ndir * 100.0f / _main->get_scale();
+						auto astart = start + ndir * 100.0f;
 						if (laneobj.ingress_arrow == nullptr)
 						{
 							laneobj.ingress_arrow = new sf::VertexArray(sf::Triangles, 3);
 						}
-						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), astart, ndir);
+						auto screen_start = Utils::to_screen(astart);
+						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), screen_start, ndir);
 					}
 				}
 
-				lane.append(sf::Vertex(start - off, this_lane_color));
-				lane.append(sf::Vertex(start + off, this_lane_color));
+				int64_t left_x, left_y, right_x, right_y;
+				Utils::lat_lon_move(start.y, start.x, -off.x, -off.y, left_y, left_x);
+				Utils::lat_lon_move(start.y, start.x, off.x, off.y, right_y, right_x);
+				lane.append(sf::Vertex(Utils::to_screen(left_x, left_y), this_lane_color));
+				lane.append(sf::Vertex(Utils::to_screen(right_x, right_y), this_lane_color));
 
-				lane_outline.append(sf::Vertex(ostart - ooff, lane_outer_color));
-				lane_outline.append(sf::Vertex(ostart + ooff, lane_outer_color));
+				//lane_outline.append(sf::Vertex(ostart - ooff, lane_outer_color));
+				//lane_outline.append(sf::Vertex(ostart + ooff, lane_outer_color));
 
 				if (node + 1 == laneobj.nodes.end())
 				{
-					lane.append(sf::Vertex(end - off, this_lane_color));
-					lane.append(sf::Vertex(end + off, this_lane_color));
+					Utils::lat_lon_move(end.y, end.x, -off.x, -off.y, left_y, left_x);
+					Utils::lat_lon_move(end.y, end.x, off.x, off.y, right_y, right_x);
+					lane.append(sf::Vertex(Utils::to_screen(left_x, left_y), this_lane_color));
+					lane.append(sf::Vertex(Utils::to_screen(right_x, right_y), this_lane_color));
 
-					lane_outline.append(sf::Vertex(oend - ooff, lane_outer_color));
-					lane_outline.append(sf::Vertex(oend + ooff, lane_outer_color));
+					//lane_outline.append(sf::Vertex(oend - ooff, lane_outer_color));
+					//lane_outline.append(sf::Vertex(oend + ooff, lane_outer_color));
 				}
 			}
 
@@ -225,6 +236,7 @@ void IntersectionEntity::build_geometry()
 				auto nextnode = node + 1;
 				if (nextnode != laneobj.nodes.end())
 				{
+					/*
 					auto local_prev_x = x;
 					auto local_prev_y = y;
 					auto local_x = Main::get_center_x() + (nextnode->x - _main->get_origin_x()) / _main->get_scale();
@@ -246,9 +258,11 @@ void IntersectionEntity::build_geometry()
 					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[1].position = local_start + local_off;
 					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[2].position = local_end + local_off;
 					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[3].position = local_end - local_off;
+					//*/
 				}
 			}
 
+			/*
 			if (node->is(NodeAttributeXY_mergePoint))
 			{
 				auto astart = end + ndir * 100.0f / _main->get_scale();
@@ -264,7 +278,7 @@ void IntersectionEntity::build_geometry()
 				//sf::VertexArray mp = Utils::draw_arrow(astart, aend, sf::Color::Red);
 				//laneobj.lane_markings.emplace_back(std::move(mp));
 			}
-
+			//*/
 			++node;
 			++node_counter;
 		}
@@ -313,10 +327,7 @@ void IntersectionEntity::build_geometry()
 void IntersectionEntity::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
 	sf::CircleShape ref(100/_main->get_scale());
-	float x, y;
-	x = Main::get_center_x() + (ref_x - _main->get_origin_x()) / _main->get_scale();
-	y = Main::get_center_y() - (ref_y - _main->get_origin_y()) / _main->get_scale();
-	ref.setPosition(x, y);
+	ref.setPosition(Utils::to_screen(ref_x, ref_y));
 	ref.setFillColor(sf::Color::Cyan);
 	target.draw(ref);
 	/*
@@ -334,6 +345,7 @@ void IntersectionEntity::draw(sf::RenderTarget &target, sf::RenderStates states)
 	//*/
 
 	// connections
+
 	std::for_each(lanes.begin(), lanes.end(), [&target](const std::pair<const LaneID_t, Lane> &d) {
 		auto &l = d.second;
 		target.draw(l);

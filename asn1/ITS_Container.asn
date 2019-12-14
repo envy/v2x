@@ -190,7 +190,14 @@ Curvature ::= SEQUENCE {
     curvatureConfidence CurvatureConfidence
 }
 
+CurvatureV1 ::= SEQUENCE {
+     curvatureValue CurvatureValueV1,
+     curvatureConfidence CurvatureConfidence
+}
+
 CurvatureValue ::= INTEGER {straight(0), unavailable(1023)} (-1023..1023)
+
+CurvatureValueV1 ::= INTEGER {straight(0), reciprocalOf1MeterRadiusToRight(-30000), reciprocalOf1MeterRadiusToLeft(30000), unavailable(30001)} (-30000..30001)
 
 CurvatureConfidence ::= ENUMERATED {
     onePerMeter-0-00002 (0),

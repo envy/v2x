@@ -9,12 +9,30 @@
 #include "MovementEventList.h"
 #include "main.h"
 
+sf::Vector2<int64_t> operator*(sf::Vector2<int64_t> v, float a)
+{
+	return sf::Vector2<int64_t>(v.x * a, v.y * a);
+}
+
+sf::Vector2<int64_t> operator/(sf::Vector2<int64_t> v, float a)
+{
+	return sf::Vector2<int64_t>(v.x / a, v.y / a);
+}
+
+sf::Vector2f operator+(sf::Vector2f a, sf::Vector2<int64_t> b)
+{
+	return sf::Vector2f(a.x + b.x, a.y + b.y);
+}
+sf::Vector2f operator+(sf::Vector2<int64_t> a, sf::Vector2f b)
+{
+	return sf::Vector2f(a.x + b.x, a.y + b.y);
+}
+
 /*
  * ASN.1 BITSTRINGs are weird.
  * Bit 0 is not the least significant bit, but the most significant, so the order is reversed.
  * Also, we only get
  */
-
 bool Utils::is_ingress_lane(LaneDirection_t dir)
 {
 	return (dir.buf[0] & (1u << (7u-LaneDirection_ingressPath))) > 0;
@@ -116,14 +134,47 @@ sf::Vector2f Utils::ortho(sf::Vector2f &a)
 	return sf::Vector2f(a.y/length(a), -a.x/length(a));
 }
 
+sf::Vector2f Utils::ortho(sf::Vector2<int64_t> &a)
+{
+	return sf::Vector2f(a.y/length(a), -a.x/length(a));
+}
+
 sf::Vector2f Utils::normalize(sf::Vector2f &a)
 {
 	return a/length(a);
 }
 
+sf::Vector2f Utils::normalize(sf::Vector2<int64_t> &a)
+{
+	auto l = length(a);
+	return sf::Vector2f(a.x / (float)l, a.y / (float)l);
+}
+
 float Utils::length(sf::Vector2f &a)
 {
 	return sqrt(a.x*a.x + a.y*a.y);
+}
+
+float Utils::length(sf::Vector2<int64_t> &a)
+{
+	return sqrt(a.x*a.x + a.y*a.y);
+}
+
+sf::Vector2f Utils::to_screen(sf::Vector2f &f)
+{
+	return sf::Vector2f(Main::get_center_x() + (f.x - _main->get_origin_x()) / _main->get_scale(),
+	                    Main::get_center_y() - (f.y - _main->get_origin_y()) / _main->get_scale());
+}
+sf::Vector2f Utils::to_screen(sf::Vector2<int64_t> &i)
+{
+	return sf::Vector2f(Main::get_center_x() + (i.x - _main->get_origin_x()) / _main->get_scale(),
+	                    Main::get_center_y() - (i.y - _main->get_origin_y()) / _main->get_scale());
+}
+
+sf::Vector2f Utils::to_screen(int64_t ix, int64_t iy)
+{
+	return sf::Vector2f(Main::get_center_x() + (ix - _main->get_origin_x()) / _main->get_scale(),
+	                    Main::get_center_y() - (iy - _main->get_origin_y()) / _main->get_scale());
 }
 
 float Utils::timemark_to_seconds(TimeMark_t &t)

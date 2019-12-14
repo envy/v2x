@@ -75,21 +75,51 @@ void MessageSink::process_msg(Array &arr)
 
 	if (is_cam(arr.buf, arr.len, &start))
 	{
-		CAM_t *cam = nullptr;
-		int ret = parse_cam(arr.buf+start, arr.len-start, &cam);
-		if (ret == 0)
+		// figure out which version of cam
+		StationID_t id;
+		ItsPduHeader_t *header = nullptr;
+		int ret = parse_header(arr.buf+start, arr.len-start, &header);
+		if (ret != 0)
 		{
-			if (msgs.find(cam->header.stationID) == msgs.end())
-			{
-				msgs.insert(std::pair<StationID_t, station_msgs_t *>(cam->header.stationID, new station_msgs_t()));
-			}
-			if (msgs[cam->header.stationID]->cam != nullptr)
-			{
-				ASN_STRUCT_FREE(asn_DEF_CAM, msgs[cam->header.stationID]->cam);
-			}
-			msgs[cam->header.stationID]->last = timestamp_now();
-			msgs[cam->header.stationID]->cam = cam;
+			std::cout << "could not parse header!\n" << std::endl;
 			return;
+		}
+		id = header->stationID;
+		if (msgs.find(id) == msgs.end())
+		{
+			msgs.insert(std::pair<StationID_t, station_msgs_t *>(id, new station_msgs_t()));
+		}
+		if (header->protocolVersion == 1)
+		{
+			CAMv1_t *cam = nullptr;
+			ret = parse_camv1(arr.buf+start, arr.len-start, &cam);
+			if (ret == 0)
+			{
+				if (msgs[id]->cam.v1 != nullptr)
+				{
+					ASN_STRUCT_FREE(asn_DEF_CAM, msgs[id]->cam.v1);
+				}
+				msgs[id]->last = timestamp_now();
+				msgs[id]->cam_version = 1;
+				msgs[id]->cam.v1 = cam;
+				return;
+			}
+		}
+		else if (header->protocolVersion == 2)
+		{
+			CAM_t *cam = nullptr;
+			ret = parse_cam(arr.buf+start, arr.len-start, &cam);
+			if (ret == 0)
+			{
+				if (msgs[id]->cam.v2 != nullptr)
+				{
+					ASN_STRUCT_FREE(asn_DEF_CAM, msgs[id]->cam.v2);
+				}
+				msgs[id]->last = timestamp_now();
+				msgs[id]->cam_version = 2;
+				msgs[id]->cam.v2 = cam;
+				return;
+			}
 		}
 		std::cout << "packet was CAM and had len: " << arr.len << std::endl;
 	}
@@ -530,9 +560,16 @@ void MessageSink::draw_details(sf::RenderTarget &target)
 	}
 
 	std::stringstream ss;
-	if (data->cam != nullptr && _show_cams)
+	if (data->cam_version != 0 && _show_cams)
 	{
-		ss << Formatter::dump_cam(data->cam);
+		if (data->cam_version == 1)
+		{
+			ss << Formatter::dump_camv1(data->cam.v1);
+		}
+		else if (data->cam_version == 2)
+		{
+			ss << Formatter::dump_cam(data->cam.v2);
+		}
 	}
 	if (data->denm != nullptr && _show_denms)
 	{
@@ -553,13 +590,23 @@ void MessageSink::draw_details(sf::RenderTarget &target)
 void MessageSink::draw_cam(sf::RenderTarget &target,station_msgs_t *data)
 {
 	sf::CircleShape c(100 / _main->get_scale());
-	auto lat = data->cam->cam.camParameters.basicContainer.referencePosition.latitude;
-	auto lon = data->cam->cam.camParameters.basicContainer.referencePosition.longitude;
-	auto x = Main::get_center_x() + (lon - _main->get_origin_x()) / _main->get_scale();
-	auto y = Main::get_center_y() - (lat - _main->get_origin_y()) / _main->get_scale();
-	c.setPosition(x, y);
-	c.setFillColor(sf::Color::Blue);
-	target.draw(c);
+	if (data->cam_version == 1)
+	{
+		auto lat = data->cam.v1->cam.camParameters.basicContainer.referencePosition.latitude;
+		auto lon = data->cam.v1->cam.camParameters.basicContainer.referencePosition.longitude;
+		c.setPosition(Utils::to_screen(lon, lat));
+		c.setFillColor(sf::Color::Blue);
+		target.draw(c);
+	}
+	else if (data->cam_version == 2)
+	{
+		auto lat = data->cam.v2->cam.camParameters.basicContainer.referencePosition.latitude;
+		auto lon = data->cam.v2->cam.camParameters.basicContainer.referencePosition.longitude;
+		c.setPosition(Utils::to_screen(lon, lat));
+		c.setFillColor(sf::Color::Blue);
+		target.draw(c);
+	}
+
 }
 
 void MessageSink::draw_map(sf::RenderTarget &background, sf::RenderTarget &foreground)
@@ -579,7 +626,7 @@ void MessageSink::draw_map(sf::RenderTarget &background, sf::RenderTarget &foreg
 		{
 			draw_intersection(background, data);
 		}
-		if (data->cam != nullptr)
+		if (data->cam_version != 0)
 		{
 			draw_cam(foreground, data);
 		}

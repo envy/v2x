@@ -184,6 +184,11 @@ int parse_cam(uint8_t *buf, uint32_t len, CAM_t **cam)
 	return parse_something(buf, len, (void **)cam, &asn_DEF_CAM);
 }
 
+int parse_camv1(uint8_t *buf, uint32_t len, CAMv1_t **cam)
+{
+	return parse_something(buf, len, (void **)cam, &asn_DEF_CAMv1);
+}
+
 int parse_denm(uint8_t *buf, uint32_t len, DENM_t **denm)
 {
 	return parse_something(buf, len, (void **)denm, &asn_DEF_DENM);

@@ -4,6 +4,9 @@
 #include <iomanip>
 
 #include "BasicVehicleContainerHighFrequency.h"
+#include "BasicVehicleContainerHighFrequencyV1.h"
+#include "LowFrequencyContainer.h"
+#include "BasicVehicleContainerLowFrequency.h"
 #include "RSUContainerHighFrequency.h"
 #include "ProtectedCommunicationZonesRSU.h"
 #include "ProtectedCommunicationZone.h"
@@ -143,13 +146,60 @@ std::string Formatter::format_vehicle_width(VehicleWidth_t val)
 	return ss.str();
 }
 
+std::string Formatter::format_vehicle_role(VehicleRole_t val)
+{
+	std::stringstream ss;
+	switch (val)
+	{
+		case VehicleRole_publicTransport:
+			ss << "Public Transport";
+			break;
+		case VehicleRole_specialTransport:
+			ss << "Special Transport";
+			break;
+		case VehicleRole_dangerousGoods:
+			ss << "Dangerous Goods";
+			break;
+		case VehicleRole_roadWork:
+			ss << "Road Work";
+			break;
+		case VehicleRole_rescue:
+			ss << "Rescue";
+			break;
+		case VehicleRole_emergency:
+			ss << "Emergency";
+			break;
+		case VehicleRole_safetyCar:
+			ss << "Safety Car";
+			break;
+		case VehicleRole_agriculture:
+			ss << "Agriculture";
+			break;
+		case VehicleRole_commercial:
+			ss << "Commercial";
+			break;
+		case VehicleRole_military:
+			ss << "Military";
+			break;
+		case VehicleRole_roadOperator:
+			ss << "Road Operator";
+			break;
+		case VehicleRole_taxi:
+			ss << "Taxi";
+			break;
+		default:
+			ss << "Unknown (" << val << ")";
+	}
+	return ss.str();
+}
+
 std::string Formatter::format_speed_value(SpeedValue_t val)
 {
 	std::stringstream ss;
 	if (val == SpeedValue_unavailable) {
 		return "unavailable";
 	}
-	ss << val << " cm/s (" << val / 100 << " m/s; " << (val/100) * 3.6 << " km/h)";
+	ss << val << " cm/s (" << val / 100.0 << " m/s; " << (val/100.0) * 3.6 << " km/h)";
 	return ss.str();
 }
 
@@ -310,6 +360,61 @@ std::string Formatter::format_lane_type(LaneTypeAttributes_t &val)
 		default:
 			return "unknown";
 	}
+}
+
+std::string Formatter::dump_camv1(CAMv1_t *cam)
+{
+	std::stringstream ss;
+	ss << "CAM v" << cam->header.protocolVersion << " from ";
+	ss << cam->header.stationID;
+	ss << " (" << format_station_type(cam->cam.camParameters.basicContainer.stationType);
+	ss << ") dT ";
+	ss << cam->cam.generationDeltaTime;
+	ss << std::endl;
+
+	ss << " Location: ";
+	double lat = cam->cam.camParameters.basicContainer.referencePosition.latitude / 10000000.0;
+	double lon = cam->cam.camParameters.basicContainer.referencePosition.longitude / 10000000.0;
+	ss << lat << ", " << lon;
+	ss << std::endl;
+
+	if (cam->cam.camParameters.highFrequencyContainer.present == HighFrequencyContainerV1_PR_basicVehicleContainerHighFrequency)
+	{
+		auto &b = cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency;
+		//auto &b = cam->cam.camParameters.highFrequencyContainer.basicVehicleContainerHighFrequency;
+		ss << " Vehicle Length: " << format_vehicle_length(b->vehicleLength.vehicleLengthValue) << std::endl;
+		ss << " Vehicle Width: " << format_vehicle_width(b->vehicleWidth) << std::endl;
+		ss << " Speed: " << format_speed_value(b->speed.speedValue) << std::endl;
+		ss << " Heading: " << format_heading_value(b->heading.headingValue) << std::endl;
+	}
+	else if (cam->cam.camParameters.highFrequencyContainer.present == HighFrequencyContainerV1_PR_rsuContainerHighFrequency)
+	{
+		auto &r = cam->cam.camParameters.highFrequencyContainer.choice.rsuContainerHighFrequency;
+		//auto &r = cam->cam.camParameters.highFrequencyContainer.rsuContainerHighFrequency;
+		if (r->protectedCommunicationZonesRSU != nullptr)
+		{
+			for(uint32_t i = 0; i < r->protectedCommunicationZonesRSU->list.count; ++i)
+			{
+				auto item = r->protectedCommunicationZonesRSU->list.array[i];
+				double _lat = item->protectedZoneLatitude / 10000000.0;
+				double _lon = item->protectedZoneLongitude / 10000000.0;
+				ss << " Protected Zone: " << format_protected_zone_type(item->protectedZoneType) << std::endl;
+				ss << " Location: " << _lat << ", " << _lon << std::endl;
+			}
+		}
+	}
+
+	if (cam->cam.camParameters.lowFrequencyContainer != nullptr)
+	{
+		auto lf = cam->cam.camParameters.lowFrequencyContainer;
+		if (lf->present == LowFrequencyContainer_PR_basicVehicleContainerLowFrequency)
+		{
+			auto v = lf->choice.basicVehicleContainerLowFrequency;
+			ss << " Vehicle Role: " << format_vehicle_role(v->vehicleRole) << std::endl;
+		}
+	}
+
+	return ss.str();
 }
 
 std::string Formatter::dump_cam(CAM_t *cam)
