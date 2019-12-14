@@ -27,6 +27,7 @@ public:
 	static sf::Vector2f ortho(sf::Vector2<int64_t> &a);
 	static sf::Vector2f normalize(sf::Vector2f &a);
 	static sf::Vector2f normalize(sf::Vector2<int64_t> &a);
+	static sf::Vector2f rotate(sf::Vector2f &a, float angle);
 	static float length(sf::Vector2f &a);
 	static float length(sf::Vector2<int64_t> &a);
 	static float timemark_to_seconds(TimeMark_t &t);

@@ -52,14 +52,14 @@ Lane &Lane::operator=(Lane &&l) noexcept
 void Lane::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
 	if (ingress_arrow != nullptr)
-		target.draw(*ingress_arrow);
+		target.draw(*ingress_arrow, states);
 	if (egress_arrow != nullptr)
-		target.draw(*egress_arrow);
+		target.draw(*egress_arrow, states);
 	if (stopline != nullptr)
-		target.draw(*stopline);
+		target.draw(*stopline, states);
 
-	std::for_each(connections.begin(), connections.end(), [&target](const LaneConnection &lc) {
-		target.draw(lc);
+	std::for_each(connections.begin(), connections.end(), [&target, &states](const LaneConnection &lc) {
+		target.draw(lc, states);
 	});
 }
 
@@ -326,29 +326,31 @@ void IntersectionEntity::build_geometry()
 
 void IntersectionEntity::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-	sf::CircleShape ref(100/_main->get_scale());
+	auto r = 100/_main->get_scale();
+	sf::CircleShape ref(r);
 	ref.setPosition(Utils::to_screen(ref_x, ref_y));
+	ref.setOrigin(r, r);
 	ref.setFillColor(sf::Color::Cyan);
-	target.draw(ref);
+	target.draw(ref, states);
 	/*
-	std::for_each(lane_outline_geometries.begin(), lane_outline_geometries.end(), [&target](const sf::VertexArray &va) {
-		target.draw(va);
+	std::for_each(lane_outline_geometries.begin(), lane_outline_geometries.end(), [&target, &states](const sf::VertexArray &va) {
+		target.draw(va, states);
 	});
 	//*/
-	std::for_each(lane_geometries.begin(), lane_geometries.end(), [&target](const sf::VertexArray &va) {
-		target.draw(va);
+	std::for_each(lane_geometries.begin(), lane_geometries.end(), [&target, &states](const sf::VertexArray &va) {
+		target.draw(va, states);
 	});
 	/*
-	std::for_each(lane_nodes.begin(), lane_nodes.end(), [&target](const sf::VertexArray &va) {
-		target.draw(va);
+	std::for_each(lane_nodes.begin(), lane_nodes.end(), [&target, &states](const sf::VertexArray &va) {
+		target.draw(va, states);
 	});
 	//*/
 
 	// connections
 
-	std::for_each(lanes.begin(), lanes.end(), [&target](const std::pair<const LaneID_t, Lane> &d) {
+	std::for_each(lanes.begin(), lanes.end(), [&target, &states](const std::pair<const LaneID_t, Lane> &d) {
 		auto &l = d.second;
-		target.draw(l);
+		target.draw(l, states);
 	});
 }
 
@@ -391,7 +393,7 @@ void IntersectionEntity::set_signal_group_state(SignalGroupID_t id, MovementPhas
 
 void LaneConnection::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-	target.draw(va);
+	target.draw(va, states);
 }
 
 void LaneConnection::set_state(MovementPhaseState_t newstate)

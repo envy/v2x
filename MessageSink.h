@@ -11,6 +11,7 @@
 
 #include "parser.h"
 #include "IntersectionEntity.h"
+#include "VehicleEntity.h"
 
 class Array
 {
@@ -54,6 +55,7 @@ typedef struct
 	SPATEM_t *spatem { nullptr };
 	MAPEM_t *mapem { nullptr };
 	IntersectionEntity *ie { nullptr };
+	VehicleEntity *ve { nullptr };
 } station_msgs_t;
 
 class MessageSink {
@@ -77,6 +79,7 @@ private:
 	void process_incoming();
 	void process_msg(Array &arr);
 
+	void parse_cam(station_msgs_t *data);
 	void parse_mapem(station_msgs_t *data);
 	void parse_spatem(station_msgs_t *data);
 public:

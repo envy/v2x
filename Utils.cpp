@@ -150,6 +150,12 @@ sf::Vector2f Utils::normalize(sf::Vector2<int64_t> &a)
 	return sf::Vector2f(a.x / (float)l, a.y / (float)l);
 }
 
+sf::Vector2f Utils::rotate(sf::Vector2f &a, float angle)
+{
+	auto rads = angle * M_PI/180.0f;
+	return sf::Vector2f(cos(rads) * a.x - sin(rads) * a.y, sin(rads) * a.x + cos(rads) * a.y);
+}
+
 float Utils::length(sf::Vector2f &a)
 {
 	return sqrt(a.x*a.x + a.y*a.y);

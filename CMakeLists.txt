@@ -16,7 +16,8 @@ set(APP_SOURCE_FILES
         MessageSink.cpp
         Formatter.cpp
         Utils.cpp
-        IntersectionEntity.cpp)
+        IntersectionEntity.cpp
+        VehicleEntity.cpp)
 
 add_executable(app ${APP_SOURCE_FILES} ${ASN_FILES})
 

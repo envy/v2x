@@ -226,19 +226,19 @@ std::string Formatter::format_heading_value(HeadingValue_t val)
 		default:
 			if (val > HeadingValue_wgs84North && val < HeadingValue_wgs84East)
 			{
-				ss << "North East";
+				ss << "North East " << "(" << val/10.0f << ")";
 			}
 			else if (val > HeadingValue_wgs84East && val < HeadingValue_wgs84South)
 			{
-				ss << "South East";
+				ss << "South East " << "(" << val/10.0f << ")";
 			}
 			else if (val > HeadingValue_wgs84South && val < HeadingValue_wgs84West)
 			{
-				ss << "South West";
+				ss << "South West " << "(" << val/10.0f << ")";
 			}
 			else if (val > HeadingValue_wgs84West && val < HeadingValue_unavailable)
 			{
-				ss << "North West";
+				ss << "North West " << "(" << val/10.0f << ")";
 			}
 	}
 	return ss.str();

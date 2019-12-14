@@ -4,11 +4,10 @@
 #include "Formatter.h"
 #include "Utils.h"
 #include "IntersectionEntity.h"
+#include "VehicleEntity.h"
 
 #include <iostream>
 #include <sstream>
-#include <asn1-src/IntersectionGeometryList.h>
-#include <asn1-src/MovementEventList.h>
 
 #include "IntersectionGeometryList.h"
 #include "IntersectionGeometry.h"
@@ -42,6 +41,13 @@
 #include "NodeAttributeXYList.h"
 #include "NodeAttributeXY.h"
 #include "TimeChangeDetails.h"
+#include "StationType.h"
+#include "BasicVehicleContainerHighFrequencyV1.h"
+#include "LowFrequencyContainer.h"
+#include "BasicVehicleContainerLowFrequency.h"
+#include "PathHistory.h"
+#include "PathPoint.h"
+#include "DeltaReferencePosition.h"
 
 MessageSink::MessageSink()
 {
@@ -92,7 +98,7 @@ void MessageSink::process_msg(Array &arr)
 		if (header->protocolVersion == 1)
 		{
 			CAMv1_t *cam = nullptr;
-			ret = parse_camv1(arr.buf+start, arr.len-start, &cam);
+			ret = ::parse_camv1(arr.buf+start, arr.len-start, &cam);
 			if (ret == 0)
 			{
 				if (msgs[id]->cam.v1 != nullptr)
@@ -102,13 +108,14 @@ void MessageSink::process_msg(Array &arr)
 				msgs[id]->last = timestamp_now();
 				msgs[id]->cam_version = 1;
 				msgs[id]->cam.v1 = cam;
+				parse_cam(msgs[id]);
 				return;
 			}
 		}
 		else if (header->protocolVersion == 2)
 		{
 			CAM_t *cam = nullptr;
-			ret = parse_cam(arr.buf+start, arr.len-start, &cam);
+			ret = ::parse_cam(arr.buf+start, arr.len-start, &cam);
 			if (ret == 0)
 			{
 				if (msgs[id]->cam.v2 != nullptr)
@@ -118,6 +125,7 @@ void MessageSink::process_msg(Array &arr)
 				msgs[id]->last = timestamp_now();
 				msgs[id]->cam_version = 2;
 				msgs[id]->cam.v2 = cam;
+				parse_cam(msgs[id]);
 				return;
 			}
 		}
@@ -184,6 +192,62 @@ void MessageSink::process_msg(Array &arr)
 			return;
 		}
 		std::cout << "packet was MAPEM and had len: " << arr.len << std::endl;
+	}
+}
+
+void MessageSink::parse_cam(station_msgs_t *data)
+{
+	if (data->cam_version == 1 && data->cam.v1 != nullptr)
+	{
+		auto cam = data->cam.v1;
+
+		// ignore RSUs
+		switch (cam->cam.camParameters.basicContainer.stationType)
+		{
+			case StationType_roadSideUnit:
+				return;
+			default:
+				break;
+		}
+
+		// ignore cams that don't have the vehicle container
+		if (cam->cam.camParameters.highFrequencyContainer.present != HighFrequencyContainerV1_PR_basicVehicleContainerHighFrequency)
+		{
+			return;
+		}
+
+		// create new VehicleEntity if it doesn't exist
+		if (data->ve == nullptr)
+		{
+			data->ve = new VehicleEntity();
+		}
+
+		auto lat = cam->cam.camParameters.basicContainer.referencePosition.latitude;
+		auto lon = cam->cam.camParameters.basicContainer.referencePosition.longitude;
+		data->ve->pos.x = lon;
+		data->ve->pos.y = lat;
+		auto &bvchf = cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency;
+		data->ve->set_length(bvchf->vehicleLength.vehicleLengthValue);
+		data->ve->set_width(bvchf->vehicleWidth);
+		data->ve->set_heading(bvchf->heading.headingValue);
+
+		// clear the old path history
+		data->ve->clear_path();
+		if (cam->cam.camParameters.lowFrequencyContainer != nullptr)
+		{
+			auto lf = cam->cam.camParameters.lowFrequencyContainer;
+			if (lf->present == LowFrequencyContainer_PR_basicVehicleContainerLowFrequency)
+			{
+				auto &ph = lf->choice.basicVehicleContainerLowFrequency->pathHistory.list;
+				for (int64_t i = 0; i < ph.count; ++i)
+				{
+					auto &elem = ph.array[i];
+					data->ve->add_path_node(elem->pathPosition.deltaLatitude, elem->pathPosition.deltaLongitude);
+				}
+			}
+		}
+
+		data->ve->build_geometry();
 	}
 }
 
@@ -587,8 +651,15 @@ void MessageSink::draw_details(sf::RenderTarget &target)
 	_main->write_text(200, 30, sf::Color::White, ss.str());
 }
 
-void MessageSink::draw_cam(sf::RenderTarget &target,station_msgs_t *data)
+void MessageSink::draw_cam(sf::RenderTarget &target, station_msgs_t *data)
 {
+	if (data->ve != nullptr)
+	{
+		data->ve->build_geometry();
+		target.draw(*data->ve);
+		return;
+	}
+
 	sf::CircleShape c(100 / _main->get_scale());
 	if (data->cam_version == 1)
 	{
@@ -615,7 +686,8 @@ void MessageSink::draw_map(sf::RenderTarget &background, sf::RenderTarget &foreg
 
 	sf::CircleShape snode(5);
 	snode.setFillColor(sf::Color::White);
-	snode.setPosition(_main->get_center_x(), _main->get_center_y());
+	snode.setPosition(Main::get_center_x(), Main::get_center_y());
+	snode.setOrigin(5, 5);
 	foreground.draw(snode);
 
 	auto it = msgs.begin();

@@ -39,7 +39,7 @@ public:
 
 	float get_scale() { return scale; };
 	void zoom(float delta) { scale += delta; }
-	void move(int32_t xd, int32_t yd)
+	void move(int64_t xd, int64_t yd)
 	{
 		ox += xd;
 		oy += yd;
@@ -49,8 +49,8 @@ public:
 		oy = lat;
 		ox = lon;
 	}
-	int32_t get_origin_x() { return ox; }
-	int32_t get_origin_y() { return oy; }
+	int64_t get_origin_x() { return ox; }
+	int64_t get_origin_y() { return oy; }
 	static constexpr float get_center_x() { return 1000; };
 	static constexpr float get_center_y() { return 500; };
 
