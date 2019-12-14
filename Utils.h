@@ -35,8 +35,11 @@ public:
 	static void draw_arrow(sf::VertexArray *va, sf::Vector2f &start, sf::Vector2f &dir, sf::Color color = sf::Color::White);
 	static void lat_lon_move(int64_t lat, int64_t lon, int64_t x_cm, int64_t y_cm, int64_t &out_lat, int64_t &out_lon);
 	static sf::Vector2f to_screen(sf::Vector2f &f);
+	static sf::Vector2f to_screen(sf::Vector2f &f, int64_t ox, int64_t oy);
 	static sf::Vector2f to_screen(sf::Vector2<int64_t> &i);
+	static sf::Vector2f to_screen(sf::Vector2<int64_t> &i, int64_t ox, int64_t oy);
 	static sf::Vector2f to_screen(int64_t ix, int64_t iy);
+	static sf::Vector2f to_screen(int64_t ix, int64_t iy, int64_t ox, int64_t oy);
 };
 
 sf::Vector2<int64_t> operator*(sf::Vector2<int64_t> v, float a);

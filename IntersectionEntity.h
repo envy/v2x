@@ -26,6 +26,10 @@ public:
 	{
 		return std::find(attributes.begin(), attributes.end(), attr) != attributes.end();
 	}
+	sf::Vector2<int64_t> to_vec()
+	{
+		return sf::Vector2<int64_t>(x, y);
+	}
 };
 
 class LaneConnection : public sf::Drawable
@@ -71,6 +75,7 @@ private:
 	sf::Color lane_outer_color { sf::Color(200, 200, 200) };
 	sf::Color tram_lane_color { sf::Color(210, 180, 140) };
 	sf::Color pedestrian_lane_color { sf::Color(135, 206, 235) };
+	sf::Color bike_lane_color { sf::Color(250, 128, 114) };
 
 	std::vector<sf::VertexArray> lane_geometries;
 	std::vector<sf::VertexArray> lane_outline_geometries;
@@ -80,7 +85,7 @@ private:
 
 public:
 	IntersectionEntity(int64_t ref_x, int64_t ref_y) : ref_x(ref_x), ref_y(ref_y) {}
-	void build_geometry();
+	void build_geometry(bool standalone);
 	void add_lane(LaneID_t id, LaneAttributes &attr);
 	void add_node(LaneID_t lane_id, int64_t x, int64_t y, uint64_t width, std::vector<NodeAttributeXY_t> &attributes);
 	void add_connection(LaneID_t start, LaneID_t end, const SignalGroupID_t *sg);

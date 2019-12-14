@@ -129,6 +129,10 @@ void MessageSink::process_msg(Array &arr)
 				return;
 			}
 		}
+		else
+		{
+			std::cout << "unknown protocol version: " << header->protocolVersion << std::endl;
+		}
 		std::cout << "packet was CAM and had len: " << arr.len << std::endl;
 	}
 
@@ -433,8 +437,6 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 			}
 		}
 	}
-
-	data->ie->build_geometry();
 }
 
 void MessageSink::parse_spatem(station_msgs_t *data)
@@ -588,11 +590,11 @@ void MessageSink::draw_station_list()
 	}
 }
 
-void MessageSink::draw_intersection(sf::RenderTarget &target,station_msgs_t *data)
+void MessageSink::draw_intersection(sf::RenderTarget &target, station_msgs_t *data, bool standalone)
 {
 	if (data->ie != nullptr)
 	{
-		data->ie->build_geometry();
+		data->ie->build_geometry(standalone);
 		target.draw(*data->ie);
 	}
 }
@@ -619,7 +621,7 @@ void MessageSink::draw_details(sf::RenderTarget &target)
 
 	if (data->mapem != nullptr && _show_visu)
 	{
-		draw_intersection(target, data);
+		draw_intersection(target, data, true);
 		return;
 	}
 
@@ -696,7 +698,7 @@ void MessageSink::draw_map(sf::RenderTarget &background, sf::RenderTarget &foreg
 		auto data = it->second;
 		if (data->mapem != nullptr)
 		{
-			draw_intersection(background, data);
+			draw_intersection(background, data, false);
 		}
 		if (data->cam_version != 0)
 		{

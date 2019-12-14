@@ -171,16 +171,35 @@ sf::Vector2f Utils::to_screen(sf::Vector2f &f)
 	return sf::Vector2f(Main::get_center_x() + (f.x - _main->get_origin_x()) / _main->get_scale(),
 	                    Main::get_center_y() - (f.y - _main->get_origin_y()) / _main->get_scale());
 }
+
+sf::Vector2f Utils::to_screen(sf::Vector2f &f, int64_t ox, int64_t oy)
+{
+	return sf::Vector2f(Main::get_center_x() + (f.x - ox) / _main->get_scale(),
+	                    Main::get_center_y() - (f.y - oy) / _main->get_scale());
+}
+
 sf::Vector2f Utils::to_screen(sf::Vector2<int64_t> &i)
 {
 	return sf::Vector2f(Main::get_center_x() + (i.x - _main->get_origin_x()) / _main->get_scale(),
 	                    Main::get_center_y() - (i.y - _main->get_origin_y()) / _main->get_scale());
 }
 
+sf::Vector2f Utils::to_screen(sf::Vector2<int64_t> &i, int64_t ox, int64_t oy)
+{
+	return sf::Vector2f(Main::get_center_x() + (i.x - ox) / _main->get_scale(),
+	                    Main::get_center_y() - (i.y - oy) / _main->get_scale());
+}
+
 sf::Vector2f Utils::to_screen(int64_t ix, int64_t iy)
 {
 	return sf::Vector2f(Main::get_center_x() + (ix - _main->get_origin_x()) / _main->get_scale(),
 	                    Main::get_center_y() - (iy - _main->get_origin_y()) / _main->get_scale());
+}
+
+sf::Vector2f Utils::to_screen(int64_t ix, int64_t iy, int64_t ox, int64_t oy)
+{
+	return sf::Vector2f(Main::get_center_x() + (ix - ox) / _main->get_scale(),
+	                    Main::get_center_y() - (iy - oy) / _main->get_scale());
 }
 
 float Utils::timemark_to_seconds(TimeMark_t &t)
@@ -221,10 +240,11 @@ void Utils::draw_arrow(sf::VertexArray *va, sf::Vector2f &start, sf::Vector2f &d
 	auto left = start + down + t;
 	auto right = start + down - t;
 	(*va)[0].position = start;
-	(*va)[0].color = color;
-	(*va)[1].position = left;
+	(*va)[0].color = sf::Color::Red;
+	(*va)[1].position = start + down;
 	(*va)[1].color = color;
-	(*va)[2].position = right;
+	(*va)[2].position = start + down;
+	(*va)[2].color = color;
 }
 
 /**
