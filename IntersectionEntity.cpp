@@ -63,6 +63,11 @@ void Lane::draw(sf::RenderTarget &target, sf::RenderStates states) const
 	});
 }
 
+sf::Vector2<int64_t> IntersectionEntity::get_location()
+{
+	return sf::Vector2<int64_t>(ref_x, ref_y);
+}
+
 void IntersectionEntity::add_lane(LaneID_t id, LaneAttributes_t &attr)
 {
 	Lane l;

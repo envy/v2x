@@ -89,6 +89,7 @@ public:
 	void add_msg(uint8_t *buf, uint32_t buflen);
 	void inc_selected();
 	void dec_selected();
+	sf::Vector2<int64_t> get_selected_location();
 	void set_show_cams(bool show);
 	bool get_show_cams();
 	void set_show_denms(bool show);

@@ -513,6 +513,37 @@ void MessageSink::dec_selected()
 	selected_index--;
 }
 
+sf::Vector2<int64_t> MessageSink::get_selected_location()
+{
+	std::shared_lock lock(data_lock);
+
+	auto it = msgs.begin();
+	uint32_t i = 0;
+	while (i < selected_index)
+	{
+		++i;
+		++it;
+	}
+	auto data = it->second;
+
+	if (data == nullptr)
+	{
+		return sf::Vector2<int64_t>(0, 0);
+	}
+
+	if (data->ie != nullptr)
+	{
+		return data->ie->get_location();
+	}
+	if (data->ve != nullptr)
+	{
+		return data->ve->pos;
+	}
+
+	// no suitable location to return
+	return sf::Vector2<int64_t>(0, 0);
+}
+
 void MessageSink::set_show_cams(bool show)
 {
 	_show_cams = show;

@@ -207,6 +207,13 @@ void Main::key_handler()
 		key_pressed(sf::Keyboard::M);
 		draw_map = !draw_map;
 	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::J))
+	{
+		key_pressed(sf::Keyboard::J);
+		draw_map = !draw_map;
+		auto pos = ms.get_selected_location();
+		set_origin(pos.y, pos.x);
+	}
 
 	bool _key_pressed = false;
 #define MOVE_STEP 25
@@ -410,7 +417,7 @@ void Main::run()
 		//draw_background();
 
 		draw_data();
-		write_text(20, 0, sf::Color::White, "quit S-Q | toggle Map | toggle Visu | zoom QE");
+		write_text(20, 0, sf::Color::White, "quit S-Q | toggle Map | Jump to map | toggle Visu | zoom QE");
 
 		// DO NOT DRAW AFTER THIS LINE
 		background.display();
