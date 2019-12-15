@@ -399,12 +399,16 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 						{
 							std::cout << "TODO: node->attributes->data" << std::endl;
 						}
+
+						// Adjust lane width for this and the following nodes
 						if (node->attributes->dWidth != nullptr)
 						{
-							// FIXME: Is this a delta or not? Yes it is
-							// FIXME: check if new widht would cause underflow
+							// dWidth is a delta from the last width
+							if ((-*node->attributes->dWidth) > (int64_t)width)
+							{
+								std::cout << "ERR: next node -dWidth > width: " << -*node->attributes->dWidth << " > " << width << std::endl;
+							}
 							width = (uint64_t)(width + *node->attributes->dWidth);
-							//width = (uint64_t)(*node->attributes->dWidth);
 						}
 					}
 
@@ -701,7 +705,7 @@ void MessageSink::draw_cam(sf::RenderTarget &target, station_msgs_t *data)
 		auto lat = data->cam.v1->cam.camParameters.basicContainer.referencePosition.latitude;
 		auto lon = data->cam.v1->cam.camParameters.basicContainer.referencePosition.longitude;
 		c.setPosition(Utils::to_screen(lon, lat));
-		c.setFillColor(sf::Color::Blue);
+		c.setFillColor(sf::Color(0, 191, 255));
 		target.draw(c);
 	}
 	else if (data->cam_version == 2)
@@ -709,7 +713,7 @@ void MessageSink::draw_cam(sf::RenderTarget &target, station_msgs_t *data)
 		auto lat = data->cam.v2->cam.camParameters.basicContainer.referencePosition.latitude;
 		auto lon = data->cam.v2->cam.camParameters.basicContainer.referencePosition.longitude;
 		c.setPosition(Utils::to_screen(lon, lat));
-		c.setFillColor(sf::Color::Blue);
+		c.setFillColor(sf::Color(0, 191, 255));
 		target.draw(c);
 	}
 

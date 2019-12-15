@@ -127,9 +127,11 @@ void IntersectionEntity::build_geometry(bool standalone)
 	if (ref == nullptr)
 	{
 		ref = new sf::CircleShape(r);
-		dynamic_cast<sf::CircleShape *>(ref)->setOrigin(r, r);
 		dynamic_cast<sf::CircleShape *>(ref)->setFillColor(sf::Color::Cyan);
 	}
+
+	dynamic_cast<sf::CircleShape *>(ref)->setRadius(r);
+	dynamic_cast<sf::CircleShape *>(ref)->setOrigin(r, r);
 
 	if (standalone)
 	{
@@ -316,29 +318,26 @@ void IntersectionEntity::build_geometry(bool standalone)
 				auto nextnode = node + 1;
 				if (nextnode != laneobj.nodes.end())
 				{
-					/*
-					auto local_prev_x = x;
-					auto local_prev_y = y;
-					auto local_x = Main::get_center_x() + (nextnode->x - _main->get_origin_x()) / _main->get_scale();
-					auto local_y = Main::get_center_y() - (nextnode->y - _main->get_origin_y()) / _main->get_scale();
-					auto local_start = sf::Vector2f(local_prev_x, local_prev_y);
-					auto local_end = sf::Vector2f(local_x, local_y);
-					auto local_dir = local_end - local_start;
-					auto local_off = Utils::ortho(local_dir) * half_width; // FIXME: this is not correct as 150cm does not equal the lat/long the vector is supposed to be doing here
-					local_end = (local_start + Utils::normalize(local_dir) * 30.0f/_main->get_scale());
+					auto local_dir = nextnode->to_vec() - node->to_vec();
+					auto local_off = Utils::ortho(local_dir) * half_width;
+					auto local_end = (node->to_vec() + Utils::normalize(local_dir) * 300.0f/_main->get_scale());
 					if (laneobj.stopline == nullptr)
 					{
 						laneobj.stopline = new sf::VertexArray(sf::Quads, 4);
-						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[0].color = sf::Color::White;
-						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[1].color = sf::Color::White;
+						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[0].color = sf::Color::Red;
+						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[1].color = sf::Color::Cyan;
 						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[2].color = sf::Color::White;
 						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[3].color = sf::Color::White;
 					}
-					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[0].position = local_start - local_off;
-					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[1].position = local_start + local_off;
-					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[2].position = local_end + local_off;
-					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[3].position = local_end - local_off;
-					//*/
+					int64_t x, y;
+					Utils::lat_lon_move(node->y, node->x, local_off.x, local_off.y, y, x);
+					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[0].position = Utils::to_screen(x, y);
+					Utils::lat_lon_move(node->y, node->x, -local_off.x, -local_off.y, y, x);
+					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[1].position = Utils::to_screen(x, y);
+					Utils::lat_lon_move(local_end.y, local_end.x, -local_off.x, -local_off.y, y, x);
+					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[2].position = Utils::to_screen(x, y);
+					Utils::lat_lon_move(local_end.y, local_end.x, local_off.x, local_off.y, y, x);
+					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[3].position = Utils::to_screen(x, y);
 				}
 			}
 
