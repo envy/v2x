@@ -323,7 +323,7 @@ void IntersectionEntity::build_geometry(bool standalone)
 					auto local_end = (node->to_vec() + Utils::normalize(local_dir) * 300.0f/_main->get_scale());
 					if (laneobj.stopline == nullptr)
 					{
-						laneobj.stopline = new sf::VertexArray(sf::Quads, 4);
+						laneobj.stopline = new sf::VertexArray(sf::TriangleStrip, 4);
 						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[0].color = sf::Color::Red;
 						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[1].color = sf::Color::Cyan;
 						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[2].color = sf::Color::White;
@@ -334,9 +334,9 @@ void IntersectionEntity::build_geometry(bool standalone)
 					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[0].position = Utils::to_screen(x, y);
 					Utils::lat_lon_move(node->y, node->x, -local_off.x, -local_off.y, y, x);
 					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[1].position = Utils::to_screen(x, y);
-					Utils::lat_lon_move(local_end.y, local_end.x, -local_off.x, -local_off.y, y, x);
-					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[2].position = Utils::to_screen(x, y);
 					Utils::lat_lon_move(local_end.y, local_end.x, local_off.x, local_off.y, y, x);
+					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[2].position = Utils::to_screen(x, y);
+					Utils::lat_lon_move(local_end.y, local_end.x, -local_off.x, -local_off.y, y, x);
 					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[3].position = Utils::to_screen(x, y);
 				}
 			}
