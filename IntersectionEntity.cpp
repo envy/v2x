@@ -134,6 +134,7 @@ void IntersectionEntity::build_geometry(bool standalone)
 		int64_t lx, ly, plx, ply;
 		lx = ref_x;
 		ly = ref_y;
+		auto ref = sf::Vector2<int64_t>(ref_x, ref_y);
 
 		auto this_lane_color = sf::Color::White;
 		switch (laneobj.attr.laneType.present)
@@ -212,30 +213,28 @@ void IntersectionEntity::build_geometry(bool standalone)
 						}
 						if (standalone)
 						{
-							coords = Utils::to_screen(start, ref_x, ref_y);
+							Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.egress_arrow), astart, invdir, ref);
 						}
 						else
 						{
-							coords = Utils::to_screen(astart);
+							Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.egress_arrow), astart, invdir);
 						}
-						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.egress_arrow), coords, invdir);
 					}
 					if (Utils::is_ingress_lane(laneobj.attr.directionalUse))
 					{
 						auto astart = start + (ndir * 100.0f);
 						if (laneobj.ingress_arrow == nullptr)
 						{
-							laneobj.ingress_arrow = new sf::VertexArray(sf::LineStrip, 3);
+							laneobj.ingress_arrow = new sf::VertexArray(sf::Triangles, 3);
 						}
 						if (standalone)
 						{
-							coords = Utils::to_screen(start, ref_x, ref_y);
+							Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), astart, ndir, ref);
 						}
 						else
 						{
-							coords = Utils::to_screen(astart);
+							Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), astart, ndir);
 						}
-						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), coords, ndir);
 					}
 				}
 
@@ -410,7 +409,7 @@ void IntersectionEntity::draw(sf::RenderTarget &target, sf::RenderStates states)
 	std::for_each(lane_geometries.begin(), lane_geometries.end(), [&target, &states](const sf::VertexArray &va) {
 		target.draw(va, states);
 	});
-	///*
+	/*
 	std::for_each(lane_nodes.begin(), lane_nodes.end(), [&target, &states](const sf::VertexArray &va) {
 		target.draw(va, states);
 	});

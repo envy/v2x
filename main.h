@@ -37,7 +37,7 @@ public:
 	Main(char *addr, int port, StationID_t stationId);
 	~Main();
 
-	float get_scale() { return scale; };
+	float get_scale() const { return scale; };
 	void zoom(float delta) { scale += delta; }
 	void move(int64_t xd, int64_t yd)
 	{
@@ -49,8 +49,9 @@ public:
 		oy = lat;
 		ox = lon;
 	}
-	int64_t get_origin_x() { return ox; }
-	int64_t get_origin_y() { return oy; }
+	int64_t get_origin_x() const { return ox; }
+	int64_t get_origin_y() const { return oy; }
+	sf::Vector2<int64_t> get_origin() const { return sf::Vector2<int64_t>(ox, oy); }
 	static constexpr float get_center_x() { return 1000; };
 	static constexpr float get_center_y() { return 500; };
 

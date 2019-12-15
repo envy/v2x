@@ -231,20 +231,29 @@ sf::Vector2<int32_t> Utils::lat_lon_to_x_y(double lat, double lon, uint8_t zoom)
 	return sf::Vector2<int32_t>(world_x * scale / TILE, world_y * scale / TILE);
 }
 
+void Utils::draw_arrow(sf::VertexArray *va, sf::Vector2f &start, sf::Vector2f &dir, sf::Vector2<int64_t> &ref, sf::Color color)
+{
+#define ARROW_SIZE 75.0f
+	auto ndir = Utils::normalize(dir);
+	auto down = ndir * ARROW_SIZE;
+	auto t = Utils::ortho(dir) * ARROW_SIZE;
+	auto left = down + t;
+	auto right = down - t;
+	int64_t x, y;
+	(*va)[0].position = Utils::to_screen(start, ref.x, ref.y);
+	(*va)[0].color = color;
+	Utils::lat_lon_move(start.y, start.x, left.x, left.y, y, x);
+	(*va)[1].position = Utils::to_screen(x, y, ref.x, ref.y);
+	(*va)[1].color = color;
+	Utils::lat_lon_move(start.y, start.x, right.x, right.y, y, x);
+	(*va)[2].position = Utils::to_screen(x, y, ref.x, ref.y);
+	(*va)[2].color = color;
+}
+
 void Utils::draw_arrow(sf::VertexArray *va, sf::Vector2f &start, sf::Vector2f &dir, sf::Color color)
 {
-#define ARROW_SIZE 50.0f
-	auto ndir = Utils::normalize(dir);
-	auto down = ndir * ARROW_SIZE / _main->get_scale();
-	auto t = Utils::ortho(dir) * ARROW_SIZE / _main->get_scale();
-	auto left = start + down + t;
-	auto right = start + down - t;
-	(*va)[0].position = start;
-	(*va)[0].color = sf::Color::Red;
-	(*va)[1].position = start + down;
-	(*va)[1].color = color;
-	(*va)[2].position = start + down;
-	(*va)[2].color = color;
+	auto ref = _main->get_origin();
+	draw_arrow(va, start, dir, ref, color);
 }
 
 /**
