@@ -122,6 +122,24 @@ void IntersectionEntity::build_geometry(bool standalone)
 
 	sf::Vector2f coords;
 
+	// RSU
+	auto r = 100/_main->get_scale();
+	if (ref == nullptr)
+	{
+		ref = new sf::CircleShape(r);
+		dynamic_cast<sf::CircleShape *>(ref)->setOrigin(r, r);
+		dynamic_cast<sf::CircleShape *>(ref)->setFillColor(sf::Color::Cyan);
+	}
+
+	if (standalone)
+	{
+		dynamic_cast<sf::CircleShape *>(ref)->setPosition(Utils::to_screen(ref_x, ref_y, ref_x, ref_y));
+	}
+	else
+	{
+		dynamic_cast<sf::CircleShape *>(ref)->setPosition(Utils::to_screen(ref_x, ref_y));
+	}
+
 	auto lit = lanes.begin();
 	while (lit != lanes.end())
 	{
@@ -395,12 +413,12 @@ void IntersectionEntity::build_geometry(bool standalone)
 
 void IntersectionEntity::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-	auto r = 100/_main->get_scale();
-	sf::CircleShape ref(r);
-	ref.setPosition(Utils::to_screen(ref_x, ref_y));
-	ref.setOrigin(r, r);
-	ref.setFillColor(sf::Color::Cyan);
-	target.draw(ref, states);
+	// Draw the RSU
+	if (ref != nullptr)
+	{
+		target.draw(*ref, states);
+	}
+
 	/*
 	std::for_each(lane_outline_geometries.begin(), lane_outline_geometries.end(), [&target, &states](const sf::VertexArray &va) {
 		target.draw(va, states);

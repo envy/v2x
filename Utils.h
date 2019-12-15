@@ -1,6 +1,7 @@
 #ifndef V2X_UTILS_H
 #define V2X_UTILS_H
 
+#include <asn1-src/AllowedManeuvers.h>
 #include "MessageSink.h"
 
 #include "LaneDirection.h"
@@ -14,14 +15,15 @@ private:
 	Utils();
 
 public:
-	static bool is_ingress_lane(LaneDirection_t dir);
-	static bool is_egress_lane(LaneDirection_t dir);
+	static bool is_ingress_lane(LaneDirection_t &dir);
+	static bool is_egress_lane(LaneDirection_t &dir);
 	static bool has_individual_vehicle_traffic(LaneSharing_t s);
 	static bool has_tracked_vehicle_traffic(LaneSharing_t s);
 	static bool has_bus_vehicle_traffic(LaneSharing_t s);
 	static bool has_taxi_vehicle_traffic(LaneSharing_t s);
 	static bool has_pedestrian_traffic(LaneSharing_t s);
 	static bool has_cyclist_traffic(LaneSharing_t s);
+	static bool maneuver_right_turn_on_red(AllowedManeuvers_t &m);
 	static MovementPhaseState_t get_movement_phase_for_signal_group(SPATEM_t *spatem, SignalGroupID_t &id);
 	static sf::Vector2f ortho(sf::Vector2f &a);
 	static sf::Vector2f ortho(sf::Vector2<int64_t> &a);

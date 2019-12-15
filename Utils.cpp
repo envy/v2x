@@ -33,12 +33,12 @@ sf::Vector2f operator+(sf::Vector2<int64_t> a, sf::Vector2f b)
  * Bit 0 is not the least significant bit, but the most significant, so the order is reversed.
  * Also, we only get
  */
-bool Utils::is_ingress_lane(LaneDirection_t dir)
+bool Utils::is_ingress_lane(LaneDirection_t &dir)
 {
 	return (dir.buf[0] & (1u << (7u-LaneDirection_ingressPath))) > 0;
 }
 
-bool Utils::is_egress_lane(LaneDirection_t dir)
+bool Utils::is_egress_lane(LaneDirection_t &dir)
 {
 	return (dir.buf[0] & (1u << (7u-LaneDirection_egressPath))) > 0;
 }
@@ -60,6 +60,11 @@ bool Utils::has_bus_vehicle_traffic(LaneSharing_t s)
 bool Utils::has_taxi_vehicle_traffic(LaneSharing_t s) {}
 bool Utils::has_pedestrian_traffic(LaneSharing_t s) {}
 bool Utils::has_cyclist_traffic(LaneSharing_t s) {}
+
+bool Utils::maneuver_right_turn_on_red(AllowedManeuvers_t &m)
+{
+	return (m.buf[0] & (1u << (11u-AllowedManeuvers_maneuverRightTurnOnRedAllowed))) > 0;
+}
 
 MovementPhaseState_t Utils::get_movement_phase_for_signal_group(SPATEM_t *spatem, SignalGroupID_t &id)
 {

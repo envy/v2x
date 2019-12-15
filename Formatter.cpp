@@ -563,10 +563,6 @@ std::string Formatter::dump_mapem(MAPEM_t *mapem)
 			for (uint32_t _l = 0; _l < in->laneSet.list.count; ++_l)
 			{
 				auto lane = in->laneSet.list.array[_l];
-				if (lane->laneAttributes.laneType.present != LaneTypeAttributes_PR_vehicle)
-				{
-					continue;
-				}
 				ss << "  Lane: " << lane->laneID << std::endl;
 				ss << "   Direction: " << format_lane_direction(lane->laneAttributes.directionalUse);
 				ss << "   Type: " << format_lane_type(lane->laneAttributes.laneType);

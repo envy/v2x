@@ -71,12 +71,13 @@ class IntersectionEntity : public sf::Drawable
 private:
 	int64_t ref_x { 0 }, ref_y { 0 };
 	std::map<LaneID_t, Lane> lanes;
-	sf::Color lane_color { sf::Color(100, 100, 100) };
-	sf::Color lane_outer_color { sf::Color(200, 200, 200) };
-	sf::Color tram_lane_color { sf::Color(210, 180, 140) };
-	sf::Color pedestrian_lane_color { sf::Color(135, 206, 235) };
-	sf::Color bike_lane_color { sf::Color(250, 128, 114) };
+	const sf::Color lane_color { sf::Color(100, 100, 100) };
+	const sf::Color lane_outer_color { sf::Color(200, 200, 200) };
+	const sf::Color tram_lane_color { sf::Color(210, 180, 140) };
+	const sf::Color pedestrian_lane_color { sf::Color(135, 206, 235) };
+	const sf::Color bike_lane_color { sf::Color(250, 128, 114) };
 
+	sf::Drawable *ref { nullptr };
 	std::vector<sf::VertexArray> lane_geometries;
 	std::vector<sf::VertexArray> lane_outline_geometries;
 	std::vector<sf::VertexArray> lane_nodes;

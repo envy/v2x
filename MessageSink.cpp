@@ -428,7 +428,9 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 				data->ie->add_connection(lane->laneID, con->connectingLane.lane, con->signalGroup);
 				if (con->connectingLane.maneuver != nullptr)
 				{
-					std::cout << "TODO: con->connectingLane.maneuver" << std::endl;
+					std::cout << "TODO: con->connectingLane.maneuver: ";
+					std::cout << Utils::maneuver_right_turn_on_red(*con->connectingLane.maneuver);
+					std::cout << std::endl;
 				}
 				if (con->remoteIntersection != nullptr)
 				{
