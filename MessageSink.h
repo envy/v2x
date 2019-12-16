@@ -51,7 +51,11 @@ typedef struct
 		CAMv1_t *v1;
 		CAM_t *v2;
 	} cam { nullptr };
-	DENM_t *denm { nullptr };
+	uint8_t denm_version { 0 };
+	union {
+		DENMv1_t *v1;
+		DENM_t *v2;
+	} denm { nullptr };
 	SPATEM_t *spatem { nullptr };
 	MAPEM_t *mapem { nullptr };
 	IntersectionEntity *ie { nullptr };

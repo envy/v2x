@@ -109,6 +109,7 @@ void car_thread(MessageSink *ms)
 {
 	while (true)
 	{
+		ms->add_msg(denm, sizeof(denm));
 		ms->add_msg(unknown_cam_1, sizeof(unknown_cam_1));
 		sleep(1);
 		ms->add_msg(unknown_cam_2, sizeof(unknown_cam_2));
@@ -117,6 +118,7 @@ void car_thread(MessageSink *ms)
 		sleep(1);
 		ms->add_msg(unknown_cam_4, sizeof(unknown_cam_4));
 		sleep(1);
+
 	}
 }
 
@@ -264,7 +266,6 @@ void Main::key_handler()
 	}
 }
 
-#define SERVER "10.1.4.72"
 #define PORT 17565
 int main(int argc, char *argv[]) {
 	int port = PORT;

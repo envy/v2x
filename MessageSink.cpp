@@ -79,23 +79,29 @@ void MessageSink::process_msg(Array &arr)
 	std::unique_lock lock(data_lock);
 	uint32_t start;
 
+	StationID_t id;
+	long prot_version;
+	ItsPduHeader_t *header = nullptr;
+
 	if (is_cam(arr.buf, arr.len, &start))
 	{
 		// figure out which version of cam
-		StationID_t id;
-		ItsPduHeader_t *header = nullptr;
 		int ret = parse_header(arr.buf+start, arr.len-start, &header);
 		if (ret != 0)
 		{
 			std::cout << "could not parse header!\n" << std::endl;
+			ASN_STRUCT_FREE(asn_DEF_ItsPduHeader, header);
 			return;
 		}
 		id = header->stationID;
+		prot_version = header->protocolVersion;
+		ASN_STRUCT_FREE(asn_DEF_ItsPduHeader, header);
+
 		if (msgs.find(id) == msgs.end())
 		{
 			msgs.insert(std::pair<StationID_t, station_msgs_t *>(id, new station_msgs_t()));
 		}
-		if (header->protocolVersion == 1)
+		if (prot_version == 1)
 		{
 			CAMv1_t *cam = nullptr;
 			ret = ::parse_camv1(arr.buf+start, arr.len-start, &cam);
@@ -103,16 +109,17 @@ void MessageSink::process_msg(Array &arr)
 			{
 				if (msgs[id]->cam.v1 != nullptr)
 				{
-					ASN_STRUCT_FREE(asn_DEF_CAM, msgs[id]->cam.v1);
+					ASN_STRUCT_FREE(asn_DEF_CAMv1, msgs[id]->cam.v1);
 				}
 				msgs[id]->last = timestamp_now();
 				msgs[id]->cam_version = 1;
 				msgs[id]->cam.v1 = cam;
 				parse_cam(msgs[id]);
+				std::cout << "got a CAMv1!" << std::endl;
 				return;
 			}
 		}
-		else if (header->protocolVersion == 2)
+		else if (prot_version == 2)
 		{
 			CAM_t *cam = nullptr;
 			ret = ::parse_cam(arr.buf+start, arr.len-start, &cam);
@@ -126,32 +133,73 @@ void MessageSink::process_msg(Array &arr)
 				msgs[id]->cam_version = 2;
 				msgs[id]->cam.v2 = cam;
 				parse_cam(msgs[id]);
+				if (msgs[id]->cam.v2->header.stationID != 14235)
+					std::cout << "got a CAMv2!" << std::endl;
 				return;
 			}
 		}
 		else
 		{
-			std::cout << "unknown protocol version: " << header->protocolVersion << std::endl;
+			std::cout << "unknown protocol version: " << prot_version << std::endl;
 		}
 		std::cout << "packet was CAM and had len: " << arr.len << std::endl;
 	}
 
 	if (is_denm(arr.buf, arr.len, &start))
 	{
-		DENM_t *denm = nullptr;
-		int ret = parse_denm(arr.buf+start, arr.len-start, &denm);
-		if (ret == 0)
+		int ret = parse_header(arr.buf+start, arr.len-start, &header);
+		if (ret != 0)
 		{
-			if (msgs.find(denm->header.stationID) == msgs.end())
-			{
-				msgs.insert(std::pair<StationID_t, station_msgs_t *>(denm->header.stationID, new station_msgs_t()));
-			}
-			if (msgs[denm->header.stationID]->denm != nullptr)
-			{
-				ASN_STRUCT_FREE(asn_DEF_DENM, msgs[denm->header.stationID]->denm);
-			}
-			msgs[denm->header.stationID]->denm = denm;
+			std::cout << "could not parse header!\n" << std::endl;
 			return;
+		}
+		id = header->stationID;
+		prot_version = header->protocolVersion;
+		ASN_STRUCT_FREE(asn_DEF_ItsPduHeader, header);
+
+		if (msgs.find(id) == msgs.end())
+		{
+			msgs.insert(std::pair<StationID_t, station_msgs_t *>(id, new station_msgs_t()));
+		}
+		if (prot_version == 1)
+		{
+			DENMv1_t *denm = nullptr;
+			ret = ::parse_denmv1(arr.buf+start, arr.len-start, &denm);
+			if (ret == 0)
+			{
+				if (msgs[id]->denm.v1 != nullptr)
+				{
+					ASN_STRUCT_FREE(asn_DEF_DENMv1, msgs[id]->denm.v1);
+				}
+				msgs[id]->last = timestamp_now();
+				msgs[id]->denm_version = 1;
+				msgs[id]->denm.v1 = denm;
+				//parse_denm(msgs[id]);
+				std::cout << "got a DENMv1!" << std::endl;
+				return;
+			}
+		}
+		else if (prot_version == 2)
+		{
+			DENM_t *denm = nullptr;
+			ret = ::parse_denm(arr.buf+start, arr.len-start, &denm);
+			if (ret == 0)
+			{
+				if (msgs[id]->denm.v2 != nullptr)
+				{
+					ASN_STRUCT_FREE(asn_DEF_DENM, msgs[id]->denm.v2);
+				}
+				msgs[id]->last = timestamp_now();
+				msgs[id]->denm_version = 2;
+				msgs[id]->denm.v2 = denm;
+				//parse_denm(msgs[id]);
+				std::cout << "got a DENMv2!" << std::endl;
+				return;
+			}
+			else
+			{
+				std::cout << "unknown protocol version: " << prot_version << std::endl;
+			}
 		}
 		std::cout << "packet was DENM and had len: " << arr.len << std::endl;
 	}
@@ -674,9 +722,16 @@ void MessageSink::draw_details(sf::RenderTarget &target)
 			ss << Formatter::dump_cam(data->cam.v2);
 		}
 	}
-	if (data->denm != nullptr && _show_denms)
+	if (data->denm_version != 0 && _show_denms)
 	{
-		ss << Formatter::dump_denm(data->denm);
+		if (data->denm_version == 1)
+		{
+
+		}
+		else if (data->denm_version == 2)
+		{
+			ss << Formatter::dump_denm(data->denm.v2);
+		}
 	}
 	if (data->spatem != nullptr && _show_spatems)
 	{

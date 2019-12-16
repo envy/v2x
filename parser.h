@@ -7,6 +7,7 @@
 #include "CAM.h"
 #include "CAMv1.h"
 #include "DENM.h"
+#include "DENMv1.h"
 #include "MAPEM.h"
 #include "SPATEM.h"
 
@@ -218,6 +219,7 @@ int parse_header(uint8_t *buf, uint32_t len, ItsPduHeader_t **header);
 int parse_cam(uint8_t *buf, uint32_t len, CAM_t **cam);
 int parse_camv1(uint8_t *buf, uint32_t len, CAMv1_t **cam);
 int parse_denm(uint8_t *buf, uint32_t len, DENM_t **denm);
+int parse_denmv1(uint8_t *buf, uint32_t len, DENMv1_t **denm);
 int parse_mapem(uint8_t *buf, uint32_t len, MAPEM_t **mapem);
 int parse_spatem(uint8_t *buf, uint32_t len, SPATEM_t **spatem);
 

@@ -194,6 +194,11 @@ int parse_denm(uint8_t *buf, uint32_t len, DENM_t **denm)
 	return parse_something(buf, len, (void **)denm, &asn_DEF_DENM);
 }
 
+int parse_denmv1(uint8_t *buf, uint32_t len, DENMv1_t **denm)
+{
+	return parse_something(buf, len, (void **)denm, &asn_DEF_DENMv1);
+}
+
 int parse_mapem(uint8_t *buf, uint32_t len, MAPEM_t **mapem)
 {
 	return parse_something(buf, len, (void **)mapem, &asn_DEF_MAPEM);

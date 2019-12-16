@@ -289,7 +289,7 @@ std::string Formatter::format_cause_code(CauseCode_t &val)
 			return "Impassability";
 		case CauseCodeType_adverseWeatherCondition_Adhesion:
 			return "Adhesion";
-		case CauseCodeType_aquaplannning:
+		case CauseCodeType_aquaplaning:
 			return "Aquaplaning";
 		case CauseCodeType_hazardousLocation_SurfaceCondition:
 			return "Surface condition";
