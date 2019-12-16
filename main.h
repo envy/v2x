@@ -24,6 +24,7 @@ private:
 
 	bool is_pressed { false };
 	sf::Keyboard::Key last_key { sf::Keyboard::Unknown };
+	uint32_t selected_inject_id { 0 };
 
 	bool draw_map { false };
 

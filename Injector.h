@@ -17,12 +17,15 @@ typedef struct
 {
 	MessageSink *ms;
 	struct timeval last;
+	uint32_t *counter;
 } pcap_loop_args_t;
 
 class Injector
 {
 private:
 	MessageSink *ms { nullptr };
+	bool injecting { false };
+	uint32_t inject_msg_counter { 0 };
 
 	void iterate_pcap(char *path);
 public:
@@ -30,6 +33,8 @@ public:
 	~Injector() = default;
 
 	void inject(uint32_t id);
+	bool is_injecting() { return injecting; };
+	uint32_t get_counter() { return inject_msg_counter; };
 };
 
 

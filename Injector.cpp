@@ -4,7 +4,7 @@
 injectable_msg_t injectable_msgs[] = {
 		{(char *)"2019-12-13-01 CAMs", (char *)"static-data/2019-12-13-01-cams.pcapng"},
 		{(char *)"2019-12-16-02 CAMS/DENMs", (char *)"static-data/2019-12-16-02-cams-denms.pcapng"},
-		{ nullptr, nullptr }
+		{(char *)"2019-12-13 Ringfahrt", (char *)"static-data/bs-ring.pcapng"}
 };
 
 constexpr uint32_t max_id = sizeof(injectable_msgs)/sizeof(injectable_msg_t);
@@ -21,6 +21,12 @@ void Injector::inject(uint32_t id)
 		return;
 	}
 
+	if (injecting)
+	{
+		return;
+	}
+
+	injecting = true;
 	std::thread t(&Injector::iterate_pcap, this, injectable_msgs[id].path);
 	t.detach();
 }
@@ -37,7 +43,7 @@ void Injector::iterate_pcap(char *path)
 		return;
 	}
 
-	pcap_loop_args_t loop_args = { ms, {0, 0}};
+	pcap_loop_args_t loop_args = { ms, {0, 0}, &inject_msg_counter };
 
 	if (pcap_loop(fp, 0, [](u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
 		auto args = (pcap_loop_args_t *)userData;
@@ -52,10 +58,8 @@ void Injector::iterate_pcap(char *path)
 			usleep(diff.tv_sec * 1000000 + diff.tv_usec);
 		}
 		args->last = pkthdr->ts;
-
-		//std::cout << "injecting packet with len " << pkthdr->len;
-		//std::cout << " @ "<< pkthdr->ts.tv_sec << "." << pkthdr->ts.tv_usec << std::endl;
 		args->ms->add_msg(buf, pkthdr->len);
+		(*args->counter)++;
 	}, (u_char *)&loop_args) < 0)
 	{
 		std::cout << "pcap_loop error: " << errbuf << std::endl;
@@ -64,4 +68,7 @@ void Injector::iterate_pcap(char *path)
 	}
 
 	pcap_close(fp);
+
+	injecting = false;
+	inject_msg_counter = 0;
 }

@@ -10,8 +10,6 @@
 #include <thread>
 #include <sstream>
 
-#include "static_data.h"
-
 Main *_main = nullptr;
 
 void dump_geonet(uint8_t *buf, uint32_t len)
@@ -56,15 +54,6 @@ void send_cam(uint8_t mac[6], StationID_t id, Proxy *p)
 	p->send_packet(r.get_raw(), r.get_len());
 }
 
-void send_cam_thread(uint8_t mac[6], StationID_t id, Proxy *p)
-{
-	while (true)
-	{
-		send_cam(mac, id, p);
-		usleep(1000*1000);
-	}
-}
-
 void send_denm(uint8_t mac[6], StationID_t id, Proxy *p)
 {
 	uint64_t t = timestamp_now();
@@ -80,45 +69,6 @@ void send_denm(uint8_t mac[6], StationID_t id, Proxy *p)
 	d.add_situation(InformationQuality_lowest, CauseCodeType_hazardousLocation_SurfaceCondition, 0);
 	d.build_packet();
 	p->send_packet(d.get_raw(), d.get_len());
-}
-
-void send_denm_thread(uint8_t mac[6], StationID_t id, Proxy *p)
-{
-	while (true)
-	{
-		send_denm(mac, id, p);
-		usleep(1000*1000);
-	}
-}
-void insert_maps_thread(MessageSink *ms)
-{
-	while (true)
-	{
-		ms->add_msg(muehlenpfordt_x_rebenring_mapem, sizeof(muehlenpfordt_x_rebenring_mapem));
-
-		//ms->add_msg(mittelweg_x_rebenring_mapem, sizeof(mittelweg_x_rebenring_mapem));
-
-		//ms->add_msg(hamburger_x_rebenring_mapem, sizeof(hamburger_x_rebenring_mapem));
-
-		//ms->add_msg(pockels_x_rebenring_mapem, sizeof(pockels_x_rebenring_mapem));
-		usleep(100*1000);
-	}
-}
-
-void car_thread(MessageSink *ms)
-{
-	while (true)
-	{
-		ms->add_msg(unknown_cam_1, sizeof(unknown_cam_1));
-		sleep(1);
-		ms->add_msg(unknown_cam_2, sizeof(unknown_cam_2));
-		sleep(1);
-		ms->add_msg(unknown_cam_3, sizeof(unknown_cam_3));
-		sleep(1);
-		ms->add_msg(unknown_cam_4, sizeof(unknown_cam_4));
-		sleep(1);
-
-	}
 }
 
 void Main::reader_thread()
@@ -264,10 +214,30 @@ void Main::key_handler()
 		ms.dec_selected();
 	}
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::I))
+	if (!i.is_injecting())
 	{
-		key_pressed(sf::Keyboard::I);
-		i.inject(0);
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+		{
+			key_pressed(sf::Keyboard::Right);
+			if (selected_inject_id + 1 < max_id)
+			{
+				selected_inject_id++;
+			}
+		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+		{
+			key_pressed(sf::Keyboard::Left);
+			if (selected_inject_id > 0)
+			{
+				selected_inject_id--;
+			}
+		}
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::I))
+		{
+			key_pressed(sf::Keyboard::I);
+			i.inject(selected_inject_id);
+		}
 	}
 }
 
@@ -420,6 +390,17 @@ void Main::run()
 
 		draw_data();
 		write_text(20, 0, sf::Color::White, "quit S-Q | toggle Map | Jump to map | toggle Visu | zoom QE");
+		std::stringstream ss;
+		ss << "Inject: ";
+		if (i.is_injecting())
+		{
+			ss << "Injecting... (" << i.get_counter() << ")";
+		}
+		else
+		{
+			ss << injectable_msgs[selected_inject_id].name;
+		}
+		write_text(1000, 0, sf::Color::White, ss.str());
 
 		// DO NOT DRAW AFTER THIS LINE
 		background.display();
