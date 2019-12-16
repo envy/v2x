@@ -104,6 +104,10 @@ CauseCode ::= SEQUENCE {
 	subCauseCode SubCauseCodeType,
 	...
 }
+CauseCodeV1 ::= SEQUENCE {
+	causeCode CauseCodeType,
+	subCauseCode SubCauseCodeType
+}
 
 CauseCodeType ::= INTEGER {
 	reserved (0),
