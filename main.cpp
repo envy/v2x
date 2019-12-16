@@ -109,7 +109,6 @@ void car_thread(MessageSink *ms)
 {
 	while (true)
 	{
-		ms->add_msg(denm, sizeof(denm));
 		ms->add_msg(unknown_cam_1, sizeof(unknown_cam_1));
 		sleep(1);
 		ms->add_msg(unknown_cam_2, sizeof(unknown_cam_2));
@@ -282,6 +281,8 @@ int main(int argc, char *argv[]) {
 
 	Main m(argv[1], port, 1337);
 	_main = &m;
+
+	m.ms.add_msg(denm, sizeof(denm));
 
 	///*
 	m.ms.add_msg(muehlenpfordt_x_rebenring_mapem, sizeof(muehlenpfordt_x_rebenring_mapem));
