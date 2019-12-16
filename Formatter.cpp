@@ -11,6 +11,7 @@
 #include "ProtectedCommunicationZonesRSU.h"
 #include "ProtectedCommunicationZone.h"
 #include "SituationContainer.h"
+#include "SituationContainerV1.h"
 #include "IntersectionState.h"
 #include "RoadSegmentList.h"
 #include "MovementState.h"
@@ -308,6 +309,14 @@ std::string Formatter::format_cause_code(CauseCode_t &val)
 	}
 }
 
+std::string Formatter::format_cause_code(CauseCodeV1_t &val)
+{
+	CauseCode_t c {};
+	c.causeCode = val.causeCode;
+	c.subCauseCode = val.subCauseCode;
+	return format_cause_code(c);
+}
+
 std::string Formatter::format_protected_zone_type(ProtectedZoneType_t val)
 {
 	switch (val)
@@ -463,6 +472,23 @@ std::string Formatter::dump_cam(CAM_t *cam)
 }
 
 std::string Formatter::dump_denm(DENM_t *denm)
+{
+	std::stringstream ss;
+	ss << "DENM v" << denm->header.protocolVersion << " from ";
+	ss << denm->header.stationID;
+	ss << std::endl;
+
+	if (denm->denm.situation != nullptr)
+	{
+		auto situation = denm->denm.situation;
+		ss << " Cause: " << format_cause_code(situation->eventType) << std::endl;
+		ss << " Info Quality: " << situation->informationQuality << std::endl;
+	}
+
+	return ss.str();
+}
+
+std::string Formatter::dump_denmv1(DENMv1_t *denm)
 {
 	std::stringstream ss;
 	ss << "DENM v" << denm->header.protocolVersion << " from ";

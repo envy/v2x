@@ -15,6 +15,7 @@
 #include "HeadingValue.h"
 #include "MovementPhaseState.h"
 #include "CauseCode.h"
+#include "CauseCodeV1.h"
 #include "ProtectedZoneType.h"
 #include "LaneDirection.h"
 #include "LaneTypeAttributes.h"
@@ -36,12 +37,14 @@ public:
 	static std::string format_heading_value(HeadingValue_t val);
 	static std::string format_event_state(MovementPhaseState_t val);
 	static std::string format_cause_code(CauseCode_t &val);
+	static std::string format_cause_code(CauseCodeV1_t &val);
 	static std::string format_protected_zone_type(ProtectedZoneType_t val);
 	static std::string format_lane_direction(LaneDirection_t &val);
 	static std::string format_lane_type(LaneTypeAttributes_t &val);
 
 	static std::string dump_camv1(CAMv1_t *cam);
 	static std::string dump_cam(CAM_t *cam);
+	static std::string dump_denmv1(DENMv1_t *denm);
 	static std::string dump_denm(DENM_t *denm);
 	static std::string dump_spatem(SPATEM_t *spatem);
 	static std::string dump_mapem(MAPEM_t *mapem);

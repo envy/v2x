@@ -726,7 +726,7 @@ void MessageSink::draw_details(sf::RenderTarget &target)
 	{
 		if (data->denm_version == 1)
 		{
-
+			ss << Formatter::dump_denmv1(data->denm.v1);
 		}
 		else if (data->denm_version == 2)
 		{
