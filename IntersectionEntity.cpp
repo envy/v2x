@@ -315,6 +315,7 @@ void IntersectionEntity::build_geometry(bool standalone)
 
 			if (node->is(NodeAttributeXY_stopLine))
 			{
+				/*
 				auto nextnode = node + 1;
 				if (nextnode != laneobj.nodes.end())
 				{
@@ -339,6 +340,7 @@ void IntersectionEntity::build_geometry(bool standalone)
 					Utils::lat_lon_move(local_end.y, local_end.x, -local_off.x, -local_off.y, y, x);
 					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[3].position = Utils::to_screen(x, y);
 				}
+				 //*/
 			}
 
 			/*

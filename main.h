@@ -3,6 +3,7 @@
 
 #include "proxy.h"
 #include "MessageSink.h"
+#include "Injector.h"
 #include <SFML/Graphics.hpp>
 
 class Main
@@ -13,15 +14,16 @@ private:
 	sf::Font font;
 	sf::Clock keyclock;
 	Proxy p;
+	Injector i;
 
 	float scale { 25 };
 	int64_t ox { 0 };
 	int64_t oy { 0 };
-	uint8_t mac[6];
-	StationID_t station_id;
+	uint8_t mac[6] {};
+	StationID_t station_id { 0 };
 
 	bool is_pressed { false };
-	sf::Keyboard::Key last_key;
+	sf::Keyboard::Key last_key { sf::Keyboard::Unknown };
 
 	bool draw_map { false };
 

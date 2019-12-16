@@ -17,10 +17,11 @@ set(APP_SOURCE_FILES
         Formatter.cpp
         Utils.cpp
         IntersectionEntity.cpp
-        VehicleEntity.cpp)
+        VehicleEntity.cpp
+        Injector.cpp)
 
 add_executable(app ${APP_SOURCE_FILES} ${ASN_FILES})
 
 target_include_directories(app PUBLIC . asn1-src)
-target_link_libraries(app sfml-graphics sfml-window pthread)
+target_link_libraries(app sfml-graphics sfml-window pthread pcap)
 target_compile_options(app PUBLIC -Wall -g -O0)

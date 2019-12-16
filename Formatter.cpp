@@ -321,6 +321,10 @@ std::string Formatter::format_protected_zone_type(ProtectedZoneType_t val)
 {
 	switch (val)
 	{
+		case ProtectedZoneType_permanentCenDsrcTolling:
+			return "permanent Cen Dsrc Tolling";
+		case ProtectedZoneType_temporaryCenDsrcTolling:
+			return "temporary Cen Dsrc Tolling";
 		default:
 			return "unknown";
 	}
@@ -330,12 +334,12 @@ std::string Formatter::format_lane_direction(LaneDirection_t &val)
 {
 	bool is_egress = false;
 	std::stringstream ss;
-	if (val.buf[0] & (1u << (7-LaneDirection_egressPath)))
+	if (val.buf[0] & (1u << (7u-LaneDirection_egressPath)))
 	{
 		ss << "egress";
 		is_egress = true;
 	}
-	if (val.buf[0] & (1u << (7-LaneDirection_ingressPath)))
+	if (val.buf[0] & (1u << (7u-LaneDirection_ingressPath)))
 	{
 		if (is_egress)
 		{

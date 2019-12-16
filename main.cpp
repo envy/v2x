@@ -263,6 +263,12 @@ void Main::key_handler()
 		key_pressed(sf::Keyboard::Up);
 		ms.dec_selected();
 	}
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::I))
+	{
+		key_pressed(sf::Keyboard::I);
+		i.inject(0);
+	}
 }
 
 #define PORT 17565
@@ -282,9 +288,7 @@ int main(int argc, char *argv[]) {
 	Main m(argv[1], port, 1337);
 	_main = &m;
 
-	m.ms.add_msg(denm, sizeof(denm));
-
-	///*
+	/*
 	m.ms.add_msg(muehlenpfordt_x_rebenring_mapem, sizeof(muehlenpfordt_x_rebenring_mapem));
 	m.ms.add_msg(muehlenpfordt_x_rebenring_spatem, sizeof(muehlenpfordt_x_rebenring_spatem));
 
@@ -298,7 +302,7 @@ int main(int argc, char *argv[]) {
 
 	//*/
 
-	///*
+	/*
 	//m.ms.add_msg(mapem_20, sizeof(mapem_20));
 	//m.ms.add_msg(mapem_22, sizeof(mapem_22)); // duplicate of hbf
 
@@ -345,16 +349,12 @@ int main(int argc, char *argv[]) {
 	// m.ms.set_origin(522732617, 105252691); // IZ
 	m.set_origin(522750000, 105244000);
 
-	//std::thread t(insert_maps_thread, &m.ms);
-
-	std::thread t(car_thread, &m.ms);
-
 	m.run();
 
 	exit(0);
 }
 
-Main::Main(char *addr, int port, StationID_t stationId) : mac(), last_key()
+Main::Main(char *addr, int port, StationID_t stationId) : i(&ms)
 {
 	mac[0] = 0x24;
 	mac[1] = 0xA4;
