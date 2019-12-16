@@ -239,6 +239,19 @@ void Main::key_handler()
 			i.inject(selected_inject_id);
 		}
 	}
+	else
+	{
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+		{
+			key_pressed(sf::Keyboard::Right);
+			i.set_time_factor(i.get_time_factor() * 2);
+		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+		{
+			key_pressed(sf::Keyboard::Left);
+			i.set_time_factor(i.get_time_factor() / 2.0);
+		}
+	}
 }
 
 #define PORT 17565
@@ -257,20 +270,6 @@ int main(int argc, char *argv[]) {
 
 	Main m(argv[1], port, 1337);
 	_main = &m;
-
-	/*
-	m.ms.add_msg(muehlenpfordt_x_rebenring_mapem, sizeof(muehlenpfordt_x_rebenring_mapem));
-	m.ms.add_msg(muehlenpfordt_x_rebenring_spatem, sizeof(muehlenpfordt_x_rebenring_spatem));
-
-	m.ms.add_msg(mittelweg_x_rebenring_mapem, sizeof(mittelweg_x_rebenring_mapem));
-
-	m.ms.add_msg(hamburger_x_rebenring_mapem, sizeof(hamburger_x_rebenring_mapem));
-	m.ms.add_msg(hamburger_x_rebenring_spatem, sizeof(hamburger_x_rebenring_spatem));
-
-	m.ms.add_msg(pockels_x_rebenring_mapem, sizeof(pockels_x_rebenring_mapem));
-	m.ms.add_msg(pockels_x_rebenring_spatem, sizeof(pockels_x_rebenring_spatem));
-
-	//*/
 
 	/*
 	//m.ms.add_msg(mapem_20, sizeof(mapem_20));
@@ -395,6 +394,7 @@ void Main::run()
 		if (i.is_injecting())
 		{
 			ss << "Injecting... (" << i.get_counter() << ")";
+			ss << " x" << i.get_time_factor();
 		}
 		else
 		{

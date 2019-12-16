@@ -43,7 +43,7 @@ void Injector::iterate_pcap(char *path)
 		return;
 	}
 
-	pcap_loop_args_t loop_args = { ms, {0, 0}, &inject_msg_counter };
+	pcap_loop_args_t loop_args = { ms, {0, 0}, this };
 
 	if (pcap_loop(fp, 0, [](u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
 		auto args = (pcap_loop_args_t *)userData;
@@ -55,11 +55,12 @@ void Injector::iterate_pcap(char *path)
 			// not-first iteration, sleep for the diff
 			struct timeval diff = {};
 			timersub(&pkthdr->ts, &args->last, &diff);
-			usleep(diff.tv_sec * 1000000 + diff.tv_usec);
+			auto sleeptime = diff.tv_sec * 1000000 + diff.tv_usec;
+			usleep(sleeptime / args->i->get_time_factor());
 		}
 		args->last = pkthdr->ts;
 		args->ms->add_msg(buf, pkthdr->len);
-		(*args->counter)++;
+		args->i->inc_counter();
 	}, (u_char *)&loop_args) < 0)
 	{
 		std::cout << "pcap_loop error: " << errbuf << std::endl;
