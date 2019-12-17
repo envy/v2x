@@ -2,9 +2,10 @@
 #include <unistd.h>
 
 injectable_msg_t injectable_msgs[] = {
-		{(char *)"2019-12-13-01 CAMs", (char *)"static-data/2019-12-13-01-cams.pcapng"},
-		{(char *)"2019-12-16-02 CAMS/DENMs", (char *)"static-data/2019-12-16-02-cams-denms.pcapng"},
-		{(char *)"2019-12-13 Ringfahrt", (char *)"static-data/bs-ring.pcapng"}
+		{(char *)"2019-12-13 Ringfahrt", (char *)"static-data/bs-ring.pcapng"},
+		{(char *)"2019-12-13 CAMs", (char *)"static-data/2019-12-13-01-cams.pcapng"},
+		{(char *)"2019-12-16 CAMS/DENMs", (char *)"static-data/2019-12-16-02-cams-denms.pcapng"},
+		{(char *)"2019-12-16 Nachts CAMS/DENMS", (char *)"static-data/2019-12-17-01-cams-denms.pcapng"}
 };
 
 constexpr uint32_t max_id = sizeof(injectable_msgs)/sizeof(injectable_msg_t);

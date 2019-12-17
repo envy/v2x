@@ -549,6 +549,13 @@ void MessageSink::add_msg(uint8_t *buf, uint32_t buflen)
 	queue_cond.notify_all();
 }
 
+void MessageSink::add_msg_static(uint8_t *buf, uint32_t buflen)
+{
+	auto heap_buf = (uint8_t *)calloc(1, buflen);
+	memcpy(heap_buf, buf, buflen);
+	add_msg(heap_buf, buflen);
+}
+
 void MessageSink::inc_selected()
 {
 	if (selected_index == UINT32_MAX || selected_index + 1 >= msgs.size())

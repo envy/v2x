@@ -360,9 +360,6 @@ Main::~Main()
 
 void Main::run()
 {
-	//std::thread camthread(send_cam_thread, mac, station_id, &p);
-	//std::thread denmthread(send_denm_thread, mac, station_id, &p);
-
 	keyclock.restart();
 
 	while (window->isOpen())

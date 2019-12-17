@@ -386,9 +386,23 @@ std::string Formatter::dump_camv1(CAMv1_t *cam)
 	ss << std::endl;
 
 	ss << " Location: ";
-	double lat = cam->cam.camParameters.basicContainer.referencePosition.latitude / 10000000.0;
-	double lon = cam->cam.camParameters.basicContainer.referencePosition.longitude / 10000000.0;
-	ss << lat << ", " << lon;
+	if (cam->cam.camParameters.basicContainer.referencePosition.latitude == Latitude_unavailable)
+	{
+		ss << "lat. unavailable";
+	}
+	else
+	{
+		ss << cam->cam.camParameters.basicContainer.referencePosition.latitude / 10000000.0;
+	}
+	ss << ", ";
+	if (cam->cam.camParameters.basicContainer.referencePosition.longitude == Longitude_unavailable)
+	{
+		ss << "lon. unavailable";
+	}
+	else
+	{
+		ss << cam->cam.camParameters.basicContainer.referencePosition.longitude / 10000000.0;
+	}
 	ss << std::endl;
 
 	if (cam->cam.camParameters.highFrequencyContainer.present == HighFrequencyContainerV1_PR_basicVehicleContainerHighFrequency)

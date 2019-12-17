@@ -21,7 +21,7 @@ class Array
 	Array(uint8_t *buf, uint32_t len) : buf(buf), len(len) {}
 	~Array()
 	{
-		//delete[] buf;
+		delete[] buf;
 	}
 	Array(Array &&a) noexcept
 	{
@@ -91,6 +91,7 @@ public:
 	virtual ~MessageSink();
 
 	void add_msg(uint8_t *buf, uint32_t buflen);
+	void add_msg_static(uint8_t *buf, uint32_t buflen);
 	void inc_selected();
 	void dec_selected();
 	sf::Vector2<int64_t> get_selected_location();
