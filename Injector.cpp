@@ -56,8 +56,10 @@ void Injector::iterate_pcap(char *path)
 			// not-first iteration, sleep for the diff
 			struct timeval diff = {};
 			timersub(&pkthdr->ts, &args->last, &diff);
-			auto sleeptime = diff.tv_sec * 1000000 + diff.tv_usec;
-			usleep(sleeptime / args->i->get_time_factor());
+			auto sleeptime = (uint32_t)((diff.tv_sec * 1'000'000 + diff.tv_usec) / args->i->get_time_factor());
+			if (sleeptime > args->i->get_max_usleep_time())
+				sleeptime = args->i->get_max_usleep_time();
+			usleep(sleeptime);
 		}
 		args->last = pkthdr->ts;
 		args->ms->add_msg(buf, pkthdr->len);

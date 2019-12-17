@@ -20,6 +20,7 @@ private:
 	bool injecting { false };
 	uint32_t inject_msg_counter { 0 };
 	float time_factor { 1.0 };
+	uint32_t max_usleep_time { 2 * 1'000'000 };
 
 	void iterate_pcap(char *path);
 public:
@@ -32,6 +33,8 @@ public:
 	void inc_counter() { inject_msg_counter++; }
 	float get_time_factor() { return time_factor; }
 	void set_time_factor(float tf) { time_factor = tf; }
+	uint32_t get_max_usleep_time() { return max_usleep_time; }
+	void set_max_usleep_time(uint32_t t) { max_usleep_time = t; }
 };
 
 

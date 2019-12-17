@@ -249,7 +249,7 @@ void Main::key_handler()
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 		{
 			key_pressed(sf::Keyboard::Left);
-			i.set_time_factor(i.get_time_factor() / 2.0);
+			i.set_time_factor(i.get_time_factor() / 2.0f);
 		}
 	}
 }
