@@ -13,7 +13,8 @@ private:
 	sf::RenderTexture background, foreground;
 	sf::Font font;
 	sf::Clock keyclock;
-	Proxy p;
+	std::vector<Proxy *> proxies;
+	std::vector<std::thread> readers;
 	Injector i;
 
 	float scale { 25 };
@@ -28,8 +29,7 @@ private:
 
 	bool draw_map { false };
 
-	std::thread reader;
-	void reader_thread();
+	void reader_thread(Proxy *p);
 	void key_handler();
 	void key_pressed(sf::Keyboard::Key);
 
@@ -37,8 +37,10 @@ private:
 	void draw_data();
 
 public:
-	Main(char *addr, int port, StationID_t stationId);
+	explicit Main(StationID_t stationId);
 	~Main();
+
+	void connect(char *address, int port);
 
 	float get_scale() const { return scale; };
 	void zoom(float delta) { scale += delta; }

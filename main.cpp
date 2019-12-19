@@ -71,12 +71,12 @@ void send_denm(uint8_t mac[6], StationID_t id, Proxy *p)
 	p->send_packet(d.get_raw(), d.get_len());
 }
 
-void Main::reader_thread()
+void Main::reader_thread(Proxy *p)
 {
 #define BUFSIZE 2048
 	auto buf = new uint8_t[BUFSIZE];
 	int32_t read = 0;
-	while((read = p.get_packet(buf, BUFSIZE)) >= 0)
+	while((read = p->get_packet(buf, BUFSIZE)) >= 0)
 	{
 		ms.add_msg(buf, (uint32_t) read);
 		buf = new uint8_t[BUFSIZE];
@@ -256,10 +256,9 @@ void Main::key_handler()
 
 #define PORT 17565
 int main(int argc, char *argv[]) {
-	int port = PORT;
-
 	asserts();
 
+	/*
 	if (argc < 2) {
 		std::cout << "Usage: " << argv[0] << " <addr> [port]" << std::endl;
 		return -1;
@@ -267,9 +266,19 @@ int main(int argc, char *argv[]) {
 	if (argc >= 3) {
 		port = (int) strtoul(argv[2], nullptr, 10);
 	}
+	//*/
+	--argc;
+	++argv;
 
-	Main m(argv[1], port, 1337);
+	Main m(1337);
 	_main = &m;
+
+	while (argc > 0)
+	{
+		m.connect(*argv, PORT);
+		++argv;
+		--argc;
+	}
 
 	/*
 	//m.ms.add_msg(mapem_20, sizeof(mapem_20));
@@ -323,7 +332,7 @@ int main(int argc, char *argv[]) {
 	exit(0);
 }
 
-Main::Main(char *addr, int port, StationID_t stationId) : i(&ms)
+Main::Main(StationID_t stationId) : i(&ms)
 {
 	mac[0] = 0x24;
 	mac[1] = 0xA4;
@@ -333,13 +342,6 @@ Main::Main(char *addr, int port, StationID_t stationId) : i(&ms)
 	mac[5] = 0x00;
 
 	station_id = stationId;
-
-	if (p.connect(addr, port)) {
-		//throw std::exception();
-		reader = std::thread([this] {
-			reader_thread();
-		});
-	}
 
 	if (!font.loadFromFile("FiraCode-Regular.ttf"))
 	{
@@ -355,7 +357,11 @@ Main::Main(char *addr, int port, StationID_t stationId) : i(&ms)
 Main::~Main()
 {
 	delete window;
-	p.disconnect();
+
+	for (auto &p : proxies)
+	{
+		p->disconnect();
+	}
 }
 
 void Main::run()
@@ -413,4 +419,16 @@ void Main::run()
 sf::RenderWindow *Main::get_window()
 {
 	return window;
+}
+
+void Main::connect(char *address, int port)
+{
+	auto p = new Proxy;
+	if (p->connect(address, port)) {
+		//throw std::exception();
+		readers.emplace_back([this, p] {
+			reader_thread(p);
+		});
+		proxies.push_back(p);
+	}
 }
