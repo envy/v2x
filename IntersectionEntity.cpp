@@ -126,6 +126,15 @@ void IntersectionEntity::build_geometry(bool standalone)
 	lane_nodes.clear();
 
 	sf::Vector2f coords;
+	sf::Vector2<int64_t> refp;
+	if (standalone)
+	{
+		refp = sf::Vector2<int64_t>(ref_x, ref_y);
+	}
+	else
+	{
+		refp = _main->get_origin();
+	}
 
 	// RSU
 	auto r = 100/_main->get_scale();
@@ -137,15 +146,7 @@ void IntersectionEntity::build_geometry(bool standalone)
 
 	dynamic_cast<sf::CircleShape *>(ref)->setRadius(r);
 	dynamic_cast<sf::CircleShape *>(ref)->setOrigin(r, r);
-
-	if (standalone)
-	{
-		dynamic_cast<sf::CircleShape *>(ref)->setPosition(Utils::to_screen(ref_x, ref_y, ref_x, ref_y));
-	}
-	else
-	{
-		dynamic_cast<sf::CircleShape *>(ref)->setPosition(Utils::to_screen(ref_x, ref_y));
-	}
+	dynamic_cast<sf::CircleShape *>(ref)->setPosition(Utils::to_screen(ref_x, ref_y, refp.x, refp.y));
 
 	auto lit = lanes.begin();
 	while (lit != lanes.end())
@@ -159,7 +160,6 @@ void IntersectionEntity::build_geometry(bool standalone)
 		int64_t lx, ly, plx, ply;
 		lx = ref_x;
 		ly = ref_y;
-		auto ref = sf::Vector2<int64_t>(ref_x, ref_y);
 
 		auto this_lane_color = sf::Color::White;
 		switch (laneobj.attr.laneType.present)
@@ -203,15 +203,7 @@ void IntersectionEntity::build_geometry(bool standalone)
 			auto ndir = Utils::normalize(dir);
 			auto ortho = Utils::ortho(dir);
 			auto off = ortho * half_width;
-
-			if (standalone)
-			{
-				coords = Utils::to_screen(lx, ly, ref_x, ref_y);
-			}
-			else
-			{
-				coords = Utils::to_screen(lx, ly);
-			}
+			coords = Utils::to_screen(lx, ly, refp.x, refp.y);
 			lane_node_strip.append( sf::Vertex(coords, sf::Color::Cyan));
 
 			/*
@@ -236,14 +228,7 @@ void IntersectionEntity::build_geometry(bool standalone)
 						{
 							laneobj.egress_arrow = new sf::VertexArray(sf::Triangles, 3);
 						}
-						if (standalone)
-						{
-							Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.egress_arrow), astart, invdir, ref);
-						}
-						else
-						{
-							Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.egress_arrow), astart, invdir);
-						}
+						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.egress_arrow), astart, invdir, refp);
 					}
 					if (Utils::is_ingress_lane(laneobj.attr.directionalUse))
 					{
@@ -252,38 +237,17 @@ void IntersectionEntity::build_geometry(bool standalone)
 						{
 							laneobj.ingress_arrow = new sf::VertexArray(sf::Triangles, 3);
 						}
-						if (standalone)
-						{
-							Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), astart, ndir, ref);
-						}
-						else
-						{
-							Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), astart, ndir);
-						}
+						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), astart, ndir, refp);
 					}
 				}
 
 				int64_t left_x, left_y, right_x, right_y;
 				Utils::lat_lon_move(start.y, start.x, -off.x, -off.y, left_y, left_x);
-				if (standalone)
-				{
-					coords = Utils::to_screen(left_x, left_y, ref_x, ref_y);
-				}
-				else
-				{
-					coords = Utils::to_screen(left_x, left_y);
-				}
+				coords = Utils::to_screen(left_x, left_y, refp.x, refp.y);
 				lane.append(sf::Vertex(coords, this_lane_color));
 
 				Utils::lat_lon_move(start.y, start.x, off.x, off.y, right_y, right_x);
-				if (standalone)
-				{
-					coords = Utils::to_screen(right_x, right_y, ref_x, ref_y);
-				}
-				else
-				{
-					coords = Utils::to_screen(right_x, right_y);
-				}
+				coords = Utils::to_screen(right_x, right_y, refp.x, refp.y);
 				lane.append(sf::Vertex(coords, this_lane_color));
 
 				//lane_outline.append(sf::Vertex(ostart - ooff, lane_outer_color));
@@ -292,25 +256,11 @@ void IntersectionEntity::build_geometry(bool standalone)
 				if (node + 1 == laneobj.nodes.end())
 				{
 					Utils::lat_lon_move(end.y, end.x, -off.x, -off.y, left_y, left_x);
-					if (standalone)
-					{
-						coords = Utils::to_screen(left_x, left_y, ref_x, ref_y);
-					}
-					else
-					{
-						coords = Utils::to_screen(left_x, left_y);
-					}
+					coords = Utils::to_screen(left_x, left_y, refp.x, refp.y);
 					lane.append(sf::Vertex(coords, this_lane_color));
 
 					Utils::lat_lon_move(end.y, end.x, off.x, off.y, right_y, right_x);
-					if (standalone)
-					{
-						coords = Utils::to_screen(right_x, right_y, ref_x, ref_y);
-					}
-					else
-					{
-						coords = Utils::to_screen(right_x, right_y);
-					}
+					coords = Utils::to_screen(right_x, right_y, refp.x, refp.y);
 					lane.append(sf::Vertex(coords, this_lane_color));
 
 					//lane_outline.append(sf::Vertex(oend - ooff, lane_outer_color));

@@ -41,6 +41,8 @@ void Injector::iterate_pcap(char *path)
 	if (fp == nullptr)
 	{
 		std::cout << "pcap_open_offline error: " << errbuf << std::endl;
+		inject_msg_counter = 0;
+		injecting = false;
 		return;
 	}
 
@@ -67,12 +69,14 @@ void Injector::iterate_pcap(char *path)
 	}, (u_char *)&loop_args) < 0)
 	{
 		std::cout << "pcap_loop error: " << errbuf << std::endl;
+		inject_msg_counter = 0;
+		injecting = false;
 		pcap_close(fp);
 		return;
 	}
 
 	pcap_close(fp);
 
-	injecting = false;
 	inject_msg_counter = 0;
+	injecting = false;
 }
