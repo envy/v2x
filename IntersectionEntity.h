@@ -37,7 +37,8 @@ class Lane;
 class LaneConnection : public sf::Drawable
 {
 public:
-	static constexpr uint32_t BEZIER_SEGMENTS = 10;
+	static constexpr uint32_t BEZIER_SEGMENTS = 20;
+	static constexpr float BEZIER_CONTROL_LENGTH = 0.45f;
 	LaneConnection() = default;
 	Lane *to { nullptr };
 	Lane *from { nullptr };

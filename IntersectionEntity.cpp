@@ -413,8 +413,8 @@ void LaneConnection::build_geometry(bool standalone)
 	auto nedir = Utils::normalize(edir);
 
 	auto cdir = to->nodes[0].to_vec() -  from->nodes[0].to_vec();
-	auto start_offset = snode + nsdir * Utils::length(cdir)/3.0f;
-	auto end_offset = enode + nedir * Utils::length(cdir)/3.0f;
+	auto start_offset = snode + nsdir * Utils::length(cdir) * BEZIER_CONTROL_LENGTH;
+	auto end_offset = enode + nedir * Utils::length(cdir) * BEZIER_CONTROL_LENGTH;
 	sf::Vector2f start, end, sc, ec;
 
 	if (standalone)
