@@ -278,3 +278,23 @@ void Utils::lat_lon_move(int64_t lat, int64_t lon, int64_t x_cm, int64_t y_cm, i
 	out_lat = (int64_t)(lat + (dlat * 180.0 / M_PI)*10000000);
 	out_lon = (int64_t)(lon + (dlon * 180.0 / M_PI)*10000000);
 }
+
+void Utils::bezier_to_va(const sf::Vector2f &start, const sf::Vector2f &end, const sf::Vector2f &startControl, const sf::Vector2f &endControl, const size_t numSegments, sf::VertexArray &va)
+{
+	if (numSegments <= 0) // Any points at all?
+	{
+		return;
+	}
+	va.clear();
+	va.append(sf::Vertex(start));
+	float p = 1.f / numSegments;
+	float q = p;
+	for (size_t i = 1; i < numSegments; i++, p += q) // Generate all between
+	{
+		auto v = sf::Vector2f(p * p * p * (end + 3.f * (startControl - endControl) - start) +
+		                      3.f * p * p * (start - 2.f * startControl + endControl) +
+		                      3.f * p * (startControl - start) + start);
+		va.append(sf::Vertex(v));
+	}
+	va.append(sf::Vertex(end));
+}

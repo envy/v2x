@@ -36,6 +36,7 @@ public:
 	static sf::Vector2<int32_t> lat_lon_to_x_y(double lat, double lon, uint8_t zoom);
 	static void draw_arrow(sf::VertexArray *va, sf::Vector2f &start, sf::Vector2f &dir, sf::Vector2<int64_t> &ref, sf::Color color = sf::Color::White);
 	static void draw_arrow(sf::VertexArray *va, sf::Vector2f &start, sf::Vector2f &dir, sf::Color color = sf::Color::White);
+	static void bezier_to_va(const sf::Vector2f &start, const sf::Vector2f &end, const sf::Vector2f &startControl, const sf::Vector2f &endControl, const size_t numSegments, sf::VertexArray &va);
 	static void lat_lon_move(int64_t lat, int64_t lon, int64_t x_cm, int64_t y_cm, int64_t &out_lat, int64_t &out_lon);
 	static sf::Vector2f to_screen(sf::Vector2f &f);
 	static sf::Vector2f to_screen(sf::Vector2f &f, int64_t ox, int64_t oy);

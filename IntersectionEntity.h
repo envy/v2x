@@ -32,9 +32,15 @@ public:
 	}
 };
 
+class Lane;
+
 class LaneConnection : public sf::Drawable
 {
 public:
+	static constexpr uint32_t BEZIER_SEGMENTS = 10;
+	LaneConnection() = default;
+	Lane *to { nullptr };
+	Lane *from { nullptr };
 	LaneID_t to_id { 0 };
 	LaneID_t from_id { 0 };
 	Node *to_node { nullptr };
@@ -43,9 +49,12 @@ public:
 	MovementPhaseState_t state { MovementPhaseState_unavailable };
 	sf::VertexArray va {};
 
+	void build_geometry(bool standalone);
 	void set_state(MovementPhaseState_t newstate);
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 };
+
+class IntersectionEntity;
 
 class Lane : public sf::Drawable
 {
@@ -55,6 +64,7 @@ public:
 	Lane() = default;
 	Lane(Lane &&l) noexcept;
 	Lane &operator=(Lane &&l) noexcept;
+	IntersectionEntity *intersection { nullptr };
 	LaneAttributes_t attr {};
 	std::vector<Node> nodes;
 	std::vector<LaneConnection> connections;
@@ -68,6 +78,8 @@ public:
 
 class IntersectionEntity : public sf::Drawable
 {
+	friend class Lane;
+	friend class LaneConnection;
 private:
 	int64_t ref_x { 0 }, ref_y { 0 };
 	std::map<LaneID_t, Lane> lanes;
