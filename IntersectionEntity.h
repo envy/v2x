@@ -41,10 +41,6 @@ public:
 	LaneConnection() = default;
 	Lane *to { nullptr };
 	Lane *from { nullptr };
-	LaneID_t to_id { 0 };
-	LaneID_t from_id { 0 };
-	Node *to_node { nullptr };
-	Node *from_node { nullptr };
 	SignalGroupID_t signal_group { 0 };
 	MovementPhaseState_t state { MovementPhaseState_unavailable };
 	sf::VertexArray va {};

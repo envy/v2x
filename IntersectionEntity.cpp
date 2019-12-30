@@ -421,8 +421,6 @@ void IntersectionEntity::add_connection(LaneID_t start, LaneID_t end, const Sign
 	LaneConnection c;
 	c.from = &lanes[start];
 	c.to = &lanes[end];
-	c.from_id = start;
-	c.to_id = end;
 	if (sg != nullptr)
 	{
 		c.signal_group = *sg;
@@ -431,8 +429,6 @@ void IntersectionEntity::add_connection(LaneID_t start, LaneID_t end, const Sign
 	{
 		c.signal_group = -1;
 	}
-	c.from_node = &lanes[start].nodes[0];
-	c.to_node = &lanes[end].nodes[1];
 	lanes[start].connections.emplace_back(std::move(c));
 }
 
