@@ -401,6 +401,17 @@ void IntersectionEntity::set_signal_group_state(SignalGroupID_t id, MovementPhas
 	}
 }
 
+void IntersectionEntity::add_lane_to_ingress_approach(ApproachID_t aid, LaneID_t lid)
+{
+	auto lane = &(lanes[lid]);
+	approaches[aid].lanes.push_back(lane);
+}
+
+Lane *IntersectionEntity::get_nearest_lane()
+{
+	return nullptr;
+}
+
 void LaneConnection::build_geometry(bool standalone)
 {
 // connections are always from one first node to another first node of a lane

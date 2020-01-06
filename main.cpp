@@ -78,7 +78,7 @@ void Main::reader_thread(Proxy *p)
 	int32_t read = 0;
 	while((read = p->get_packet(buf, BUFSIZE)) >= 0)
 	{
-		ms.add_msg(buf, (uint32_t) read);
+		add_msg(buf, (uint32_t) read);
 		buf = new uint8_t[BUFSIZE];
 	}
 }
@@ -104,14 +104,14 @@ void Main::draw_background()
 
 void Main::draw_data()
 {
-	if (draw_map)
+	if (_draw_map)
 	{
-		ms.draw_map(background, foreground);
+		draw_map(background, foreground);
 	}
 	else
 	{
-		ms.draw_station_list();
-		ms.draw_details(background);
+		draw_station_list();
+		draw_details(background);
 	}
 }
 
@@ -151,18 +151,18 @@ void Main::key_handler()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::V))
 	{
 		key_pressed(sf::Keyboard::V);
-		ms.set_show_visu(!ms.get_show_visu());
+		set_show_visu(!get_show_visu());
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::M))
 	{
 		key_pressed(sf::Keyboard::M);
-		draw_map = !draw_map;
+		_draw_map = !_draw_map;
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::J))
 	{
 		key_pressed(sf::Keyboard::J);
-		draw_map = !draw_map;
-		auto pos = ms.get_selected_location();
+		_draw_map = !_draw_map;
+		auto pos = get_selected_location();
 		set_origin(pos.y, pos.x);
 	}
 
@@ -206,12 +206,12 @@ void Main::key_handler()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 	{
 		key_pressed(sf::Keyboard::Down);
-		ms.inc_selected();
+		inc_selected();
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 	{
 		key_pressed(sf::Keyboard::Up);
-		ms.dec_selected();
+		dec_selected();
 	}
 
 	if (!i.is_injecting())
@@ -332,7 +332,7 @@ int main(int argc, char *argv[]) {
 	exit(0);
 }
 
-Main::Main(StationID_t stationId) : i(&ms)
+Main::Main(StationID_t stationId) : i(this)
 {
 	mac[0] = 0x24;
 	mac[1] = 0xA4;
@@ -431,4 +431,361 @@ void Main::connect(char *address, int port)
 		});
 		proxies.push_back(p);
 	}
+}
+
+void Main::inc_selected()
+{
+	if (selected_index == UINT32_MAX || selected_index + 1 >= msgs.size())
+	{
+		return;
+	}
+	selected_index++;
+}
+
+void Main::dec_selected()
+{
+	if (selected_index == 0)
+	{
+		return;
+	}
+	selected_index--;
+}
+
+sf::Vector2<int64_t> Main::get_selected_location()
+{
+	std::shared_lock lock(data_lock);
+
+	auto it = msgs.begin();
+	uint32_t i = 0;
+	while (i < selected_index)
+	{
+		++i;
+		++it;
+	}
+	auto data = it->second;
+
+	if (data == nullptr)
+	{
+		return sf::Vector2<int64_t>(0, 0);
+	}
+
+	if (data->ie != nullptr)
+	{
+		return data->ie->get_location();
+	}
+	if (data->ve != nullptr)
+	{
+		return data->ve->pos;
+	}
+
+	// no suitable location to return
+	return sf::Vector2<int64_t>(0, 0);
+}
+
+void Main::set_show_cams(bool show)
+{
+	_show_cams = show;
+}
+bool Main::get_show_cams()
+{
+	return _show_cams;
+}
+
+void Main::set_show_denms(bool show)
+{
+	_show_denms = show;
+}
+bool Main::get_show_denms()
+{
+	return _show_denms;
+}
+
+void Main::set_show_spatems(bool show)
+{
+	_show_spatems = show;
+}
+bool Main::get_show_spatems()
+{
+	return _show_spatems;
+}
+
+void Main::set_show_mapems(bool show)
+{
+	_show_mapems = show;
+}
+bool Main::get_show_mapems()
+{
+	return _show_mapems;
+}
+
+void Main::set_show_visu(bool show)
+{
+	_show_visu = show;
+}
+bool Main::get_show_visu()
+{
+	return _show_visu;
+}
+
+void Main::set_visu_only_vehicles(bool show)
+{
+	_visu_only_vehicles = show;
+}
+bool Main::get_visu_only_vehicles()
+{
+	return _visu_only_vehicles;
+}
+
+void Main::draw_station_list()
+{
+	std::shared_lock lock(data_lock);
+	auto it = msgs.begin();
+	uint32_t i = 1;
+	while (it != msgs.end())
+	{
+		std::stringstream ss;
+		if (i == selected_index + 1)
+		{
+			ss << "> ";
+		}
+		else
+		{
+			ss << "  ";
+		}
+		ss << it->first;
+		_main->write_text(20, 10 + 20 * i, sf::Color::White, ss.str());
+		++it;
+		++i;
+	}
+}
+
+void Main::draw_intersection(sf::RenderTarget &target, station_msgs_t *data, bool standalone)
+{
+	if (data->ie != nullptr)
+	{
+		data->ie->build_geometry(standalone);
+		target.draw(*data->ie);
+	}
+}
+
+void Main::draw_details(sf::RenderTarget &target)
+{
+	std::shared_lock lock(data_lock);
+
+	station_msgs_t *data = nullptr;
+
+	auto it = msgs.begin();
+	uint32_t i = 0;
+	while (i < selected_index)
+	{
+		++i;
+		++it;
+	}
+	data = it->second;
+
+	if (data == nullptr)
+	{
+		return;
+	}
+
+	if (data->mapem != nullptr && _show_visu)
+	{
+		draw_intersection(target, data, true);
+		return;
+	}
+
+	std::stringstream ss;
+	if (data->cam_version != 0 && _show_cams)
+	{
+		if (data->cam_version == 1)
+		{
+			ss << Formatter::dump_camv1(data->cam.v1);
+		}
+		else if (data->cam_version == 2)
+		{
+			ss << Formatter::dump_cam(data->cam.v2);
+		}
+	}
+	if (data->denm_version != 0 && _show_denms)
+	{
+		if (data->denm_version == 1)
+		{
+			ss << Formatter::dump_denmv1(data->denm.v1);
+		}
+		else if (data->denm_version == 2)
+		{
+			ss << Formatter::dump_denm(data->denm.v2);
+		}
+	}
+	if (data->spatem != nullptr && _show_spatems)
+	{
+		ss << Formatter::dump_spatem(data->spatem);
+	}
+	if (data->mapem != nullptr && _show_mapems)
+	{
+		ss << Formatter::dump_mapem(data->mapem);
+	}
+
+	_main->write_text(200, 30, sf::Color::White, ss.str());
+}
+
+void Main::draw_cam(sf::RenderTarget &target, station_msgs_t *data)
+{
+	if (data->ve != nullptr)
+	{
+		data->ve->build_geometry();
+		target.draw(*data->ve);
+		return;
+	}
+
+	sf::CircleShape c(100 / _main->get_scale());
+	if (data->cam_version == 1)
+	{
+		auto lat = data->cam.v1->cam.camParameters.basicContainer.referencePosition.latitude;
+		auto lon = data->cam.v1->cam.camParameters.basicContainer.referencePosition.longitude;
+		c.setPosition(Utils::to_screen(lon, lat));
+		c.setFillColor(sf::Color(0, 191, 255));
+		target.draw(c);
+	}
+	else if (data->cam_version == 2)
+	{
+		auto lat = data->cam.v2->cam.camParameters.basicContainer.referencePosition.latitude;
+		auto lon = data->cam.v2->cam.camParameters.basicContainer.referencePosition.longitude;
+		c.setPosition(Utils::to_screen(lon, lat));
+		c.setFillColor(sf::Color(0, 191, 255));
+		target.draw(c);
+	}
+
+}
+
+#define MAX_INTERSECTIONS (5)
+static void add_nearest_intersection(IntersectionEntity **a, IntersectionEntity *ie)
+{
+	auto dist = _main->get_origin() - ie->get_location();
+	auto len = Utils::length(dist);
+
+	size_t min_idx = 0, max_idx = 0;
+	float min_len = std::numeric_limits<float>::max(), max_len = std::numeric_limits<float>::min();
+	// a is an array of IE that might be nullptr or intersection that are near to the current origin
+	bool early_return = false;
+	for (size_t i = 0; i < MAX_INTERSECTIONS; ++i)
+	{
+		if (a[i] == nullptr)
+		{
+			// empty slot, insert here
+			a[i] = ie;
+			early_return = true;
+		}
+		auto ldist = _main->get_origin() - a[i]->get_location();
+		auto llen = Utils::length(ldist);
+		if (llen < min_len)
+		{
+			min_len = llen;
+			min_idx = i;
+		}
+		if (llen > max_len)
+		{
+			max_len = llen;
+			max_idx = i;
+		}
+		if (early_return)
+			break;
+	}
+	if (early_return)
+		return;
+
+	// if we get here, then the whole array is filled
+
+	if (len < min_len)
+	{
+		// new minimum, eject the max, replace it with the new min
+		a[max_idx] = ie;
+		min_idx = max_idx;
+		min_len = len;
+		// change max_idx/max_len to new maximum
+		float new_max = std::numeric_limits<float>::min();
+		for (size_t j = 0; j < MAX_INTERSECTIONS; ++j)
+		{
+			auto _ldist = _main->get_origin() - a[j]->get_location();
+			auto _llen = Utils::length(_ldist);
+			if (_llen > new_max)
+			{
+				max_idx = j;
+				max_len = _llen;
+				new_max = _llen;
+			}
+		}
+	}
+	else if (len > min_len && len < max_len)
+	{
+		// not the new min, but we can eject the max and replace it with this and then find the new max
+		a[max_idx] = ie;
+		// change max_idx/max_len to new maximum
+		float new_max = std::numeric_limits<float>::min();
+		for (size_t j = 0; j < MAX_INTERSECTIONS; ++j)
+		{
+			auto _ldist = _main->get_origin() - a[j]->get_location();
+			auto _llen = Utils::length(_ldist);
+			if (_llen > new_max)
+			{
+				max_idx = j;
+				max_len = _llen;
+				new_max = _llen;
+			}
+		}
+	}
+}
+
+void Main::draw_map(sf::RenderTarget &background, sf::RenderTarget &foreground)
+{
+	std::shared_lock lock(data_lock);
+
+	sf::CircleShape snode(5);
+	snode.setFillColor(sf::Color::White);
+	snode.setPosition(Main::get_center_x(), Main::get_center_y());
+	snode.setOrigin(5, 5);
+	foreground.draw(snode);
+
+	// while drawing, find nearest intersections
+	IntersectionEntity *nearest[MAX_INTERSECTIONS];
+	memset(nearest, 0, sizeof(nearest));
+
+	auto it = msgs.begin();
+	while (it != msgs.end())
+	{
+		auto data = it->second;
+		if (data->mapem != nullptr)
+		{
+			draw_intersection(background, data, false);
+			if (data->ie != nullptr)
+			{
+				add_nearest_intersection(nearest, data->ie);
+			}
+		}
+		if (data->cam_version != 0)
+		{
+			draw_cam(foreground, data);
+		}
+		++it;
+	}
+
+	sf::VertexArray va(sf::Lines);
+	for (size_t i = 0; i < MAX_INTERSECTIONS; ++i)
+	{
+		if (nearest[i] == nullptr)
+			break;
+		auto o = _main->get_origin();
+		auto il = nearest[i]->get_location();
+		va.append(sf::Vertex(Utils::to_screen(o), sf::Color::White));
+		va.append(sf::Vertex(Utils::to_screen(il), sf::Color::White));
+	}
+	foreground.draw(va);
+
+	// now, find the nearest ingress approach
+	/*
+	for (auto ie : nearest)
+	{
+		if (ie->)
+	}
+	//*/
 }

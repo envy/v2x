@@ -6,7 +6,7 @@
 #include "Injector.h"
 #include <SFML/Graphics.hpp>
 
-class Main
+class Main : public MessageSink
 {
 private:
 	sf::RenderWindow *window;
@@ -27,7 +27,14 @@ private:
 	sf::Keyboard::Key last_key { sf::Keyboard::Unknown };
 	uint32_t selected_inject_id { 0 };
 
-	bool draw_map { false };
+	bool _draw_map { false };
+	uint32_t selected_index { 0 };
+	bool _show_cams { true };
+	bool _show_denms { true };
+	bool _show_spatems { true };
+	bool _show_mapems {true };
+	bool _show_visu { true };
+	bool _visu_only_vehicles { false };
 
 	void reader_thread(Proxy *p);
 	void key_handler();
@@ -64,8 +71,26 @@ public:
 	void write_text(float x, float y, const sf::Color &color, const std::string &text);
 	sf::RenderWindow *get_window();
 
-
-	MessageSink ms;
+	void inc_selected();
+	void dec_selected();
+	sf::Vector2<int64_t> get_selected_location();
+	void set_show_cams(bool show);
+	bool get_show_cams();
+	void set_show_denms(bool show);
+	bool get_show_denms();
+	void set_show_spatems(bool show);
+	bool get_show_spatems();
+	void set_show_mapems(bool show);
+	bool get_show_mapems();
+	void set_show_visu(bool show);
+	bool get_show_visu();
+	void set_visu_only_vehicles(bool show);
+	bool get_visu_only_vehicles();
+	void draw_station_list();
+	void draw_details(sf::RenderTarget &target);
+	void draw_map(sf::RenderTarget &background, sf::RenderTarget &foreground);
+	void draw_cam(sf::RenderTarget &target, station_msgs_t *data);
+	void draw_intersection(sf::RenderTarget &target, station_msgs_t *data, bool standalone);
 };
 
 extern Main *_main;

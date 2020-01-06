@@ -14,6 +14,7 @@
 #include "LaneAttributes.h"
 #include "SignalGroupID.h"
 #include "MovementPhaseState.h"
+#include "ApproachID.h"
 
 struct Node
 {
@@ -72,6 +73,11 @@ public:
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 };
 
+class Approach
+{
+public:
+	std::vector<Lane *> lanes;
+};
 
 class IntersectionEntity : public sf::Drawable
 {
@@ -79,6 +85,7 @@ class IntersectionEntity : public sf::Drawable
 	friend class LaneConnection;
 private:
 	int64_t ref_x { 0 }, ref_y { 0 };
+	std::map<ApproachID_t, Approach> approaches;
 	std::map<LaneID_t, Lane> lanes;
 	const sf::Color lane_color { sf::Color(100, 100, 100) };
 	const sf::Color lane_outer_color { sf::Color(200, 200, 200) };
@@ -98,9 +105,11 @@ public:
 	sf::Vector2<int64_t> get_location();
 	void build_geometry(bool standalone);
 	void add_lane(LaneID_t id, LaneAttributes &attr);
+	void add_lane_to_ingress_approach(ApproachID_t aid, LaneID_t lid);
 	void add_node(LaneID_t lane_id, int64_t x, int64_t y, uint64_t width, std::vector<NodeAttributeXY_t> &attributes);
 	void add_connection(LaneID_t start, LaneID_t end, const SignalGroupID_t *sg);
 	void set_signal_group_state(SignalGroupID_t id, MovementPhaseState_t state);
+	Lane *get_nearest_lane();
 };
 
 
