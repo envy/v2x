@@ -45,7 +45,7 @@ private:
 
 public:
 	explicit Main(StationID_t stationId);
-	~Main();
+	~Main() override;
 
 	void connect(char *address, int port);
 

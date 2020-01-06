@@ -9,14 +9,9 @@
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
 
-#include "NodeAttributeXY.h"
-#include "LaneID.h"
-#include "LaneAttributes.h"
-#include "SignalGroupID.h"
-#include "MovementPhaseState.h"
-#include "ApproachID.h"
+#include "asn_headers.h"
 
-struct Node
+struct LaneNode
 {
 public:
 	int64_t x { 0 };
@@ -64,7 +59,7 @@ public:
 	Lane &operator=(Lane &&l) noexcept;
 	IntersectionEntity *intersection { nullptr };
 	LaneAttributes_t attr {};
-	std::vector<Node> nodes;
+	std::vector<LaneNode> nodes;
 	std::vector<LaneConnection> connections;
 	sf::Drawable *ingress_arrow { nullptr };
 	sf::Drawable *egress_arrow { nullptr };

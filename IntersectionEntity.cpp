@@ -93,7 +93,7 @@ void IntersectionEntity::add_node(LaneID_t lane_id, int64_t x, int64_t y, uint64
 	if (lane.nodes.empty())
 	{
 		//first node is referenced from ref-point
-		Node n;
+		LaneNode n;
 		//n.x = ref_x + x;
 		//n.y = ref_y + y;
 		Utils::lat_lon_move(ref_y, ref_x, x, y, n.y, n.x);
@@ -105,7 +105,7 @@ void IntersectionEntity::add_node(LaneID_t lane_id, int64_t x, int64_t y, uint64
 	{
 		//every other node is referenced from the previous node
 		auto &prev_node = lane.nodes[lane.nodes.size() - 1];
-		Node n;
+		LaneNode n;
 		//n.x = prev_node.x + x;
 		//n.y = prev_node.y + y;
 		Utils::lat_lon_move(prev_node.y, prev_node.x, x, y, n.y, n.x);

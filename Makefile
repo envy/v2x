@@ -43,12 +43,14 @@ asn_mod: $(ASN_FILES)
 	$(ASN1) $(ASN_FLAGS) -D $(ASN_DEST) $(ASN_FILES)
 	$(eval ASN_C_FILES := $(wildcard asn1-src/*.c))
 	$(eval ASN_H_FILES := $(wildcard asn1-src/*.h))
+	cd asn1-src && find . -type f \( -iname "*.h" -not -iname "asn_headers.h" \) | cut -c3- | awk '{ print "#include \"" $$1 "\"" }' > asn_headers.h
 
 asn: $(ASN_ORIG_FILES)
 	rm -f asn1-src/*
 	$(ASN1) $(ASN_FLAGS) -D $(ASN_DEST) $(ASN_ORIG_FILES)
 	$(eval ASN_C_FILES := $(wildcard asn1-src/*.c))
 	$(eval ASN_H_FILES := $(wildcard asn1-src/*.h))
+	cd asn1-src && find . -type f \( -iname "*.h" -not -iname "asn_headers.h" \) | cut -c3- | awk '{ print "#include \"" $$1 "\"" }' > asn_headers.h
 
 app: $(APP_CXX_FILES) $(APP_H_FILES) $(ASN_C_FILES) $(ASN_H_FILES)
 	mkdir -p build
