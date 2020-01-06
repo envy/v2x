@@ -404,12 +404,18 @@ void IntersectionEntity::set_signal_group_state(SignalGroupID_t id, MovementPhas
 void IntersectionEntity::add_lane_to_ingress_approach(ApproachID_t aid, LaneID_t lid)
 {
 	auto lane = &(lanes[lid]);
-	approaches[aid].lanes.push_back(lane);
+	ingress_approaches[aid].lanes.push_back(lane);
 }
 
-Lane *IntersectionEntity::get_nearest_lane()
+void IntersectionEntity::for_each_ingress_approach(std::function<void(Approach&)> callback)
 {
-	return nullptr;
+	if (!ingress_approaches.empty())
+	{
+		for (auto &approach : ingress_approaches)
+		{
+			callback(approach.second);
+		}
+	}
 }
 
 void LaneConnection::build_geometry(bool standalone)

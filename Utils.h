@@ -1,13 +1,10 @@
 #ifndef V2X_UTILS_H
 #define V2X_UTILS_H
 
-#include <asn1-src/AllowedManeuvers.h>
 #include "MessageSink.h"
 
-#include "LaneDirection.h"
-#include "MovementPhaseState.h"
-#include "SignalGroupID.h"
-#include "TimeMark.h"
+#include "asn_headers.h"
+#include <set>
 
 class Utils
 {
@@ -44,6 +41,8 @@ public:
 	static sf::Vector2f to_screen(sf::Vector2<int64_t> &i, int64_t ox, int64_t oy);
 	static sf::Vector2f to_screen(int64_t ix, int64_t iy);
 	static sf::Vector2f to_screen(int64_t ix, int64_t iy, int64_t ox, int64_t oy);
+	static bool point_in_polygon(std::vector<sf::Vector2<int64_t>> &polygon, sf::Vector2<int64_t> &point);
+	static std::vector<sf::Vector2<int64_t>> convex_hull(std::vector<sf::Vector2<int64_t>> &set);
 };
 
 sf::Vector2<int64_t> operator*(sf::Vector2<int64_t> v, float a);

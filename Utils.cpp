@@ -298,3 +298,62 @@ void Utils::bezier_to_va(const sf::Vector2f &start, const sf::Vector2f &end, con
 	}
 	va.append(sf::Vertex(end));
 }
+
+bool Utils::point_in_polygon(std::vector<sf::Vector2<int64_t>> &polygon, sf::Vector2<int64_t> &point)
+{
+	if (polygon.size() < 3)
+		return false; // two point or less is not a polygon
+	bool ret = false;
+	size_t i = 0, j = 0;
+	for (i = 0, j = polygon.size()-1; i < polygon.size(); j = i++)
+	{
+		auto &vi = polygon[i];
+		auto &vj = polygon[j];
+		if ( ((vi.y >= point.y) != (vj.y >= point.y)) && (point.x <= (vj.x - vi.x) * (point.y - vi.y) / (vj.y - vi.y) + vi.x))
+		{
+			ret = !ret;
+		}
+	}
+	return ret;
+}
+
+static int orientation(sf::Vector2<int64_t> p, sf::Vector2<int64_t> q, sf::Vector2<int64_t> r)
+{
+	int val = (q.y - p.y) * (r.x - q.x) -
+	          (q.x - p.x) * (r.y - q.y);
+	if (val == 0) return 0;  // colinear
+	return (val > 0)? 1: 2; // clock or counterclock wise
+}
+
+std::vector<sf::Vector2<int64_t>> Utils::convex_hull(std::vector<sf::Vector2<int64_t>> &points)
+{
+	std::vector<sf::Vector2<int64_t>> v;
+
+	// find leftmost point in s, that is the point with the smallest x coord
+	size_t leftmost = 0;
+	for (int i = 1; i < points.size(); ++i)
+	{
+		if (points[i].x < points[leftmost].x)
+		{
+			leftmost = i;
+		}
+	}
+
+	sf::Vector2<int64_t> endpoint(INT_MAX, 0);
+	size_t p = leftmost, q;
+	do
+	{
+		v.push_back(points[p]);
+		q = (p + 1) % points.size();
+		for (size_t i = 0; i < points.size(); ++i)
+		{
+			if (orientation(points[p], points[i], points[q]) == 2)
+			{
+				q = i;
+			}
+		}
+		p = q;
+	} while (p != leftmost);
+
+	return v;
+}

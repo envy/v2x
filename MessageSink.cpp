@@ -308,7 +308,7 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 
 		data->ie->add_lane(lane->laneID, lane->laneAttributes);
 
-		if (lane->ingressApproach != nullptr)
+		if (lane->ingressApproach != nullptr && Utils::is_ingress_lane(lane->laneAttributes.directionalUse) && lane->laneAttributes.laneType.present == LaneTypeAttributes_PR_vehicle)
 		{
 			data->ie->add_lane_to_ingress_approach(*lane->ingressApproach, lane->laneID);
 		}

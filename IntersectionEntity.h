@@ -17,6 +17,10 @@ public:
 	int64_t x { 0 };
 	int64_t y { 0 };
 	uint64_t width { 0 };
+	int64_t lx { 0 };
+	int64_t ly { 0 };
+	int64_t rx { 0 };
+	int64_t ry { 0 };
 	std::vector<NodeAttributeXY_t> attributes;
 	bool is(NodeAttributeXY_t attr)
 	{
@@ -26,6 +30,15 @@ public:
 	{
 		return sf::Vector2<int64_t>(x, y);
 	}
+	sf::Vector2<int64_t> right_to_vec()
+	{
+		return sf::Vector2<int64_t>(rx, ry);
+	}
+	sf::Vector2<int64_t> left_to_vec()
+	{
+		return sf::Vector2<int64_t>(lx, ly);
+	}
+
 };
 
 class Lane;
@@ -80,7 +93,7 @@ class IntersectionEntity : public sf::Drawable
 	friend class LaneConnection;
 private:
 	int64_t ref_x { 0 }, ref_y { 0 };
-	std::map<ApproachID_t, Approach> approaches;
+	std::map<ApproachID_t, Approach> ingress_approaches;
 	std::map<LaneID_t, Lane> lanes;
 	const sf::Color lane_color { sf::Color(100, 100, 100) };
 	const sf::Color lane_outer_color { sf::Color(200, 200, 200) };
@@ -104,7 +117,7 @@ public:
 	void add_node(LaneID_t lane_id, int64_t x, int64_t y, uint64_t width, std::vector<NodeAttributeXY_t> &attributes);
 	void add_connection(LaneID_t start, LaneID_t end, const SignalGroupID_t *sg);
 	void set_signal_group_state(SignalGroupID_t id, MovementPhaseState_t state);
-	Lane *get_nearest_lane();
+	void for_each_ingress_approach(std::function<void(Approach&)> callback);
 };
 
 

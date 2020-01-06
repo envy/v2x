@@ -9,6 +9,7 @@
 #include <iostream>
 #include <thread>
 #include <sstream>
+#include <set>
 
 Main *_main = nullptr;
 
@@ -769,23 +770,49 @@ void Main::draw_map(sf::RenderTarget &background, sf::RenderTarget &foreground)
 		++it;
 	}
 
-	sf::VertexArray va(sf::Lines);
-	for (size_t i = 0; i < MAX_INTERSECTIONS; ++i)
-	{
-		if (nearest[i] == nullptr)
-			break;
-		auto o = _main->get_origin();
-		auto il = nearest[i]->get_location();
-		va.append(sf::Vertex(Utils::to_screen(o), sf::Color::White));
-		va.append(sf::Vertex(Utils::to_screen(il), sf::Color::White));
-	}
-	foreground.draw(va);
-
-	// now, find the nearest ingress approach
-	/*
+	// now, find the nearest approach
+	Approach *nearest_approach = nullptr;
 	for (auto ie : nearest)
 	{
-		if (ie->)
+		if (ie == nullptr)
+		{
+			break;
+		}
+		ie->for_each_ingress_approach([this, &foreground, &nearest_approach](Approach &a) {
+			std::vector<sf::Vector2<int64_t>> polygon;
+			std::vector<sf::Vector2<int64_t>> points;
+			sf::VertexArray va(sf::LineStrip);
+			for (auto lane : a.lanes)
+			{
+				for (auto &ln : lane->nodes)
+				{
+					points.push_back(ln.to_vec());
+				}
+			}
+			// find convex hull of set
+			polygon = Utils::convex_hull(points);
+			for (auto &p : polygon)
+			{
+				va.append(sf::Vertex(Utils::to_screen(p), sf::Color::Magenta));
+			}
+
+			foreground.draw(va);
+
+			auto o = get_origin();
+			if (Utils::point_in_polygon(polygon, o))
+			{
+				nearest_approach = &a;
+			}
+		});
 	}
-	//*/
+
+	sf::VertexArray va(sf::Lines);
+	if (nearest_approach != nullptr)
+	{
+		auto o = _main->get_origin();
+		auto ln = nearest_approach->lanes[0]->nodes[0].to_vec();
+		va.append(sf::Vertex(Utils::to_screen(o), sf::Color::Magenta));
+		va.append(sf::Vertex(Utils::to_screen(ln), sf::Color::Magenta));
+	}
+	foreground.draw(va);
 }
