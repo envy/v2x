@@ -308,6 +308,10 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 
 		data->ie->add_lane(lane->laneID, lane->laneAttributes);
 
+		auto &ielane = data->ie->get_lane(lane->laneID);
+		ielane.is_ingress = Utils::is_ingress_lane(lane->laneAttributes.directionalUse);
+		ielane.is_egress = Utils::is_egress_lane(lane->laneAttributes.directionalUse);
+
 		if (lane->ingressApproach != nullptr && Utils::is_ingress_lane(lane->laneAttributes.directionalUse) && lane->laneAttributes.laneType.present == LaneTypeAttributes_PR_vehicle)
 		{
 			data->ie->add_lane_to_ingress_approach(*lane->ingressApproach, lane->laneID);
@@ -444,6 +448,8 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 			}
 		}
 	}
+
+	data->ie->infer_data();
 }
 
 void MessageSink::parse_spatem(station_msgs_t *data)

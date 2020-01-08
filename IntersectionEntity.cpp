@@ -16,6 +16,8 @@ Lane::~Lane()
 
 Lane::Lane(Lane &&l) noexcept
 {
+	id = l.id;
+	l.id = -1;
 	attr = l.attr;
 	l.attr.directionalUse.buf = nullptr;
 	ingress_arrow = l.ingress_arrow;
@@ -26,6 +28,11 @@ Lane::Lane(Lane &&l) noexcept
 	l.intersection = nullptr;
 	connections = std::move(l.connections);
 	nodes = std::move(l.nodes);
+	is_ingress = l.is_ingress;
+	is_egress = l.is_egress;
+	can_turn_left = l.can_turn_left;
+	can_turn_straight = l.can_turn_straight;
+	can_turn_right = l.can_turn_right;
 }
 
 Lane &Lane::operator=(Lane &&l) noexcept
@@ -39,6 +46,8 @@ Lane &Lane::operator=(Lane &&l) noexcept
 	delete ingress_arrow;
 	delete egress_arrow;
 
+	id = l.id;
+	l.id = -1;
 	attr = l.attr;
 	l.attr.directionalUse.buf = nullptr;
 	ingress_arrow = l.ingress_arrow;
@@ -49,6 +58,11 @@ Lane &Lane::operator=(Lane &&l) noexcept
 	l.intersection = nullptr;
 	connections = std::move(l.connections);
 	nodes = std::move(l.nodes);
+	is_ingress = l.is_ingress;
+	is_egress = l.is_egress;
+	can_turn_left = l.can_turn_left;
+	can_turn_straight = l.can_turn_straight;
+	can_turn_right = l.can_turn_right;
 
 	return *this;
 }
@@ -82,6 +96,7 @@ void IntersectionEntity::add_lane(LaneID_t id, LaneAttributes_t &attr)
 	l.attr = attr;
 	l.attr.directionalUse.buf = new uint8_t[attr.directionalUse.size];
 	l.intersection = this;
+	l.id = id;
 	memcpy(l.attr.directionalUse.buf, attr.directionalUse.buf, l.attr.directionalUse.size);
 	// FIXME: copy missing for LaneSharing and LaneTypeAttributes
 	lanes[id] = std::move(l);
@@ -237,7 +252,20 @@ void IntersectionEntity::build_geometry(bool standalone)
 						{
 							laneobj.ingress_arrow = new sf::VertexArray(sf::Triangles, 3);
 						}
-						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), astart, ndir, refp);
+						sf::Color color = sf::Color::Black;
+						if (laneobj.can_turn_right)
+						{
+							color += sf::Color::Blue;
+						}
+						if (laneobj.can_turn_left)
+						{
+							color += sf::Color::Red;
+						}
+						if (laneobj.can_turn_straight)
+						{
+							color += sf::Color::Green;
+						}
+						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), astart, ndir, refp, color);
 					}
 				}
 
@@ -418,6 +446,61 @@ void IntersectionEntity::for_each_ingress_approach(std::function<void(Approach&)
 	}
 }
 
+void IntersectionEntity::infer_data()
+{
+	// figure out where you can go from a lane
+	for(auto &p_lane : lanes)
+	{
+		auto &lane = p_lane.second;
+		if (!lane.is_ingress)
+		{
+			continue;
+		}
+		// direction of the lane
+		auto dir = lane.nodes[0].to_vec() - lane.nodes[1].to_vec();
+		for (auto &con : lane.connections)
+		{
+
+			auto &olane = *con.to;
+			// direction from the lane to to the
+			auto odir = olane.nodes[0].to_vec() - lane.nodes[0].to_vec();
+
+			auto ndir = Utils::normalize(dir);
+			auto nodir = Utils::normalize(odir);
+
+			auto angle = acos((float)(ndir.x*nodir.x+ndir.y*nodir.y)/(float)(Utils::length(ndir) * Utils::length(nodir)));
+			auto vcross = ndir.x*nodir.y - ndir.y*nodir.x;
+			auto deg_angle = angle * 180.0f / M_PI;
+
+			//std::cout << "lane " << lane.id << " to " << olane.id << " with angle " << deg_angle << " (" << vcross << ")";
+
+			if (deg_angle < 10.0f && deg_angle > -10.0f)
+			{
+				lane.can_turn_straight = true;
+				con.turn_direction = TurnDirection::Straight;
+				//std::cout << " ^ straight" << std::endl;
+			}
+			else if (vcross < 0.0f)
+			{
+				lane.can_turn_right = true;
+				con.turn_direction = TurnDirection::Right;
+				//std::cout << " -> right" << std::endl;
+			}
+			else if (vcross > 0.0f)
+			{
+				lane.can_turn_left = true;
+				con.turn_direction = TurnDirection::Left;
+				//std::cout << " <- left" << std::endl;
+			}
+		}
+	}
+}
+
+Lane &IntersectionEntity::get_lane(LaneID_t id)
+{
+	return lanes[id];
+}
+
 void LaneConnection::build_geometry(bool standalone)
 {
 // connections are always from one first node to another first node of a lane
@@ -452,7 +535,7 @@ void LaneConnection::build_geometry(bool standalone)
 	va.setPrimitiveType(sf::LineStrip);
 	Utils::bezier_to_va(start, end, sc, ec, BEZIER_SEGMENTS, va);
 
-	for (uint32_t i = 0; i < va.getVertexCount(); ++i)
+	for (size_t i = 0; i < va.getVertexCount(); ++i)
 	{
 		switch (state)
 		{

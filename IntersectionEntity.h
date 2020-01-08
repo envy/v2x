@@ -43,6 +43,14 @@ public:
 
 class Lane;
 
+enum class TurnDirection
+{
+	Unknown,
+	Straight,
+	Left,
+	Right,
+};
+
 class LaneConnection : public sf::Drawable
 {
 public:
@@ -54,6 +62,7 @@ public:
 	SignalGroupID_t signal_group { 0 };
 	MovementPhaseState_t state { MovementPhaseState_unavailable };
 	sf::VertexArray va {};
+	TurnDirection turn_direction { TurnDirection::Unknown };
 
 	void build_geometry(bool standalone);
 	void set_state(MovementPhaseState_t newstate);
@@ -70,6 +79,7 @@ public:
 	Lane() = default;
 	Lane(Lane &&l) noexcept;
 	Lane &operator=(Lane &&l) noexcept;
+	LaneID_t id { -1 };
 	IntersectionEntity *intersection { nullptr };
 	LaneAttributes_t attr {};
 	std::vector<LaneNode> nodes;
@@ -77,6 +87,13 @@ public:
 	sf::Drawable *ingress_arrow { nullptr };
 	sf::Drawable *egress_arrow { nullptr };
 	sf::Drawable *stopline { nullptr };
+
+	bool is_ingress { false };
+	bool is_egress { false };
+
+	bool can_turn_left { false };
+	bool can_turn_straight { false };
+	bool can_turn_right { false };
 
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 };
@@ -112,7 +129,9 @@ public:
 	IntersectionEntity(int64_t ref_x, int64_t ref_y) : ref_x(ref_x), ref_y(ref_y) {}
 	sf::Vector2<int64_t> get_location();
 	void build_geometry(bool standalone);
+	void infer_data();
 	void add_lane(LaneID_t id, LaneAttributes &attr);
+	Lane &get_lane(LaneID_t id);
 	void add_lane_to_ingress_approach(ApproachID_t aid, LaneID_t lid);
 	void add_node(LaneID_t lane_id, int64_t x, int64_t y, uint64_t width, std::vector<NodeAttributeXY_t> &attributes);
 	void add_connection(LaneID_t start, LaneID_t end, const SignalGroupID_t *sg);
