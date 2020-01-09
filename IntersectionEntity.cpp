@@ -462,8 +462,7 @@ void IntersectionEntity::infer_data()
 		{
 
 			auto &olane = *con.to;
-			// direction from the lane to to the
-			auto odir = olane.nodes[0].to_vec() - lane.nodes[0].to_vec();
+			auto odir = olane.nodes[1].to_vec() - olane.nodes[0].to_vec();
 
 			auto ndir = Utils::normalize(dir);
 			auto nodir = Utils::normalize(odir);
@@ -472,25 +471,20 @@ void IntersectionEntity::infer_data()
 			auto vcross = ndir.x*nodir.y - ndir.y*nodir.x;
 			auto deg_angle = angle * 180.0f / M_PI;
 
-			//std::cout << "lane " << lane.id << " to " << olane.id << " with angle " << deg_angle << " (" << vcross << ")";
-
-			if (deg_angle < 10.0f && deg_angle > -10.0f)
+			if (deg_angle < 30.0f)
 			{
 				lane.can_turn_straight = true;
 				con.turn_direction = TurnDirection::Straight;
-				//std::cout << " ^ straight" << std::endl;
 			}
 			else if (vcross < 0.0f)
 			{
 				lane.can_turn_right = true;
 				con.turn_direction = TurnDirection::Right;
-				//std::cout << " -> right" << std::endl;
 			}
 			else if (vcross > 0.0f)
 			{
 				lane.can_turn_left = true;
 				con.turn_direction = TurnDirection::Left;
-				//std::cout << " <- left" << std::endl;
 			}
 		}
 	}
