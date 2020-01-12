@@ -20,6 +20,7 @@ private:
 	sf::RectangleShape bar {};
 	sf::RectangleShape minbar {};
 	sf::RectangleShape maxbar {};
+	sf::RectangleShape likelybar {};
 	std::string str { "" };
 	float x { 0 };
 	float y { 0 };

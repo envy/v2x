@@ -27,7 +27,8 @@ SignalEntity::SignalEntity(LaneConnection *con) : con(con)
 	bar.setFillColor(sf::Color::Black);
 
 	minbar.setFillColor(sf::Color::Red);
-	maxbar.setFillColor(sf::Color::Red);
+	maxbar.setFillColor(sf::Color::Yellow);
+	likelybar.setFillColor(sf::Color::Cyan);
 }
 
 SignalEntity::~SignalEntity()
@@ -93,6 +94,7 @@ void SignalEntity::draw(sf::RenderTarget &target, sf::RenderStates states) const
 	if (con->state != MovementPhaseState_unavailable)
 	{
 		target.draw(bar);
+		target.draw(likelybar);
 		target.draw(minbar);
 		target.draw(maxbar);
 
@@ -111,6 +113,7 @@ void SignalEntity::set_origin(float x, float y)
 
 	bar.setPosition(x - 40, y);
 	minbar.setPosition(x - 40, y);
+	likelybar.setPosition(x - 40, y);
 	maxbar.setPosition(x - 40, y + BAR_HEIGHT);
 }
 
@@ -160,41 +163,46 @@ void SignalEntity::update()
 			break;
 	}
 
+	if (con->likely_time != -1)
+	{
+		auto likely = Utils::timemark_to_seconds(con->likely_time);
+		if (likely > BAR_SECONDS)
+		{
+			likely = BAR_SECONDS;
+		}
+		auto likely_scaled = BAR_HEIGHT/BAR_SECONDS * likely;
+		likelybar.setSize(sf::Vector2f(BAR_WIDTH, likely_scaled));
+	}
+	else
+	{
+		likelybar.setSize(sf::Vector2f(0, 0));
+	}
+
+	auto min = Utils::timemark_to_seconds(con->min_end_time);
+	if (min > BAR_SECONDS)
+	{
+		min = BAR_SECONDS;
+	}
+	auto min_scaled = BAR_HEIGHT/BAR_SECONDS * min;
+	if (min_scaled < 0)
+	{
+		min_scaled = 0;
+	}
+	minbar.setSize(sf::Vector2f(BAR_WIDTH, min_scaled));
+
+	float max = BAR_SECONDS;
 	if (con->max_end_time != -1)
 	{
-		auto max = Utils::timemark_to_seconds(con->max_end_time);
+		max = Utils::timemark_to_seconds(con->max_end_time);
 		if (max > BAR_SECONDS)
 		{
 			max = BAR_SECONDS;
 		}
-		auto min = Utils::timemark_to_seconds(con->min_end_time);
-		if (min > BAR_SECONDS)
-		{
-			min = BAR_SECONDS;
-		}
-		auto min_scaled = BAR_HEIGHT/max * min;
-		if (min_scaled < 0)
-		{
-			min_scaled = 0;
-		}
-		minbar.setSize(sf::Vector2f(BAR_WIDTH, min_scaled));
-		//maxbar.setSize(sf::Vector2f(BAR_WIDTH, -BAR_HEIGHT/max * max));
-		maxbar.setSize(sf::Vector2f(0, 0));
+		auto max_scaled = BAR_HEIGHT/BAR_SECONDS * (BAR_SECONDS - max);
+		maxbar.setSize(sf::Vector2f(BAR_WIDTH, -max_scaled));
 	}
 	else
 	{
-		auto max = BAR_SECONDS; // two minutes
-		auto min = Utils::timemark_to_seconds(con->min_end_time);
-		if (min > BAR_SECONDS)
-		{
-			min = BAR_SECONDS;
-		}
-		auto min_scaled = BAR_HEIGHT/max * min;
-		if (min_scaled < 0)
-		{
-			min_scaled = 0;
-		}
-		minbar.setSize(sf::Vector2f(BAR_WIDTH,min_scaled));
 		maxbar.setSize(sf::Vector2f(0, 0));
 	}
 
