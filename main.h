@@ -48,6 +48,7 @@ public:
 	~Main() override;
 
 	void connect(char *address, int port);
+	sf::Font get_font() const;
 
 	float get_scale() const { return scale; };
 	void zoom(float delta) { scale += delta; }
@@ -69,6 +70,7 @@ public:
 
 	void run();
 	void write_text(float x, float y, const sf::Color &color, const std::string &text);
+	void write_text(const sf::Vector2f &pos, const sf::Color &color, const std::string &text);
 	sf::RenderWindow *get_window();
 
 	void inc_selected();

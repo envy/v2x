@@ -4,6 +4,7 @@
 #include "factory.h"
 #include "Formatter.h"
 #include "Utils.h"
+#include "SignalEntity.h"
 
 #include <unistd.h>
 #include <iostream>
@@ -123,6 +124,17 @@ void Main::write_text(float x, float y, const sf::Color &color, const std::strin
 	t.setCharacterSize(24);
 	t.setFillColor(color);
 	t.setPosition(x, y);
+	t.setString(text);
+	foreground.draw(t);
+}
+
+void Main::write_text(const sf::Vector2f &pos, const sf::Color &color, const std::string &text)
+{
+	sf::Text t;
+	t.setFont(font);
+	t.setCharacterSize(24);
+	t.setFillColor(color);
+	t.setPosition(pos);
 	t.setString(text);
 	foreground.draw(t);
 }
@@ -806,13 +818,80 @@ void Main::draw_map(sf::RenderTarget &background, sf::RenderTarget &foreground)
 		});
 	}
 
-	sf::VertexArray va(sf::Lines);
 	if (nearest_approach != nullptr)
 	{
-		auto o = _main->get_origin();
-		auto ln = nearest_approach->lanes[0]->nodes[0].to_vec();
-		va.append(sf::Vertex(Utils::to_screen(o), sf::Color::Magenta));
-		va.append(sf::Vertex(Utils::to_screen(ln), sf::Color::Magenta));
+		float x = 100;
+		float y = 850;
+		std::map<SignalGroupID_t, SignalEntity> known_signals;
+		for (auto lane : nearest_approach->lanes)
+		{
+			for (auto &con : lane->connections)
+			{
+				/*
+				auto a = known_signals.find(con.signal_group);
+				if (a != known_signals.end())
+				{
+					a->second.add_allowed_turn(con.turn_direction);
+					continue;
+				}//*/
+				auto inserted = known_signals.emplace(con.signal_group, &con);
+				inserted.first->second.add_allowed_turn(con.turn_direction);
+			}
+		}
+		auto seit = known_signals.begin();
+		TurnDirection looking_for = TurnDirection::Left;
+		bool loop = true;
+		while (loop)
+		{
+			auto &se = seit->second;
+			if (seit == known_signals.end())
+			{
+				goto next_turn;
+			}
+
+			if (se.get_allowed_turns() != looking_for)
+			{
+				++seit;
+				if (seit == known_signals.end())
+				{
+					next_turn:
+					seit = known_signals.begin();
+					switch (looking_for)
+					{
+						case TurnDirection::Left:
+							looking_for = TurnDirection::StraightAndLeft;
+							break;
+						case TurnDirection::StraightAndLeft:
+							looking_for = TurnDirection::Straight;
+							break;
+						case TurnDirection::Straight:
+							looking_for = TurnDirection::RightAndStraightAndLeft;
+							break;
+						case TurnDirection::RightAndStraightAndLeft:
+							looking_for = TurnDirection::RightAndStraight;
+							break;
+						case TurnDirection::RightAndStraight:
+							looking_for = TurnDirection::Right;
+							break;
+						case TurnDirection::Right:
+							loop = false;
+							break;
+					}
+				}
+			}
+			else
+			{
+				se.update();
+				se.set_origin(x, y);
+				x += 100;
+				foreground.draw(se);
+				++seit;
+			}
+		}
 	}
-	foreground.draw(va);
+}
+
+sf::Font Main::get_font() const
+{
+	return font;
 }

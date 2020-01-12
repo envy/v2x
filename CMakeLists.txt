@@ -18,6 +18,7 @@ set(APP_SOURCE_FILES
         Utils.cpp
         IntersectionEntity.cpp
         VehicleEntity.cpp
+        SignalEntity.cpp
         Injector.cpp)
 
 add_executable(app ${APP_SOURCE_FILES} ${ASN_FILES})

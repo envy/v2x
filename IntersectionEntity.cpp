@@ -429,6 +429,25 @@ void IntersectionEntity::set_signal_group_state(SignalGroupID_t id, MovementPhas
 	}
 }
 
+void IntersectionEntity::set_signal_group_timing(SignalGroupID_t id, TimeMark_t min, TimeMark_t max, TimeMark_t likely, TimeIntervalConfidence_t conf)
+{
+	auto lit = lanes.begin();
+	while (lit != lanes.end())
+	{
+		auto lcit = lit->second.connections.begin();
+		while (lcit != lit->second.connections.end())
+		{
+			if (lcit->signal_group == id)
+			{
+				lcit->set_timing(min, max, likely, conf);
+				// No return here as there might be multiple connections with the same signal group
+			}
+			++lcit;
+		}
+		++lit;
+	}
+}
+
 void IntersectionEntity::add_lane_to_ingress_approach(ApproachID_t aid, LaneID_t lid)
 {
 	auto lane = &(lanes[lid]);
@@ -571,4 +590,12 @@ void LaneConnection::draw(sf::RenderTarget &target, sf::RenderStates states) con
 void LaneConnection::set_state(MovementPhaseState_t newstate)
 {
 	state = newstate;
+}
+
+void LaneConnection::set_timing(TimeMark_t min, TimeMark_t max, TimeMark_t likely, TimeIntervalConfidence_t conf)
+{
+	min_end_time = min;
+	max_end_time = max;
+	likely_time = likely;
+	confidence = conf;
 }

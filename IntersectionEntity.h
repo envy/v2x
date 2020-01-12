@@ -45,10 +45,14 @@ class Lane;
 
 enum class TurnDirection
 {
-	Unknown,
-	Straight,
-	Left,
-	Right,
+	Unknown = 0,
+	Straight = 1,
+	Left = 2,
+	StraightAndLeft = 3,
+	Right = 4,
+	RightAndStraight = 5,
+	RightAndLeft = 6,
+	RightAndStraightAndLeft = 7,
 };
 
 class LaneConnection : public sf::Drawable
@@ -61,12 +65,17 @@ public:
 	Lane *from { nullptr };
 	SignalGroupID_t signal_group { 0 };
 	MovementPhaseState_t state { MovementPhaseState_unavailable };
+	TimeMark_t min_end_time { -1 };
+	TimeMark_t max_end_time { -1 };
+	TimeMark_t likely_time { -1 };
+	TimeIntervalConfidence_t confidence { -1 };
 	sf::VertexArray va {};
 	TurnDirection turn_direction { TurnDirection::Unknown };
 
 	void build_geometry(bool standalone);
 	void set_state(MovementPhaseState_t newstate);
-	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+	void set_timing(TimeMark_t min, TimeMark_t max, TimeMark_t likely, TimeIntervalConfidence_t conf);
+	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 };
 
 class IntersectionEntity;
@@ -95,7 +104,7 @@ public:
 	bool can_turn_straight { false };
 	bool can_turn_right { false };
 
-	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 };
 
 class Approach
@@ -123,7 +132,7 @@ private:
 	std::vector<sf::VertexArray> lane_outline_geometries;
 	std::vector<sf::VertexArray> lane_nodes;
 
-	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 public:
 	IntersectionEntity(int64_t ref_x, int64_t ref_y) : ref_x(ref_x), ref_y(ref_y) {}
@@ -136,6 +145,7 @@ public:
 	void add_node(LaneID_t lane_id, int64_t x, int64_t y, uint64_t width, std::vector<NodeAttributeXY_t> &attributes);
 	void add_connection(LaneID_t start, LaneID_t end, const SignalGroupID_t *sg);
 	void set_signal_group_state(SignalGroupID_t id, MovementPhaseState_t state);
+	void set_signal_group_timing(SignalGroupID_t id, TimeMark_t min, TimeMark_t max, TimeMark_t likely, TimeIntervalConfidence_t conf);
 	void for_each_ingress_approach(std::function<void(Approach&)> callback);
 };
 

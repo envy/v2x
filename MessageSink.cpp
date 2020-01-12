@@ -473,7 +473,7 @@ void MessageSink::parse_spatem(station_msgs_t *data)
 			if (ms->state_time_speed.list.array[0]->timing != nullptr)
 			{
 				auto t = ms->state_time_speed.list.array[0]->timing;
-				//xer_fprint(stdout, &asn_DEF_TimeChangeDetails, t);
+				data->ie->set_signal_group_timing(ms->signalGroup, t->minEndTime, t->maxEndTime ? *t->maxEndTime : -1, t->likelyTime ? *t->likelyTime : -1, t->confidence ? *t->confidence : -1);
 			}
 			if (ms->state_time_speed.list.count > 1)
 			{
