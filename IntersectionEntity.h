@@ -21,6 +21,7 @@ public:
 	int64_t ly { 0 };
 	int64_t rx { 0 };
 	int64_t ry { 0 };
+	sf::Vector2f dir { 0, 0};
 	std::vector<NodeAttributeXY_t> attributes;
 	bool is(NodeAttributeXY_t attr)
 	{

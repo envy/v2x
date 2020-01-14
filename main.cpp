@@ -587,6 +587,11 @@ void Main::draw_details(sf::RenderTarget &target)
 
 	station_msgs_t *data = nullptr;
 
+	if (msgs.empty())
+	{
+		return;
+	}
+
 	auto it = msgs.begin();
 	uint32_t i = 0;
 	while (i < selected_index)
@@ -798,15 +803,20 @@ void Main::draw_map(sf::RenderTarget &background, sf::RenderTarget &foreground)
 			{
 				for (auto &ln : lane->nodes)
 				{
+					// add lane width
+					points.push_back(ln.left_to_vec());
 					points.push_back(ln.to_vec());
+					points.push_back(ln.right_to_vec());
 				}
 			}
 			// find convex hull of set
 			polygon = Utils::convex_hull(points);
 			for (auto &p : polygon)
 			{
+				// move each polygon away from the center
 				va.append(sf::Vertex(Utils::to_screen(p), sf::Color::Magenta));
 			}
+			va.append(sf::Vertex(Utils::to_screen(polygon[0]), sf::Color::Magenta));
 
 			foreground.draw(va);
 

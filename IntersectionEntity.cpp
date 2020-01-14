@@ -202,8 +202,6 @@ void IntersectionEntity::build_geometry(bool standalone)
 		auto node_counter = 0;
 		while (node != laneobj.nodes.end())
 		{
-			float width = node->width;
-			float half_width = width / 2.0f;
 			int64_t nx = node->x;
 			int64_t ny = node->y;
 
@@ -213,19 +211,13 @@ void IntersectionEntity::build_geometry(bool standalone)
 			ly = ny;
 
 			sf::Vector2<int64_t> start(plx, ply);
-			sf::Vector2<int64_t> end(lx, ly);
-			auto dir = end - start;
-			auto ndir = Utils::normalize(dir);
-			auto ortho = Utils::ortho(dir);
-			auto off = ortho * half_width;
 			coords = Utils::to_screen(lx, ly, refp.x, refp.y);
 			lane_node_strip.append( sf::Vertex(coords, sf::Color::Cyan));
 
-			/*
-			auto ostart = start - ndir * 1.1f;
-			auto oend = end + ndir * 1.1f;
-			auto ooff = Utils::ortho(dir) * half_width * 1.1f;
-			//*/
+			coords = Utils::to_screen(node->lx, node->ly, refp.x, refp.y);
+			lane.append(sf::Vertex(coords, this_lane_color));
+			coords = Utils::to_screen(node->rx, node->ry, refp.x, refp.y);
+			lane.append(sf::Vertex(coords, this_lane_color));
 
 			if (node_counter == 0)
 			{
@@ -237,8 +229,8 @@ void IntersectionEntity::build_geometry(bool standalone)
 				{
 					if (Utils::is_egress_lane(laneobj.attr.directionalUse))
 					{
-						auto astart = start + (ndir * 150.0f);
-						auto invdir = -ndir;
+						auto astart = start + (node->dir * 150.0f);
+						auto invdir = -node->dir;
 						if (laneobj.egress_arrow == nullptr)
 						{
 							laneobj.egress_arrow = new sf::VertexArray(sf::Triangles, 3);
@@ -247,7 +239,7 @@ void IntersectionEntity::build_geometry(bool standalone)
 					}
 					if (Utils::is_ingress_lane(laneobj.attr.directionalUse))
 					{
-						auto astart = start + (ndir * 100.0f);
+						auto astart = start + (node->dir * 100.0f);
 						if (laneobj.ingress_arrow == nullptr)
 						{
 							laneobj.ingress_arrow = new sf::VertexArray(sf::Triangles, 3);
@@ -265,65 +257,14 @@ void IntersectionEntity::build_geometry(bool standalone)
 						{
 							color += sf::Color::Green;
 						}
-						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), astart, ndir, refp, color);
+						Utils::draw_arrow(dynamic_cast<sf::VertexArray *>(laneobj.ingress_arrow), astart, node->dir, refp, color);
 					}
-				}
-
-				int64_t left_x, left_y, right_x, right_y;
-				Utils::lat_lon_move(start.y, start.x, -off.x, -off.y, left_y, left_x);
-				coords = Utils::to_screen(left_x, left_y, refp.x, refp.y);
-				lane.append(sf::Vertex(coords, this_lane_color));
-
-				Utils::lat_lon_move(start.y, start.x, off.x, off.y, right_y, right_x);
-				coords = Utils::to_screen(right_x, right_y, refp.x, refp.y);
-				lane.append(sf::Vertex(coords, this_lane_color));
-
-				//lane_outline.append(sf::Vertex(ostart - ooff, lane_outer_color));
-				//lane_outline.append(sf::Vertex(ostart + ooff, lane_outer_color));
-
-				if (node + 1 == laneobj.nodes.end())
-				{
-					Utils::lat_lon_move(end.y, end.x, -off.x, -off.y, left_y, left_x);
-					coords = Utils::to_screen(left_x, left_y, refp.x, refp.y);
-					lane.append(sf::Vertex(coords, this_lane_color));
-
-					Utils::lat_lon_move(end.y, end.x, off.x, off.y, right_y, right_x);
-					coords = Utils::to_screen(right_x, right_y, refp.x, refp.y);
-					lane.append(sf::Vertex(coords, this_lane_color));
-
-					//lane_outline.append(sf::Vertex(oend - ooff, lane_outer_color));
-					//lane_outline.append(sf::Vertex(oend + ooff, lane_outer_color));
 				}
 			}
 
 			if (node->is(NodeAttributeXY_stopLine))
 			{
-				/*
-				auto nextnode = node + 1;
-				if (nextnode != laneobj.nodes.end())
-				{
-					auto local_dir = nextnode->to_vec() - node->to_vec();
-					auto local_off = Utils::ortho(local_dir) * half_width;
-					auto local_end = (node->to_vec() + Utils::normalize(local_dir) * 300.0f/_main->get_scale());
-					if (laneobj.stopline == nullptr)
-					{
-						laneobj.stopline = new sf::VertexArray(sf::TriangleStrip, 4);
-						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[0].color = sf::Color::Red;
-						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[1].color = sf::Color::Cyan;
-						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[2].color = sf::Color::White;
-						(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[3].color = sf::Color::White;
-					}
-					int64_t x, y;
-					Utils::lat_lon_move(node->y, node->x, local_off.x, local_off.y, y, x);
-					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[0].position = Utils::to_screen(x, y);
-					Utils::lat_lon_move(node->y, node->x, -local_off.x, -local_off.y, y, x);
-					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[1].position = Utils::to_screen(x, y);
-					Utils::lat_lon_move(local_end.y, local_end.x, local_off.x, local_off.y, y, x);
-					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[2].position = Utils::to_screen(x, y);
-					Utils::lat_lon_move(local_end.y, local_end.x, -local_off.x, -local_off.y, y, x);
-					(*dynamic_cast<sf::VertexArray *>(laneobj.stopline))[3].position = Utils::to_screen(x, y);
-				}
-				 //*/
+				// TODO: draw a stopline
 			}
 
 			/*
@@ -471,6 +412,42 @@ void IntersectionEntity::infer_data()
 	for(auto &p_lane : lanes)
 	{
 		auto &lane = p_lane.second;
+
+		// calc the lane vertices
+		auto lnit = lane.nodes.begin();
+		while (lnit != lane.nodes.end())
+		{
+			if (lnit + 1 == lane.nodes.end())
+			{
+				// there is not a next node
+				auto &node = *lnit;
+				auto &prev = *(lnit - 1);
+
+				node.dir = prev.dir;
+				auto o = Utils::ortho(node.dir);
+				auto off = o * (node.width / 2.0f);
+
+				Utils::lat_lon_move(node.y, node.x, -off.x, -off.y, node.ly, node.lx);
+				Utils::lat_lon_move(node.y, node.x, off.x, off.y, node.ry, node.rx);
+			}
+			else
+			{
+				// there is a next node
+				auto &node = *lnit;
+				auto &next = *(lnit + 1);
+
+				auto lanedir = next.to_vec() - node.to_vec();
+				node.dir = Utils::normalize(lanedir);
+
+				auto o = Utils::ortho(node.dir);
+				auto off = o * (node.width / 2.0f);
+
+				Utils::lat_lon_move(node.y, node.x, -off.x, -off.y, node.ly, node.lx);
+				Utils::lat_lon_move(node.y, node.x, off.x, off.y, node.ry, node.rx);
+			}
+			++lnit;
+		}
+
 		if (!lane.is_ingress)
 		{
 			continue;

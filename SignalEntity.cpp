@@ -6,6 +6,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <sstream>
+#include <algorithm>
 
 SignalEntity::SignalEntity(LaneConnection *con) : con(con)
 {
@@ -29,6 +30,8 @@ SignalEntity::SignalEntity(LaneConnection *con) : con(con)
 	minbar.setFillColor(sf::Color::Red);
 	maxbar.setFillColor(sf::Color::Yellow);
 	likelybar.setFillColor(sf::Color::Cyan);
+	likelybar.setOutlineColor(sf::Color::Cyan);
+	likelybar.setOutlineThickness(2);
 }
 
 SignalEntity::~SignalEntity()
@@ -111,10 +114,10 @@ void SignalEntity::set_origin(float x, float y)
 	yellow.setPosition(x, y + (RADIUS*2 + 5));
 	green.setPosition(x, y + (RADIUS*2 + 5 + RADIUS*2 + 5));
 
-	bar.setPosition(x - 40, y);
-	minbar.setPosition(x - 40, y);
-	likelybar.setPosition(x - 40, y);
-	maxbar.setPosition(x - 40, y + BAR_HEIGHT);
+	bar.setPosition(x + BAR_X_POS, y + BAR_Y_POS);
+	minbar.setPosition(x + BAR_X_POS, y + BAR_Y_POS);
+	//likelybar.setPosition(x + BAR_X_POS, y + BAR_Y_POS);
+	maxbar.setPosition(x + BAR_X_POS, y + BAR_Y_POS + BAR_HEIGHT);
 }
 
 void SignalEntity::update()
@@ -165,13 +168,19 @@ void SignalEntity::update()
 
 	if (con->likely_time != -1)
 	{
-		auto likely = Utils::timemark_to_seconds(con->likely_time);
-		if (likely > BAR_SECONDS)
+		auto likely_min = Utils::timemark_to_seconds(con->likely_time) - con->confidence;
+		auto likely_max = Utils::timemark_to_seconds(con->likely_time) + con->confidence;
+		likely_min = std::clamp(likely_min, 0.0f, BAR_SECONDS);
+		likely_max = std::clamp(likely_max, 0.0f, BAR_SECONDS);
+		auto likely_min_scaled = BAR_HEIGHT/BAR_SECONDS * likely_min;
+		auto likely_max_scaled = BAR_HEIGHT/BAR_SECONDS * likely_max;
+		likelybar.setPosition(x + BAR_X_POS, y + BAR_Y_POS + likely_min_scaled);
+		if (likely_max_scaled < likely_min_scaled)
 		{
-			likely = BAR_SECONDS;
+			std::cout << likely_max_scaled << " < " << likely_min_scaled << std::endl;
 		}
-		auto likely_scaled = BAR_HEIGHT/BAR_SECONDS * likely;
-		likelybar.setSize(sf::Vector2f(BAR_WIDTH, likely_scaled));
+		auto height = likely_max_scaled - likely_min_scaled;
+		likelybar.setSize(sf::Vector2f(BAR_WIDTH, height));
 	}
 	else
 	{
@@ -179,25 +188,15 @@ void SignalEntity::update()
 	}
 
 	auto min = Utils::timemark_to_seconds(con->min_end_time);
-	if (min > BAR_SECONDS)
-	{
-		min = BAR_SECONDS;
-	}
+	min = std::clamp(min, 0.0f, BAR_SECONDS);
 	auto min_scaled = BAR_HEIGHT/BAR_SECONDS * min;
-	if (min_scaled < 0)
-	{
-		min_scaled = 0;
-	}
 	minbar.setSize(sf::Vector2f(BAR_WIDTH, min_scaled));
 
 	float max = BAR_SECONDS;
 	if (con->max_end_time != -1)
 	{
 		max = Utils::timemark_to_seconds(con->max_end_time);
-		if (max > BAR_SECONDS)
-		{
-			max = BAR_SECONDS;
-		}
+		max = std::clamp(max, 0.0f, BAR_SECONDS);
 		auto max_scaled = BAR_HEIGHT/BAR_SECONDS * (BAR_SECONDS - max);
 		maxbar.setSize(sf::Vector2f(BAR_WIDTH, -max_scaled));
 	}

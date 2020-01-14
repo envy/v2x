@@ -30,6 +30,8 @@ public:
 	static constexpr float ARROW_LEFT_X_OFFSET = -20.0f;
 	static constexpr float ARROW_RIGHT_X_OFFSET = 20.0f;
 	static constexpr float ARROW_STRAIGHT_X_OFFSET = 0.0f;
+	static constexpr float BAR_X_POS = -40.0f;
+	static constexpr float BAR_Y_POS = 0.0f;
 	static constexpr float BAR_WIDTH = 25.0f;
 	static constexpr float BAR_HEIGHT = 130.0f;
 	static constexpr float BAR_SECONDS = 30.0f;

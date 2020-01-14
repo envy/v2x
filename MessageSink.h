@@ -24,6 +24,8 @@ class Array
 	}
 	Array(Array &&a) noexcept
 	{
+		delete[] buf;
+
 		buf = a.buf;
 		a.buf = nullptr;
 		len = a.len;
