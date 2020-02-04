@@ -6,6 +6,14 @@
 #include "Utils.h"
 #include "SignalEntity.h"
 
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Alpha_shape_2.h>
+#include <CGAL/Alpha_shape_vertex_base_2.h>
+#include <CGAL/Alpha_shape_face_base_2.h>
+#include <CGAL/Delaunay_triangulation_2.h>
+#include <CGAL/algorithm.h>
+#include <CGAL/assertions.h>
+
 #include <unistd.h>
 #include <iostream>
 #include <thread>
@@ -796,7 +804,6 @@ void Main::draw_map(sf::RenderTarget &background, sf::RenderTarget &foreground)
 			break;
 		}
 		ie->for_each_ingress_approach([this, &foreground, &nearest_approach](Approach &a) {
-			std::vector<sf::Vector2<int64_t>> polygon;
 			std::vector<sf::Vector2<int64_t>> points;
 			sf::VertexArray va(sf::LineStrip);
 			for (auto lane : a.lanes)
@@ -809,8 +816,40 @@ void Main::draw_map(sf::RenderTarget &background, sf::RenderTarget &foreground)
 					points.push_back(ln.right_to_vec());
 				}
 			}
+
+			typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+			typedef CGAL::Alpha_shape_vertex_base_2<K> Vb;
+			typedef CGAL::Alpha_shape_face_base_2<K> Fb;
+			typedef CGAL::Triangulation_data_structure_2<Vb, Fb> Tds;
+			typedef CGAL::Alpha_shape_2<CGAL::Delaunay_triangulation_2<K, Tds>> Alpha_shape_2;
+
+			std::vector<K::Point_2> points_k(points.size());
+			std::vector<sf::Vector2<int64_t>> polygon;
+
+			int64_t bx = points[0].x;
+			int64_t by = points[0].y;
+
+			for (size_t i = 0; i < points.size(); ++i)
+			{
+				points_k[i] = K::Point_2(points[i].x - bx, points[i].y - by);
+				//points_k[i] = points[i].x - bx;
+				//points_k[i].y = points[i].y - by;
+				//points_k.emplace_back(p.x - bx, p.y - by);
+			}
+
+			Alpha_shape_2 A(points_k.begin(), points_k.end(), K::FT(10000000), Alpha_shape_2::GENERAL);
+
+			auto it = A.alpha_shape_vertices_begin();
+			while (it != A.alpha_shape_vertices_end())
+			{
+				auto &p = A.point(*it);
+				polygon.emplace_back(p.x() + bx, p.y() + by);
+				++it;
+			}
+
 			// find convex hull of set
-			polygon = Utils::convex_hull(points);
+			//polygon = Utils::convex_hull(points);
+
 			for (auto &p : polygon)
 			{
 				// move each polygon away from the center

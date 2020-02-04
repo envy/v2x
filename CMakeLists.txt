@@ -4,7 +4,9 @@ project(v2x)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(SFML 2.5 COMPONENTS graphics window REQUIRED)
+find_package(SFML 2.5 COMPONENTS REQUIRED graphics window)
+find_package(Boost COMPONENTS REQUIRED thread)
+find_package(CGAL COMPONENTS REQUIRED Core Alpha_shapes_2)
 
 file(GLOB ASN_FILES ${PROJECT_SOURCE_DIR}/asn1-src/*.c)
 
@@ -24,5 +26,6 @@ set(APP_SOURCE_FILES
 add_executable(app ${APP_SOURCE_FILES} ${ASN_FILES})
 
 target_include_directories(app PUBLIC . asn1-src)
-target_link_libraries(app sfml-graphics sfml-window pthread pcap)
+target_link_libraries(app sfml-graphics sfml-window pthread pcap CGAL::CGAL)
+target_link_options(app PUBLIC)
 target_compile_options(app PUBLIC -Wall -g -O0)
