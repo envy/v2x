@@ -31,8 +31,39 @@ void Injector::inject(uint32_t id)
 	}
 
 	injecting = true;
-	std::thread t(&Injector::iterate_pcap, this, injectable_msgs[id].path);
-	t.detach();
+	thread_injecting = true;
+	injector_thread = new std::thread(&Injector::iterate_pcap, this, injectable_msgs[id].path);
+	injector_thread->detach();
+}
+
+void Injector::stop_injecting()
+{
+	thread_injecting = false;
+}
+
+void Injector::pcap_loop_callback(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet)
+{
+	auto args = (pcap_loop_args_t *)userData;
+	if (!args->i->thread_injecting)
+	{
+		pcap_breakloop(args->fp);
+	}
+	auto buf = (uint8_t *)calloc(1, pkthdr->len);
+	memcpy(buf, packet, pkthdr->len);
+
+	if (args->last.tv_sec != 0)
+	{
+		// not-first iteration, sleep for the diff
+		struct timeval diff = {};
+		timersub(&pkthdr->ts, &args->last, &diff);
+		auto sleeptime = (uint32_t)((diff.tv_sec * 1'000'000 + diff.tv_usec) / args->i->get_time_factor());
+		if (sleeptime > args->i->get_max_usleep_time())
+			sleeptime = args->i->get_max_usleep_time();
+		usleep(sleeptime);
+	}
+	args->last = pkthdr->ts;
+	args->ms->add_msg(buf, pkthdr->len);
+	args->i->inc_counter();
 }
 
 void Injector::iterate_pcap(char *path)
@@ -49,27 +80,9 @@ void Injector::iterate_pcap(char *path)
 		return;
 	}
 
-	pcap_loop_args_t loop_args = { ms, {0, 0}, this };
+	pcap_loop_args_t loop_args = { ms, {0, 0}, this, fp };
 
-	if (pcap_loop(fp, 0, [](u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
-		auto args = (pcap_loop_args_t *)userData;
-		auto buf = (uint8_t *)calloc(1, pkthdr->len);
-		memcpy(buf, packet, pkthdr->len);
-
-		if (args->last.tv_sec != 0)
-		{
-			// not-first iteration, sleep for the diff
-			struct timeval diff = {};
-			timersub(&pkthdr->ts, &args->last, &diff);
-			auto sleeptime = (uint32_t)((diff.tv_sec * 1'000'000 + diff.tv_usec) / args->i->get_time_factor());
-			if (sleeptime > args->i->get_max_usleep_time())
-				sleeptime = args->i->get_max_usleep_time();
-			usleep(sleeptime);
-		}
-		args->last = pkthdr->ts;
-		args->ms->add_msg(buf, pkthdr->len);
-		args->i->inc_counter();
-	}, (u_char *)&loop_args) < 0)
+	if (pcap_loop(fp, 0, pcap_loop_callback, (u_char *)&loop_args) < 0)
 	{
 		std::cout << "pcap_loop error: " << errbuf << std::endl;
 		inject_msg_counter = 0;

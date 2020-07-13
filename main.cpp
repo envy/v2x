@@ -264,6 +264,11 @@ void Main::key_handler()
 			key_pressed(sf::Keyboard::Left);
 			i.set_time_factor(i.get_time_factor() / 2.0f);
 		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::I))
+		{
+			key_pressed(sf::Keyboard::I);
+			i.stop_injecting();
+		}
 	}
 }
 
