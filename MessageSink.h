@@ -14,7 +14,7 @@
 
 class Array
 {
-	public:
+public:
 	uint8_t *buf { nullptr };
 	uint32_t len { 0 };
 	Array(uint8_t *buf, uint32_t len) : buf(buf), len(len) {}

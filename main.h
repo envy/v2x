@@ -48,6 +48,7 @@ public:
 	~Main() override;
 
 	void connect(char *address, int port);
+	void connect_dummy();
 	sf::Font get_font() const;
 
 	float get_scale() const { return scale; };
