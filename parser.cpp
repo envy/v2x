@@ -2,6 +2,11 @@
 #include "Formatter.h"
 
 #include <iostream>
+#include "asn1-src/Ieee1609Dot2Data.h"
+#include "asn1-src/Ieee1609Dot2Content.h"
+#include "asn1-src/SignedData.h"
+#include "asn1-src/SignedDataPayload.h"
+#include "asn1-src/ToBeSignedData.h"
 
 int dump_packet(uint8_t *buf, uint32_t len)
 {
@@ -152,53 +157,102 @@ int ch_offset(uint8_t *buf, int avail)
 	return offset;
 }
 
+int geonet_size(uint8_t type)
+{
+	switch (type)
+	{
+	case GEONET_TYPE_BEACON:
+		return sizeof(geonet_beacon_t);
+	case GEONET_TYPE_GUC:
+		return sizeof(geonet_guc_t);
+	case GEONET_TYPE_GAC_CIRCLE:
+	case GEONET_TYPE_GAC_ELLIPSE:
+	case GEONET_TYPE_GAC_RECT:
+	case GEONET_TYPE_GBC_CIRCLE:
+	case GEONET_TYPE_GBC_ELLIPSE:
+	case GEONET_TYPE_GBC_RECT:
+		return sizeof(geonet_gac_t);
+	case GEONET_TYPE_TSB_MHB:
+		return sizeof(geonet_tsb_mhb_t);
+	case GEONET_TYPE_TSB_SHB:
+		return sizeof(geonet_tsb_shb_t);
+	default:
+		std::cerr << "PARSER FIXME: unknown geonet type 0x" << std::hex << (unsigned int)type << std::dec << std::endl;
+		return 0;
+	}
+}
+
 int btp_offset(uint8_t *buf, uint32_t len)
 {
-	uint32_t fix_offset = sizeof(ethernet_t) + sizeof(geonetworking_t);
-	if (len < fix_offset)
+	uint32_t header_size = sizeof(ethernet_t) + sizeof(geonetworking_t);
+	if (len < header_size)
 	{
 		return -1;
 	}
 	auto *e = (ethernet_t *)buf;
 	auto *g = (geonetworking_t *)e->data;
-	geonetworking_common_header_t *c = nullptr;
-	if (g->basic_header.next_header == 1)
+	if (g->basic_header.next_header == GEONET_BASIC_HEADER_NEXT_ANY)
 	{
-		c = (geonetworking_common_header_t *)g->data;
-		fix_offset += sizeof(geonetworking_common_header_t);
+		std::cerr << "FIXME: btp_offset for ANY header?!" << std::endl;
+		return -1;
 	}
-	else
+	if (g->basic_header.next_header == GEONET_BASIC_HEADER_NEXT_COMMON)
 	{
-		int sec = 0;
-		if ((sec = ch_offset(g->data, len)) < 0)
+		auto *c = (geonetworking_common_header_t *)g->data;
+		header_size += sizeof(geonetworking_common_header_t);
+		header_size += geonet_size(c->type.raw);
+
+		return header_size;
+	}
+	else if (g->basic_header.next_header == GEONET_BASIC_HEADER_NEXT_SECURED)
+	{
+		asn_dec_rval_t ret;
+		Ieee1609Dot2Data_t *data = nullptr;
+
+		ASN_STRUCT_RESET(asn_DEF_Ieee1609Dot2Data, data);
+		ret = oer_decode(nullptr, &asn_DEF_Ieee1609Dot2Data, (void **)&data, g->data, len);
+
+		if (ret.code == RC_WMORE)
 		{
+			std::cerr << "FIXME: secured packet not comeplete!" << std::endl;
 			return -1;
 		}
-		c = (geonetworking_common_header_t *)(g->data + sec);
-		fix_offset += sec;
-		fix_offset += sizeof(geonetworking_common_header_t);
-	}
-	switch (c->type.raw)
-	{
-		case GEONET_TYPE_GAC_CIRCLE:
-		case GEONET_TYPE_GAC_ELLIPSE:
-		case GEONET_TYPE_GAC_RECT:
-		case GEONET_TYPE_GBC_CIRCLE:
-		case GEONET_TYPE_GBC_ELLIPSE:
-		case GEONET_TYPE_GBC_RECT:
-			return fix_offset + sizeof(geonet_gac_t);
-		case GEONET_TYPE_GUC:
-			return fix_offset + sizeof(geonet_guc_t);
-		case GEONET_TYPE_TSB_MHB:
-			return fix_offset + sizeof(geonet_tsb_mhb_t);
-		case GEONET_TYPE_TSB_SHB:
-			return fix_offset + sizeof(geonet_tsb_shb_t);
-		case GEONET_TYPE_BEACON:
-			return fix_offset + sizeof(geonet_beacon_t);
-		default:
-			std::cerr << "PARSER FIXME: unknown geonet type 0x" << std::hex << (unsigned int)c->type.raw << std::dec << std::endl;
+		if (ret.code == RC_FAIL)
+		{
+			std::cerr << "FIXME: secured packet asn decode failure" << std::endl;
 			return -1;
+		}
+		// ret.code == RC_OK here
+		// hacky: we will find the unsecured data and then copy it directly after the basic header and point to that.
+		// first we need to find the unsecured data
+		while (true)
+		{
+			auto *content = data->content;
+			if (content->present == Ieee1609Dot2Content_PR_unsecuredData)
+			{
+				// found it!
+				auto unsecdata = content->choice.unsecuredData;
+				memcpy(g->data, unsecdata.buf, unsecdata.size);
+				header_size += sizeof(geonetworking_common_header_t);
+				auto *c = (geonetworking_common_header_t *)g->data;
+				header_size += geonet_size(c->type.raw);
+				return header_size;
+			}
+			if (content->present == Ieee1609Dot2Content_PR_signedData)
+			{
+				// signed data, need to go through a lot of datattypes
+				auto *signeddata = content->choice.signedData;
+				auto *tbsdata = signeddata->tbsData;
+				auto *signeddatapayload = tbsdata->payload;
+				data = signeddatapayload->data;
+				// at the end, we again have a Ieee1609Dot2Data_t pointer
+				continue;
+			}
+		}
 	}
+
+	std::cerr << "unknown next header " << (int)g->basic_header.next_header << std::endl;
+	return -1;
 }
 
 static bool is_something(uint8_t *buf, uint32_t len, uint32_t *start, uint16_t port)
