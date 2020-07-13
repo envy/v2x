@@ -101,36 +101,45 @@ typedef struct __geonetworking
 		} life_time;
 		uint8_t remaining_hop_limit;
 	} basic_header;
-	struct {
-		uint8_t reserved:4;
-		uint8_t next_header:4;
-		union {
-			uint8_t raw;
-			struct {
-				uint8_t sub_type:4;
-				uint8_t type:4;
-			} fields;
-		} type;
-		union {
-			uint8_t raw;
-			struct {
-				uint8_t id:6;
-				uint8_t offload:1;
-				uint8_t scf:1;
-			} fields;
-		} traffic_class;
-		union {
-			uint8_t raw;
-			struct {
-				uint8_t todo;
-			} fields;
-		} flags;
-		uint16_t payload_length;
-		uint8_t max_hop_limit;
-		uint8_t reserved2;
-	} common_header;
 	uint8_t data[];
 } __attribute__((packed)) geonetworking_t;
+
+typedef struct __genonetworking_common_header
+{
+	uint8_t reserved:4;
+	uint8_t next_header:4;
+	union {
+		uint8_t raw;
+		struct {
+			uint8_t sub_type:4;
+			uint8_t type:4;
+		} fields;
+	} type;
+	union {
+		uint8_t raw;
+		struct {
+			uint8_t id:6;
+			uint8_t offload:1;
+			uint8_t scf:1;
+		} fields;
+	} traffic_class;
+	union {
+		uint8_t raw;
+		struct {
+			uint8_t todo;
+		} fields;
+	} flags;
+	uint16_t payload_length;
+	uint8_t max_hop_limit;
+	uint8_t reserved2;
+	uint8_t data[];
+} __attribute__((packed)) geonetworking_common_header_t;
+
+typedef struct __genonetworking_secured_packet
+{
+	uint8_t todo[7];
+	uint8_t data[];
+} __attribute__((packed)) geonetworking_secured_packet_t;
 
 typedef struct __geonet_long_position_vector
 {
@@ -204,6 +213,7 @@ typedef struct __btp_b
 	uint8_t data[];
 } btp_b_t;
 
+int ch_offset(uint8_t *buf, int avail);
 int btp_offset(uint8_t *buf, uint32_t len);
 
 int dump_packet(uint8_t *buf, uint32_t len);

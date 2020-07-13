@@ -16,7 +16,9 @@ ASN_FILES := asn1/ITS_Container.asn \
 	asn1/mod/AddGrpC.asn \
 	asn1/ElectronicRegistrationIdentificationVehicleDataModule.asn \
 	asn1/MAPEM_PDU_Descriptions.asn \
-	asn1/SPATEM_PDU_Descriptions.asn
+	asn1/SPATEM_PDU_Descriptions.asn \
+	asn1/IEEE1609dot2BaseTypes.asn \
+	asn1/IEEE1609dot2.asn
 
 ASN_ORIG_FILES := asn1/ITS_Container.asn \
 	asn1/CAM.asn \
@@ -26,7 +28,9 @@ ASN_ORIG_FILES := asn1/ITS_Container.asn \
 	asn1/original/AddGrpC.asn \
 	asn1/ElectronicRegistrationIdentificationVehicleDataModule.asn \
 	asn1/MAPEM_PDU_Descriptions.asn \
-	asn1/SPATEM_PDU_Descriptions.asn
+	asn1/SPATEM_PDU_Descriptions.asn \
+	asn1/IEEE1609dot2BaseTypes.asn \
+	asn1/IEEE1609dot2.asn
 
 ASN_C_FILES := $(wildcard asn1-src/*.c)
 ASN_H_FILES := $(wildcard asn1-src/*.h)

@@ -254,6 +254,58 @@ void MessageSink::parse_cam(station_msgs_t *data)
 
 		data->ve->build_geometry();
 	}
+	else if (data->cam_version == 2 && data->cam.v2 != nullptr)
+	{
+		auto cam = data->cam.v2;
+
+		// ignore RSUs
+		switch (cam->cam.camParameters.basicContainer.stationType)
+		{
+			case StationType_roadSideUnit:
+				return;
+			default:
+				break;
+		}
+
+		// ignore cams that don't have the vehicle container
+		if (cam->cam.camParameters.highFrequencyContainer.present != HighFrequencyContainer_PR_basicVehicleContainerHighFrequency)
+		{
+			return;
+		}
+
+		// create new VehicleEntity if it doesn't exist
+		if (data->ve == nullptr)
+		{
+			data->ve = new VehicleEntity();
+		}
+
+		auto lat = cam->cam.camParameters.basicContainer.referencePosition.latitude;
+		auto lon = cam->cam.camParameters.basicContainer.referencePosition.longitude;
+		data->ve->pos.x = lon;
+		data->ve->pos.y = lat;
+		auto &bvchf = cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency;
+		data->ve->set_length(bvchf->vehicleLength.vehicleLengthValue);
+		data->ve->set_width(bvchf->vehicleWidth);
+		data->ve->set_heading(bvchf->heading.headingValue);
+
+		// clear the old path history
+		data->ve->clear_path();
+		if (cam->cam.camParameters.lowFrequencyContainer != nullptr)
+		{
+			auto lf = cam->cam.camParameters.lowFrequencyContainer;
+			if (lf->present == LowFrequencyContainer_PR_basicVehicleContainerLowFrequency)
+			{
+				auto &ph = lf->choice.basicVehicleContainerLowFrequency->pathHistory.list;
+				for (int64_t i = 0; i < ph.count; ++i)
+				{
+					auto &elem = ph.array[i];
+					data->ve->add_path_node(elem->pathPosition.deltaLatitude, elem->pathPosition.deltaLongitude);
+				}
+			}
+		}
+
+		data->ve->build_geometry();
+	}
 }
 
 void MessageSink::parse_mapem(station_msgs_t *data)

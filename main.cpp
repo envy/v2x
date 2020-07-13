@@ -19,9 +19,9 @@ void dump_geonet(uint8_t *buf, uint32_t len)
 	auto *e = (ethernet_t *)buf;
 	auto *g = (geonetworking_t *)e->data;
 
-	std::cout << "GeoNet " << Formatter::format_geonet_type((geonet_type_t) g->common_header.type.raw) << std::endl;
-
-	switch (g->common_header.type.raw)
+	auto *c = (geonetworking_common_header_t*) *g->data;
+	std::cout << "GeoNet " << Formatter::format_geonet_type((geonet_type_t) c->type.raw) << std::endl;
+	switch (c->type.raw)
 	{
 		case GEONET_TYPE_TSB_SHB:
 		case GEONET_TYPE_BEACON:
@@ -38,7 +38,7 @@ void dump_geonet(uint8_t *buf, uint32_t len)
 void asserts()
 {
 	static_assert(sizeof(ethernet_t) == 14);
-	static_assert(sizeof(geonetworking_t) == 4+8);
+	static_assert(sizeof(geonetworking_t) == 4);
 	static_assert(sizeof(geonet_long_position_vector_t) == 24);
 	static_assert(sizeof(geonet_beacon_t) == 24);
 	static_assert(sizeof(geonet_tsb_shb_t) == 28);
@@ -884,6 +884,9 @@ void Main::draw_map(sf::RenderTarget &background, sf::RenderTarget &foreground)
 							looking_for = TurnDirection::Right;
 							break;
 						case TurnDirection::Right:
+							loop = false;
+							break;
+						case TurnDirection::RightAndLeft:
 							loop = false;
 							break;
 					}

@@ -37,17 +37,37 @@ int dump_packet(uint8_t *buf, uint32_t len)
 	std::cout << "Life Time: " << (unsigned int)g->basic_header.life_time.raw << std::endl; // TODO: calc correct lifetime
 	std::cout << "Remaining Hop Limit: " << (unsigned int)g->basic_header.remaining_hop_limit << std::endl;
 
-	// TODO: check next header == common_header
 
-	std::cout << "Next Header: " << (unsigned int)g->common_header.next_header << std::endl;
-	std::cout << "Type: 0x" << std::hex << (unsigned int)g->common_header.type.raw << std::dec << std::endl;
-	std::cout << "Traffic Class: " << (unsigned int)g->common_header.traffic_class.raw << std::endl;
-	std::cout << "Payload length: " << (unsigned int)ntohs(g->common_header.payload_length) << std::endl;
-	std::cout << "Max Hop Limit: " << (unsigned int)g->common_header.max_hop_limit << std::endl;
+	tlen -= sizeof(geonetworking_t);
+	geonetworking_common_header_t *c = nullptr;
+	if (g->basic_header.next_header == GEONET_BASIC_HEADER_NEXT_SECURED)
+	{
+		auto *s = (geonetworking_secured_packet_t *)g->data;
+
+		tlen -=sizeof(geonetworking_secured_packet_t);
+		c = (geonetworking_common_header_t *)s->data;
+		std::cout << "Next Header: " << (unsigned int)c->next_header << std::endl;
+		std::cout << "Type: 0x" << std::hex << (unsigned int)c->type.raw << std::dec << std::endl;
+		std::cout << "Traffic Class: " << (unsigned int)c->traffic_class.raw << std::endl;
+		std::cout << "Payload length: " << (unsigned int)ntohs(c->payload_length) << std::endl;
+		std::cout << "Max Hop Limit: " << (unsigned int)c->max_hop_limit << std::endl;
+
+		tlen -= sizeof(geonetworking_common_header_t);
+	}
+	else if (g->basic_header.next_header == GEONET_BASIC_HEADER_NEXT_COMMON)
+	{
+		c = (geonetworking_common_header_t *)g->data;
+		std::cout << "Next Header: " << (unsigned int)c->next_header << std::endl;
+		std::cout << "Type: 0x" << std::hex << (unsigned int)c->type.raw << std::dec << std::endl;
+		std::cout << "Traffic Class: " << (unsigned int)c->traffic_class.raw << std::endl;
+		std::cout << "Payload length: " << (unsigned int)ntohs(c->payload_length) << std::endl;
+		std::cout << "Max Hop Limit: " << (unsigned int)c->max_hop_limit << std::endl;
+
+		tlen -= sizeof(geonetworking_common_header_t);
+	}
 
 	// TODO: check next header == btp-b
 
-	tlen -= sizeof(geonetworking_t);
 	std::cout << tlen << " remaining" << std::endl;
 
 	if (tlen < sizeof(btp_b_t))
@@ -56,7 +76,7 @@ int dump_packet(uint8_t *buf, uint32_t len)
 		return -6;
 	}
 
-	auto *b = (btp_b_t *)(g->data + sizeof(geonet_tsb_shb_t));
+	auto *b = (btp_b_t *)(c->data + sizeof(geonet_tsb_shb_t));
 
 	std::cout << "Port: " << (unsigned int)ntohs(b->port) << std::endl;
 	std::cout << "Port Info: " << std::hex << (unsigned int)ntohs(b->port_info) << std::dec << std::endl;
@@ -64,16 +84,101 @@ int dump_packet(uint8_t *buf, uint32_t len)
 	return 0;
 }
 
+int ch_offset(uint8_t *buf, int avail)
+{
+	int offset = 0;
+	// we start with a Ieee1609Dot2Data
+	// first octet is protocol version
+	std::cout << "protocol version: " << (int)buf[offset] << std::endl;
+	offset++;
+
+	// next is the Ieee1609Dot2Content choice
+	std::cout << "Ieee1609Dot2Content choice: 0x" << std::hex << (int)buf[offset] << std::dec << std::endl;
+	// it should be set to 0x81
+	if (buf[offset] != 0x81)
+	{
+		std::cerr << "unexpected Ieee1609Dot2Content choice in outer data" << std::endl;
+		exit(1);
+	}
+	offset++;
+
+	// next is SignedData
+	// first in that is hashId, an enum
+	std::cout << "hashId: " << (int)buf[offset] << std::endl;
+	offset++;
+
+	// then we have the tbsData
+	// first in that is payload
+	// first in that is the presence bitmap of the sequence
+	std::cout << "SignedDataPayload presence bitmap: 0x" << std::hex << (int)buf[offset] << std::dec << std::endl;
+	// it should be 0x40
+	if (buf[offset] != 0x40)
+	{
+		std::cerr << "unexpected SignedDataPayload presence bitmap in outer data" << std::endl;
+		exit(1);
+	}
+	offset++;
+
+	// then we again have a Ieee1609Dot2Data
+	// first octet is protocol version
+	std::cout << "protocol version: " << (int)buf[offset] << std::endl;
+	offset++;
+
+	// next is the Ieee1609Dot2Content choice
+	std::cout << "Ieee1609Dot2Content choice: 0x" << std::hex << (int)buf[offset] << std::dec << std::endl;
+	// it should be set to 0x80
+	if (buf[offset] != 0x80)
+	{
+		std::cerr << "unexpected Ieee1609Dot2Content choice in inner data" << std::endl;
+		exit(1);
+	}
+	offset++;
+
+	// next is Opaque
+	// this is a octet string with variable size, so a length prefix first
+	if (buf[offset] & 0b10000000)
+	{
+		// there is an octet telling us how many octets to read
+		auto to_read = static_cast<uint8_t>(buf[offset] & 0b01111111);
+		std::cout << "need to read " << (int)to_read << " octets" << std::endl;
+		offset += 1 + to_read;
+	}
+	else
+	{
+		std::cout << "need to read 1 octet" << std::endl;
+		offset++;
+	}
+
+	return offset;
+}
+
 int btp_offset(uint8_t *buf, uint32_t len)
 {
-	static const uint32_t fix_offset = sizeof(ethernet_t) + sizeof(geonetworking_t);
+	uint32_t fix_offset = sizeof(ethernet_t) + sizeof(geonetworking_t);
 	if (len < fix_offset)
 	{
 		return -1;
 	}
 	auto *e = (ethernet_t *)buf;
 	auto *g = (geonetworking_t *)e->data;
-	switch (g->common_header.type.raw)
+	geonetworking_common_header_t *c = nullptr;
+	if (g->basic_header.next_header == 1)
+	{
+		c = (geonetworking_common_header_t *)g->data;
+		fix_offset += sizeof(geonetworking_common_header_t);
+	}
+	else
+	{
+		int sec = 0;
+		if ((sec = ch_offset(g->data, len)) < 0)
+		{
+			return -1;
+		}
+		c = (geonetworking_common_header_t *)(g->data + sec);
+		fix_offset += sec;
+		fix_offset += sizeof(geonetworking_common_header_t);
+	}
+	switch (c->type.raw)
 	{
 		case GEONET_TYPE_GAC_CIRCLE:
 		case GEONET_TYPE_GAC_ELLIPSE:
@@ -91,7 +196,7 @@ int btp_offset(uint8_t *buf, uint32_t len)
 		case GEONET_TYPE_BEACON:
 			return fix_offset + sizeof(geonet_beacon_t);
 		default:
-			std::cerr << "FIXME: unknown geonet type 0x" << std::hex << (unsigned int)g->common_header.type.raw << std::dec << std::endl;
+			std::cerr << "PARSER FIXME: unknown geonet type 0x" << std::hex << (unsigned int)c->type.raw << std::dec << std::endl;
 			return -1;
 	}
 }

@@ -49,10 +49,11 @@ PacketFactory::PacketFactory(const uint8_t mac[6])
 	g->basic_header.life_time.fields.mult = 26;
 	g->basic_header.remaining_hop_limit = 1;
 
-	g->common_header.next_header = GEONET_COMMON_HEADER_NEXT_BTP_B;
-	g->common_header.type.raw = GEONET_TYPE_TSB_SHB;
-	g->common_header.payload_length = htons(payload_len);
-	g->common_header.max_hop_limit = 1;
+	auto *c = (geonetworking_common_header_t *)g->data;
+	c->next_header = GEONET_COMMON_HEADER_NEXT_BTP_B;
+	c->type.raw = GEONET_TYPE_TSB_SHB;
+	c->payload_length = htons(payload_len);
+	c->max_hop_limit = 1;
 }
 
 PacketFactory::~PacketFactory()
@@ -106,7 +107,8 @@ void CAMFactory::build_packet()
 	}
 	payload_len = sizeof(btp_b_t) + ((r.encoded + 7) / 8);
 	buflen = header_len + payload_len - sizeof(btp_b_t);
-	g->common_header.payload_length = htons(payload_len);
+	auto *c = (geonetworking_common_header_t *)g->data;
+	c->payload_length = htons(payload_len);
 }
 
 /**
@@ -206,7 +208,8 @@ void DENMFactory::build_packet()
 	}
 	payload_len = sizeof(btp_b_t) + ((r.encoded + 7) / 8);
 	buflen = header_len + payload_len - sizeof(btp_b_t);
-	g->common_header.payload_length = htons(payload_len);
+	auto *c = (geonetworking_common_header_t *)g->data;
+	c->payload_length = htons(payload_len);
 }
 
 void DENMFactory::set_station_id(StationID_t id)
