@@ -34,3 +34,9 @@ The app still works with injecting pcap files, just no live data.
 
 ## External files
 ASN.1 files have been obtained from [here](https://forge.etsi.org/rep/LIBS/LibIts/tree/STF525/asn1) and Wireshark.
+
+You can get additional pcap for replay here:
+
+Desc | Link
+--- | ---
+2020-07-14 8:50 until 18:00 | https://weichbrodt.me/files/2020-07-14-bs-muehlenpfordt-rebenring.pcapng
