@@ -3,6 +3,7 @@ app
 *.a
 
 .idea/
+build/
 
 asn1-src/*.c
 asn1-src/*.h

@@ -25,11 +25,10 @@ make
 ## How to run
 Run from main directory as it needs to find the font.
 You have to specify the IP, *not* the hostname!
-If you don't have an itsg5proxy to connect to, just put a valid IP that will refuse connection, e.g., 127.0.0.1.
-The app still works with injecting pcap files, just no live data.
+If you don't have an itsg5proxy to connect to, just don't give it an IP.
 
 ```bash
-./app <ip of itsg5proxy>
+./app [<ip of itsg5proxy>]
 ```
 
 ## External files
