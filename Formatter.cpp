@@ -464,8 +464,7 @@ std::string Formatter::dump_cam(CAM_t *cam)
 	{
 		auto &b = cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency;
 		//auto &b = cam->cam.camParameters.highFrequencyContainer.basicVehicleContainerHighFrequency;
-		ss << " Vehicle Length: " << format_vehicle_length(b->vehicleLength.vehicleLengthValue) << std::endl;
-		ss << " Vehicle Width: " << format_vehicle_width(b->vehicleWidth) << std::endl;
+		ss << " W x L: " << format_vehicle_width(b->vehicleWidth) << " x " << format_vehicle_length(b->vehicleLength.vehicleLengthValue) << std::endl;
 		ss << " Speed: " << format_speed_value(b->speed.speedValue) << std::endl;
 		ss << " Heading: " << format_heading_value(b->heading.headingValue) << std::endl;
 	}
