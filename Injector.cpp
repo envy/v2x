@@ -1,26 +1,47 @@
 #include "Injector.h"
 #include <unistd.h>
+#include <dirent.h>
+#include <sstream>
 
-injectable_msg_t injectable_msgs[] = {
-		{(char *)"2019-12-13 Ringfahrt", (char *)"static-data/bs-ring.pcapng"},
-		{(char *)"2019-12-13 CAMs", (char *)"static-data/2019-12-13-01-cams.pcapng"},
-		{(char *)"2019-12-16 CAMS/DENMs", (char *)"static-data/2019-12-16-02-cams-denms.pcapng"},
-		{(char *)"2019-12-16 Nachts CAMS/DENMS", (char *)"static-data/2019-12-17-01-cams-denms.pcapng"},
-		{(char *)"2020-07-13 Secured CAMS", (char *)"static-data/secured-cams.pcapng"},
-		{(char *)"2020-07-13 Secured CAMS 2", (char *)"static-data/secured-cams2.pcapng"},
-		{(char *)"2020-07-13 Secured CAMS 3", (char *)"static-data/secured-cams3.pcapng"}
-};
+constexpr char *PATHPREFIX = (char *)"./static-data";
 
-constexpr uint32_t max_id = sizeof(injectable_msgs)/sizeof(injectable_msg_t);
+bool has_ending (std::string const &fullString, std::string const &ending) {
+	if (fullString.length() >= ending.length()) {
+		return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+	} else {
+		return false;
+	}
+}
 
 Injector::Injector(MessageSink *ms) : ms(ms)
 {
-
+	DIR *d;
+	struct dirent *dir;
+	d = opendir(PATHPREFIX);
+	if (d)
+	{
+		while ((dir = readdir(d)) != NULL)
+		{
+			// we looking for files ending in .pcapng
+			if (strlen(dir->d_name) < 8)
+			{
+				continue;
+			}
+			std::string name(dir->d_name);
+			if (!has_ending(name, ".pcapng"))
+			{
+				continue;
+			}
+			std::cout << "Injector found: " << name << std::endl;
+			files.push_back(name);
+		}
+		closedir(d);
+	}
 }
 
 void Injector::inject(uint32_t id)
 {
-	if (id > max_id)
+	if (id > files.size() - 1)
 	{
 		return;
 	}
@@ -32,7 +53,7 @@ void Injector::inject(uint32_t id)
 
 	injecting = true;
 	thread_injecting = true;
-	injector_thread = new std::thread(&Injector::iterate_pcap, this, injectable_msgs[id].path);
+	injector_thread = new std::thread(&Injector::iterate_pcap, this, id);
 	injector_thread->detach();
 }
 
@@ -66,12 +87,15 @@ void Injector::pcap_loop_callback(u_char *userData, const struct pcap_pkthdr *pk
 	args->i->inc_counter();
 }
 
-void Injector::iterate_pcap(char *path)
+void Injector::iterate_pcap(uint32_t id)
 {
 	pcap_t *fp;
 	char errbuf[PCAP_ERRBUF_SIZE];
 
-	fp = pcap_open_offline(path, errbuf);
+	std::stringstream ss;
+	ss << PATHPREFIX << "/" << files[id];
+
+	fp = pcap_open_offline(ss.str().c_str(), errbuf);
 	if (fp == nullptr)
 	{
 		std::cout << "pcap_open_offline error: " << errbuf << std::endl;

@@ -232,7 +232,7 @@ void Main::key_handler()
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 		{
 			key_pressed(sf::Keyboard::Right);
-			if (selected_inject_id + 1 < max_id)
+			if (selected_inject_id + 1 < i.files.size())
 			{
 				selected_inject_id++;
 			}
@@ -377,7 +377,7 @@ void Main::run()
 		}
 		else
 		{
-			ss << injectable_msgs[selected_inject_id].name;
+			ss << i.files[selected_inject_id];
 		}
 		write_text(1000, 0, sf::Color::White, ss.str());
 
@@ -877,6 +877,11 @@ void Main::draw_map(sf::RenderTarget &background, sf::RenderTarget &foreground)
 			}
 		}
 	}
+}
+
+void Main::slowdown_injector()
+{
+	i.set_time_factor(1.0f);
 }
 
 sf::Font Main::get_font() const

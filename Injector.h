@@ -4,15 +4,6 @@
 #include <pcap.h>
 #include "MessageSink.h"
 
-typedef struct
-{
-	char *name;
-	char *path;
-} injectable_msg_t;
-
-extern injectable_msg_t injectable_msgs[];
-extern const uint32_t max_id;
-
 class Injector
 {
 private:
@@ -24,11 +15,13 @@ private:
 	uint32_t max_usleep_time { 2 * 1'000'000 };
 	std::thread *injector_thread { nullptr };
 
-	void iterate_pcap(char *path);
+	void iterate_pcap(uint32_t path);
 	static void pcap_loop_callback(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet);
 public:
 	explicit Injector(MessageSink *ms);
 	~Injector() = default;
+
+	std::vector<std::string> files {};
 
 	void inject(uint32_t id);
 	void stop_injecting();

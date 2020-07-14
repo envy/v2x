@@ -219,6 +219,7 @@ int btp_offset(uint8_t *buf, uint32_t len)
 		}
 		if (ret.code == RC_FAIL)
 		{
+			ASN_STRUCT_FREE(asn_DEF_Ieee1609Dot2Data, data);
 			std::cerr << "FIXME: secured packet asn decode failure" << std::endl;
 			return -1;
 		}
@@ -236,6 +237,7 @@ int btp_offset(uint8_t *buf, uint32_t len)
 				header_size += sizeof(geonetworking_common_header_t);
 				auto *c = (geonetworking_common_header_t *)g->data;
 				header_size += geonet_size(c->type.raw);
+				ASN_STRUCT_FREE(asn_DEF_Ieee1609Dot2Data, data);
 				return header_size;
 			}
 			if (content->present == Ieee1609Dot2Content_PR_signedData)

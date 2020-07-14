@@ -209,11 +209,13 @@ int Proxy::get_packet(uint8_t *buf, uint32_t buflen)
 			}
 			if (ret.code == RC_FAIL)
 			{
+				ASN_STRUCT_FREE(asn_DEF_Ieee1609Dot2Data, data);
 				std::cerr << "asn decode failure" << std::endl;
 				break;
 			}
 			if (ret.code == RC_OK)
 			{
+				ASN_STRUCT_FREE(asn_DEF_Ieee1609Dot2Data, data);
 				break;
 			}
 		}

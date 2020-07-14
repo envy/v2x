@@ -53,6 +53,9 @@ void MessageSink::process_msg(Array &arr)
 		if (msgs.find(id) == msgs.end())
 		{
 			msgs.insert(std::pair<StationID_t, station_msgs_t *>(id, new station_msgs_t()));
+			// we did not know this id before.
+			// if we are injecting, slow down back to 1X
+			_main->slowdown_injector();
 		}
 		if (prot_version == 1)
 		{
@@ -202,6 +205,8 @@ void MessageSink::process_msg(Array &arr)
 
 void MessageSink::parse_cam(station_msgs_t *data)
 {
+	LowFrequencyContainer_t *lf = nullptr;
+
 	if (data->cam_version == 1 && data->cam.v1 != nullptr)
 	{
 		auto cam = data->cam.v1;
@@ -236,23 +241,10 @@ void MessageSink::parse_cam(station_msgs_t *data)
 		data->ve->set_width(bvchf->vehicleWidth);
 		data->ve->set_heading(bvchf->heading.headingValue);
 
-		// clear the old path history
-		data->ve->clear_path();
 		if (cam->cam.camParameters.lowFrequencyContainer != nullptr)
 		{
-			auto lf = cam->cam.camParameters.lowFrequencyContainer;
-			if (lf->present == LowFrequencyContainer_PR_basicVehicleContainerLowFrequency)
-			{
-				auto &ph = lf->choice.basicVehicleContainerLowFrequency->pathHistory.list;
-				for (int64_t i = 0; i < ph.count; ++i)
-				{
-					auto &elem = ph.array[i];
-					data->ve->add_path_node(elem->pathPosition.deltaLatitude, elem->pathPosition.deltaLongitude);
-				}
-			}
+			lf = cam->cam.camParameters.lowFrequencyContainer;
 		}
-
-		data->ve->build_geometry();
 	}
 	else if (data->cam_version == 2 && data->cam.v2 != nullptr)
 	{
@@ -288,24 +280,32 @@ void MessageSink::parse_cam(station_msgs_t *data)
 		data->ve->set_width(bvchf->vehicleWidth);
 		data->ve->set_heading(bvchf->heading.headingValue);
 
-		// clear the old path history
-		data->ve->clear_path();
 		if (cam->cam.camParameters.lowFrequencyContainer != nullptr)
 		{
-			auto lf = cam->cam.camParameters.lowFrequencyContainer;
-			if (lf->present == LowFrequencyContainer_PR_basicVehicleContainerLowFrequency)
-			{
-				auto &ph = lf->choice.basicVehicleContainerLowFrequency->pathHistory.list;
-				for (int64_t i = 0; i < ph.count; ++i)
-				{
-					auto &elem = ph.array[i];
-					data->ve->add_path_node(elem->pathPosition.deltaLatitude, elem->pathPosition.deltaLongitude);
-				}
-			}
+			lf = cam->cam.camParameters.lowFrequencyContainer;
 		}
-
-		data->ve->build_geometry();
 	}
+
+	// common operations
+	if (lf != nullptr)
+	{
+		if (lf->present == LowFrequencyContainer_PR_basicVehicleContainerLowFrequency)
+		{
+			// clear the old path history
+			data->ve->clear_path();
+			auto bvclf = lf->choice.basicVehicleContainerLowFrequency;
+			auto &ph = bvclf->pathHistory.list;
+			for (int64_t i = 0; i < ph.count; ++i)
+			{
+				auto &elem = ph.array[i];
+				data->ve->add_path_node(elem->pathPosition.deltaLatitude, elem->pathPosition.deltaLongitude);
+			}
+
+			data->ve->set_exterior_lights(bvclf->exteriorLights);
+		}
+	}
+
+	data->ve->build_geometry();
 }
 
 void MessageSink::parse_mapem(station_msgs_t *data)

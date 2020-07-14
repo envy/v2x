@@ -35,6 +35,9 @@ void VehicleEntity::build_geometry()
 	Utils::lat_lon_move(pos.y, pos.x, bl.x, bl.y, y, x);
 	dynamic_cast<sf::VertexArray *>(main)->operator[](3).position = Utils::to_screen(x, y);
 
+	// draw turn signals
+
+
 	// Draw path history
 	if (path == nullptr)
 	{
@@ -75,6 +78,25 @@ void VehicleEntity::draw(sf::RenderTarget &target, sf::RenderStates states) cons
 		target.draw(*path, states);
 	}
 
+	if (turnsignal_left)
+	{
+		auto r = 50/_main->get_scale();
+		sf::CircleShape fts(r);
+		fts.setPosition(dynamic_cast<sf::VertexArray *>(main)->operator[](1).position);
+		fts.setOrigin(r, r);
+		fts.setFillColor(sf::Color::Yellow);
+		target.draw(fts, states);
+	}
+	if (turnsignal_right)
+	{
+		auto r = 50/_main->get_scale();
+		sf::CircleShape fts(r);
+		fts.setPosition(dynamic_cast<sf::VertexArray *>(main)->operator[](0).position);
+		fts.setOrigin(r, r);
+		fts.setFillColor(sf::Color::Yellow);
+		target.draw(fts, states);
+	}
+
 	auto r = 100/_main->get_scale();
 	sf::CircleShape ref(r);
 	ref.setPosition(Utils::to_screen(pos.x, pos.y));
@@ -103,6 +125,12 @@ void VehicleEntity::set_heading(HeadingValue_t val)
 	{
 		heading = val;
 	}
+}
+
+void VehicleEntity::set_exterior_lights(ExteriorLights_t lights)
+{
+	turnsignal_left = (lights.buf[0] & (1u << (7u-ExteriorLights_leftTurnSignalOn))) > 0;
+	turnsignal_right = (lights.buf[0] & (1u << (7u-ExteriorLights_rightTurnSignalOn))) > 0;
 }
 
 void VehicleEntity::add_path_node(int64_t dlat, int64_t dlon)

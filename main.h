@@ -74,6 +74,8 @@ public:
 	void write_text(const sf::Vector2f &pos, const sf::Color &color, const std::string &text);
 	sf::RenderWindow *get_window();
 
+	void slowdown_injector();
+
 	void inc_selected();
 	void dec_selected();
 	sf::Vector2<int64_t> get_selected_location();
