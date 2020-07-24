@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <sstream>
 #include "Utils.h"
 
 #include "IntersectionState.h"
@@ -26,6 +27,35 @@ sf::Vector2f operator+(sf::Vector2f a, sf::Vector2<int64_t> b)
 sf::Vector2f operator+(sf::Vector2<int64_t> a, sf::Vector2f b)
 {
 	return sf::Vector2f(a.x + b.x, a.y + b.y);
+}
+
+std::vector<std::string> Utils::split(const std::string& s, char delimiter)
+{
+	std::vector<std::string> tokens;
+	std::string token;
+	std::istringstream ts(s);
+	while (std::getline(ts, token, delimiter))
+	{
+		tokens.push_back(token);
+	}
+	return tokens;
+}
+
+std::string Utils::join(const std::vector<std::string> &v, char delimiter, size_t start = 0)
+{
+	std::stringstream ss;
+	auto it = v.begin();
+	it += start;
+	while (it != v.end())
+	{
+		ss << *it;
+		if (it + 1 != v.end())
+		{
+			ss << delimiter;
+		}
+		++it;
+	}
+	return ss.str();
 }
 
 /*

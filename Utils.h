@@ -43,6 +43,8 @@ public:
 	static sf::Vector2f to_screen(int64_t ix, int64_t iy, int64_t ox, int64_t oy);
 	static bool point_in_polygon(std::vector<sf::Vector2<int64_t>> &polygon, sf::Vector2<int64_t> &point);
 	static std::vector<sf::Vector2<int64_t>> convex_hull(std::vector<sf::Vector2<int64_t>> &set);
+	static std::vector<std::string> split(const std::string& s, char delimiter);
+	static std::string join(const std::vector<std::string> &v, char delimiter, size_t start);
 };
 
 sf::Vector2<int64_t> operator*(sf::Vector2<int64_t> v, float a);

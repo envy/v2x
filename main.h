@@ -29,6 +29,7 @@ private:
 
 	bool _draw_map { false };
 	uint32_t selected_index { 0 };
+	uint64_t scroll_offset { 0 };
 	bool _show_cams { true };
 	bool _show_denms { true };
 	bool _show_spatems { true };

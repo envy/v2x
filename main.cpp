@@ -226,6 +226,22 @@ void Main::key_handler()
 		key_pressed(sf::Keyboard::Up);
 		dec_selected();
 	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::PageUp))
+	{
+		key_pressed(sf::Keyboard::PageUp);
+		if (scroll_offset > 0)
+		{
+			scroll_offset--;
+		}
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::PageDown))
+	{
+		key_pressed(sf::Keyboard::PageDown);
+		if (scroll_offset + 1 <= UINT64_MAX)
+		{
+			scroll_offset++;
+		}
+	}
 
 	if (!i.is_injecting())
 	{
@@ -619,7 +635,22 @@ void Main::draw_details(sf::RenderTarget &target)
 		ss << Formatter::dump_mapem(data->mapem);
 	}
 
-	_main->write_text(200, 30, sf::Color::White, ss.str());
+	#define MAX_LINES 35
+	auto str = ss.str();
+	auto arr = Utils::split(str, '\n');
+	if (arr.size() <= MAX_LINES)
+	{
+		// everything fits on screen
+	}
+	else
+	{
+		// need to scroll, figure out how far max
+		auto max = arr.size() - MAX_LINES;
+		auto scroll = std::min(scroll_offset, max);
+		str = Utils::join(arr, '\n', scroll);
+
+	}
+	_main->write_text(200, 30, sf::Color::White, str);
 }
 
 void Main::draw_cam(sf::RenderTarget &target, station_msgs_t *data)

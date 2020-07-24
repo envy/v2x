@@ -332,20 +332,23 @@ std::string Formatter::format_protected_zone_type(ProtectedZoneType_t val)
 
 std::string Formatter::format_lane_direction(LaneDirection_t &val)
 {
-	bool is_egress = false;
 	std::stringstream ss;
 	if (val.buf[0] & (1u << (7u-LaneDirection_egressPath)))
 	{
-		ss << "egress";
-		is_egress = true;
+		ss << "e";
 	}
+	else
+	{
+		ss << "-";
+	}
+	ss << "/";
 	if (val.buf[0] & (1u << (7u-LaneDirection_ingressPath)))
 	{
-		if (is_egress)
-		{
-			ss << " / ";
-		}
-		ss << "ingress";
+		ss << "i";
+	}
+	else
+	{
+		ss << "-";
 	}
 	return ss.str();
 }
@@ -409,8 +412,7 @@ std::string Formatter::dump_camv1(CAMv1_t *cam)
 	{
 		auto &b = cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency;
 		//auto &b = cam->cam.camParameters.highFrequencyContainer.basicVehicleContainerHighFrequency;
-		ss << " Vehicle Length: " << format_vehicle_length(b->vehicleLength.vehicleLengthValue) << std::endl;
-		ss << " Vehicle Width: " << format_vehicle_width(b->vehicleWidth) << std::endl;
+		ss << " W x L: " << format_vehicle_width(b->vehicleWidth) << " x " << format_vehicle_length(b->vehicleLength.vehicleLengthValue) << std::endl;
 		ss << " Speed: " << format_speed_value(b->speed.speedValue) << std::endl;
 		ss << " Heading: " << format_heading_value(b->heading.headingValue) << std::endl;
 	}
@@ -599,16 +601,13 @@ std::string Formatter::dump_mapem(MAPEM_t *mapem)
 			{
 				ss << " - " << std::string((char *)in->name->buf, in->name->size);
 			}
-			ss << std::endl;
 			double lat = in->refPoint.lat / 10000000.0;
 			double lon = in->refPoint.Long / 10000000.0;
-			ss << "  Location: " << lat << ", " << lon << std::endl;
+			ss << " @ " << lat << ", " << lon << std::endl;
 			for (uint32_t _l = 0; _l < in->laneSet.list.count; ++_l)
 			{
 				auto lane = in->laneSet.list.array[_l];
-				ss << "  Lane: " << lane->laneID << std::endl;
-				ss << "   Direction: " << format_lane_direction(lane->laneAttributes.directionalUse);
-				ss << "   Type: " << format_lane_type(lane->laneAttributes.laneType);
+				ss << "  L " << lane->laneID << "(" << format_lane_type(lane->laneAttributes.laneType) << ") " << format_lane_direction(lane->laneAttributes.directionalUse);
 				if (lane->connectsTo != nullptr)
 				{
 					ss << "   Connects to: ";
