@@ -285,7 +285,21 @@ std::string Formatter::format_cause_code(CauseCode_t &val)
 		case CauseCodeType_accident:
 			return "Accident";
 		case CauseCodeType_roadworks:
-			return "Roadworks";
+			switch (val.subCauseCode)
+			{
+				default:
+					return "Roadworks";
+				case 1:
+					return "Slow moving maintenance vehicle";
+				case 2:
+					return "Road marking work";
+				case 4:
+					return "Short-term stationary road works";
+				case 5:
+					return "Street cleaning";
+				case 6:
+					return "Winter service";
+			}
 		case CauseCodeType_impassability:
 			return "Impassability";
 		case CauseCodeType_adverseWeatherCondition_Adhesion:
