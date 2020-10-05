@@ -61,7 +61,7 @@ void MessageSink::process_msg(Array &arr)
 			msgs.insert(std::pair<StationID_t, station_msgs_t *>(id, new station_msgs_t()));
 			// we did not know this id before.
 			// if we are injecting, slow down back to 1X
-			_main->slowdown_injector();
+			//_main->slowdown_injector();
 		}
 		if (prot_version == 1)
 		{
@@ -514,6 +514,7 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 				if (con->connectingLane.maneuver != nullptr)
 				{
 					std::cout << "TODO: con->connectingLane.maneuver: ";
+					std::cout << "RTOR: ";
 					std::cout << Utils::maneuver_right_turn_on_red(*con->connectingLane.maneuver);
 					std::cout << std::endl;
 				}

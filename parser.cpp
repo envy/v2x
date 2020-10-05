@@ -89,74 +89,6 @@ int dump_packet(uint8_t *buf, uint32_t len)
 	return 0;
 }
 
-int ch_offset(uint8_t *buf, int avail)
-{
-	int offset = 0;
-	// we start with a Ieee1609Dot2Data
-	// first octet is protocol version
-	std::cout << "protocol version: " << (int)buf[offset] << std::endl;
-	offset++;
-
-	// next is the Ieee1609Dot2Content choice
-	std::cout << "Ieee1609Dot2Content choice: 0x" << std::hex << (int)buf[offset] << std::dec << std::endl;
-	// it should be set to 0x81
-	if (buf[offset] != 0x81)
-	{
-		std::cerr << "unexpected Ieee1609Dot2Content choice in outer data" << std::endl;
-		exit(1);
-	}
-	offset++;
-
-	// next is SignedData
-	// first in that is hashId, an enum
-	std::cout << "hashId: " << (int)buf[offset] << std::endl;
-	offset++;
-
-	// then we have the tbsData
-	// first in that is payload
-	// first in that is the presence bitmap of the sequence
-	std::cout << "SignedDataPayload presence bitmap: 0x" << std::hex << (int)buf[offset] << std::dec << std::endl;
-	// it should be 0x40
-	if (buf[offset] != 0x40)
-	{
-		std::cerr << "unexpected SignedDataPayload presence bitmap in outer data" << std::endl;
-		exit(1);
-	}
-	offset++;
-
-	// then we again have a Ieee1609Dot2Data
-	// first octet is protocol version
-	std::cout << "protocol version: " << (int)buf[offset] << std::endl;
-	offset++;
-
-	// next is the Ieee1609Dot2Content choice
-	std::cout << "Ieee1609Dot2Content choice: 0x" << std::hex << (int)buf[offset] << std::dec << std::endl;
-	// it should be set to 0x80
-	if (buf[offset] != 0x80)
-	{
-		std::cerr << "unexpected Ieee1609Dot2Content choice in inner data" << std::endl;
-		exit(1);
-	}
-	offset++;
-
-	// next is Opaque
-	// this is a octet string with variable size, so a length prefix first
-	if (buf[offset] & 0b10000000)
-	{
-		// there is an octet telling us how many octets to read
-		auto to_read = static_cast<uint8_t>(buf[offset] & 0b01111111);
-		std::cout << "need to read " << (int)to_read << " octets" << std::endl;
-		offset += 1 + to_read;
-	}
-	else
-	{
-		std::cout << "need to read 1 octet" << std::endl;
-		offset++;
-	}
-
-	return offset;
-}
-
 int geonet_size(uint8_t type)
 {
 	switch (type)
@@ -193,8 +125,8 @@ int btp_offset(uint8_t *buf, uint32_t len)
 	auto *g = (geonetworking_t *)e->data;
 	if (g->basic_header.next_header == GEONET_BASIC_HEADER_NEXT_ANY)
 	{
-		std::cerr << "FIXME: btp_offset for ANY header?!" << std::endl;
-		return -1;
+		std::cerr << "PARSER FIXME: btp_offset for ANY header?!" << std::endl;
+		return -2;
 	}
 	if (g->basic_header.next_header == GEONET_BASIC_HEADER_NEXT_COMMON)
 	{

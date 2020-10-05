@@ -11,6 +11,7 @@
 #include <thread>
 #include <sstream>
 #include <set>
+#include <algorithm>
 
 Main *_main = nullptr;
 
