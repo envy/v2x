@@ -486,7 +486,10 @@ void MessageSink::parse_mapem(station_msgs_t *data)
 							{
 								std::cout << "ERR: next node -dWidth > width: " << -*node->attributes->dWidth << " > " << width << std::endl;
 							}
-							width = (uint64_t)(width + *node->attributes->dWidth);
+							else
+							{
+								width = (uint64_t)(width + *node->attributes->dWidth);
+							}
 						}
 					}
 
