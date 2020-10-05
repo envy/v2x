@@ -202,7 +202,15 @@ int btp_offset(uint8_t *buf, uint32_t len)
 		header_size += sizeof(geonetworking_common_header_t);
 		header_size += geonet_size(c->type.raw);
 
-		return header_size;
+		if (c->next_header == GEONET_COMMON_HEADER_NEXT_BTP_B || c->next_header == GEONET_COMMON_HEADER_NEXT_BTP_A)
+		{
+			return header_size;
+		}
+		if (c->type.raw != GEONET_TYPE_BEACON)
+		{
+			std::cerr << "PARSER: common next header is not BTP and type is not BEACON" << std::endl;
+		}
+		return -3;
 	}
 	else if (g->basic_header.next_header == GEONET_BASIC_HEADER_NEXT_SECURED)
 	{
@@ -214,14 +222,14 @@ int btp_offset(uint8_t *buf, uint32_t len)
 
 		if (ret.code == RC_WMORE)
 		{
-			std::cerr << "FIXME: secured packet not comeplete!" << std::endl;
-			return -1;
+			std::cerr << "PARSER FIXME: secured packet not comeplete!" << std::endl;
+			return -4;
 		}
 		if (ret.code == RC_FAIL)
 		{
 			ASN_STRUCT_FREE(asn_DEF_Ieee1609Dot2Data, data);
-			std::cerr << "FIXME: secured packet asn decode failure" << std::endl;
-			return -1;
+			std::cerr << "PARSER FIXME: secured packet asn decode failure" << std::endl;
+			return -5;
 		}
 		// ret.code == RC_OK here
 		// hacky: we will find the unsecured data and then copy it directly after the basic header and point to that.
@@ -238,7 +246,15 @@ int btp_offset(uint8_t *buf, uint32_t len)
 				auto *c = (geonetworking_common_header_t *)g->data;
 				header_size += geonet_size(c->type.raw);
 				ASN_STRUCT_FREE(asn_DEF_Ieee1609Dot2Data, data);
-				return header_size;
+				if (c->next_header == GEONET_COMMON_HEADER_NEXT_BTP_B || c->next_header == GEONET_COMMON_HEADER_NEXT_BTP_A)
+				{
+					return header_size;
+				}
+				if (c->type.raw != GEONET_TYPE_BEACON)
+				{
+					std::cerr << "PARSER: common next header is not BTP and type is not BEACON" << std::endl;
+				}
+				return -6;
 			}
 			if (content->present == Ieee1609Dot2Content_PR_signedData)
 			{
@@ -253,8 +269,8 @@ int btp_offset(uint8_t *buf, uint32_t len)
 		}
 	}
 
-	std::cerr << "unknown next header " << (int)g->basic_header.next_header << std::endl;
-	return -1;
+	std::cerr << "PARSER unknown next header " << (int)g->basic_header.next_header << std::endl;
+	return -7;
 }
 
 static bool is_something(uint8_t *buf, uint32_t len, uint32_t *start, uint16_t port)
@@ -274,6 +290,25 @@ static bool is_something(uint8_t *buf, uint32_t len, uint32_t *start, uint16_t p
 			*start = (uint8_t *)b - buf + sizeof(btp_b_t);
 		}
 		return true;
+	}
+
+	return false;
+}
+
+bool is_beacon(uint8_t *buf, uint32_t len, uint32_t *beacon_start)
+{
+	auto header_len = sizeof(ethernet_t) + sizeof(geonetworking_t);
+	if (header_len > len)
+	{
+		return false;
+	}
+
+	auto *e = (ethernet_t *)buf;
+	auto *g = (geonetworking_t *)e->data;
+	if (g->basic_header.next_header == GEONET_BASIC_HEADER_NEXT_COMMON)
+	{
+		auto *c = (geonetworking_common_header_t *)g->data;
+		return c->type.raw == GEONET_TYPE_BEACON;
 	}
 
 	return false;
@@ -307,7 +342,7 @@ static int parse_something(uint8_t *buf, uint32_t len, void **ptr, asn_TYPE_desc
 
 	if (ret.code != RC_OK)
 	{
-		std::cout << "Could not decode: ";
+		std::cout << "PARSER: Could not decode: ";
 		switch (ret.code)
 		{
 			case RC_WMORE:

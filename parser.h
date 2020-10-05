@@ -218,6 +218,7 @@ int btp_offset(uint8_t *buf, uint32_t len);
 
 int dump_packet(uint8_t *buf, uint32_t len);
 
+bool is_beacon(uint8_t *buf, uint32_t len, uint32_t *beacon_start);
 bool is_cam(uint8_t *buf, uint32_t len, uint32_t *cam_start);
 bool is_denm(uint8_t *buf, uint32_t len, uint32_t *denm_start);
 bool is_mapem(uint8_t *buf, uint32_t len, uint32_t *mapem_start);

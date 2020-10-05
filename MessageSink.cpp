@@ -36,6 +36,12 @@ void MessageSink::process_msg(Array &arr)
 	long prot_version;
 	ItsPduHeader_t *header = nullptr;
 
+	if (is_beacon(arr.buf, arr.len, &start))
+	{
+		// ignore beacons
+		return;
+	}
+
 	if (is_cam(arr.buf, arr.len, &start))
 	{
 		// figure out which version of cam
@@ -201,6 +207,21 @@ void MessageSink::process_msg(Array &arr)
 		}
 		std::cout << "packet was MAPEM and had len: " << arr.len << std::endl;
 	}
+
+	std::cout << "SINK: Tried to process an unkown message" << std::endl;
+
+	int btpoffset = btp_offset(arr.buf, arr.len);
+	if (btpoffset <= 0 || btpoffset >= arr.len)
+	{
+		std::cout << "SINK: Message does not seem to have a BTP header" << std::endl;
+		std::cout << "SINK: hl " << (sizeof(ethernet_t) + sizeof(geonetworking_t)) << " | al " << arr.len << " | bo " << btpoffset << std::endl;
+		return;
+	}
+
+	auto *b = (btp_b_t *)(arr.buf + btpoffset);
+
+	std::cout << "SINK: BTP port " << std::hex << ntohs(b->port) << std::dec << std::endl;
+
 }
 
 void MessageSink::parse_cam(station_msgs_t *data)
