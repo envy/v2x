@@ -140,10 +140,23 @@ int DummyProxy::reliable_read(uint8_t *buf, uint32_t buflen)
 
 int Proxy::get_packet(uint8_t *buf, uint32_t buflen)
 {
-	uint32_t header_size = sizeof(ethernet_t) + sizeof(geonetworking_t);
+	uint32_t header_size = sizeof(ethernet_t);
 
 	int _read = reliable_read(buf, header_size);
 	auto *e = (ethernet_t *)buf;
+
+	if (e->type != ETHERTYPE_GEONET)
+	{
+		// This is not a geonetworking packet.
+		// FIXME: how do we proceed? we don't know how long this packet is...
+		// We could try reading byte by byte until we see the magic geonet type number?
+		// Also, the dest mac should always be ff:ff:ff:ff:ff:ff, so we have 8 bytes to look for.
+		return _read;
+	}
+
+	header_size += sizeof(geonetworking_t);
+	_read += reliable_read(buf + header_size, sizeof(geonetworking_t));
+
 	auto *g = (geonetworking_t *)e->data;
 	if (g->basic_header.next_header == GEONET_BASIC_HEADER_NEXT_ANY)
 	{

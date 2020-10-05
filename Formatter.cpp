@@ -290,9 +290,11 @@ std::string Formatter::format_cause_code(CauseCode_t &val)
 				default:
 					return "Roadworks";
 				case 1:
-					return "Slow moving maintenance vehicle";
+					return "??";
 				case 2:
 					return "Road marking work";
+				case 3:
+					return "??";
 				case 4:
 					return "Short-term stationary road works";
 				case 5:
@@ -516,6 +518,16 @@ std::string Formatter::dump_denm(DENM_t *denm)
 		auto situation = denm->denm.situation;
 		ss << " Cause: " << format_cause_code(situation->eventType) << std::endl;
 		ss << " Info Quality: " << situation->informationQuality << std::endl;
+	}
+
+	if (denm->denm.alacarte != nullptr)
+	{
+		auto alacarte = denm->denm.alacarte;
+		if (alacarte->roadWorks != nullptr)
+		{
+			auto rw = alacarte->roadWorks;
+
+		}
 	}
 
 	return ss.str();
