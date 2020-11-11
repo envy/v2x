@@ -145,21 +145,47 @@ int Proxy::get_packet(uint8_t *buf, uint32_t buflen)
 	int _read = reliable_read(buf, header_size);
 	auto *e = (ethernet_t *)buf;
 
-	if (e->type != ETHERTYPE_GEONET)
+	if (ntohs(e->type) != ETHERTYPE_GEONET)
 	{
 		// This is not a geonetworking packet.
 		// FIXME: how do we proceed? we don't know how long this packet is...
 		// We could try reading byte by byte until we see the magic geonet type number?
 		// Also, the dest mac should always be ff:ff:ff:ff:ff:ff, so we have 8 bytes to look for.
-		return _read;
-	}
+		std::cerr << "PROXY: This is not a geonetworking packet: " << std::hex << ntohs(e->type) << " != " << ETHERTYPE_GEONET << std::endl;
+		//return _read;
+		uint64_t skipped = 0;
+		const uint8_t destmac[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+		while (true)
+		{
+			// move read data one byte to the left
+			memmove(buf, buf + 1, header_size - 1);
+			// read an additional byte
+			skipped += reliable_read(buf + header_size - 1, 1);
 
-	header_size += sizeof(geonetworking_t);
+			// test if there is now a geonetworking type
+			if (ntohs(e->type) != ETHERTYPE_GEONET)
+			{
+				// nope, another byte!
+				continue;
+			}
+			// there is, check if destination mac is ff:ff:ff:ff:ff:ff
+			if (memcmp(e->destination_mac, destmac, 6) != 0)
+			{
+				// it is not
+				continue;
+			}
+			// it is!
+			std::cerr << "PROXY: found a valid geonet ethernet header after skipping " << std::dec << skipped << " bytes." << std::endl;
+			break;
+		}
+	}
 	_read += reliable_read(buf + header_size, sizeof(geonetworking_t));
+	header_size += sizeof(geonetworking_t);
 
 	auto *g = (geonetworking_t *)e->data;
 	if (g->basic_header.next_header == GEONET_BASIC_HEADER_NEXT_ANY)
 	{
+		std::cerr << "PROXY: found geonetworking ANY header." << std::endl;
 		return _read;
 	}
 	if (g->basic_header.next_header == GEONET_BASIC_HEADER_NEXT_COMMON)
