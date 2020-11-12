@@ -2,6 +2,8 @@
 #include "Formatter.h"
 
 #include <iostream>
+#include <arpa/inet.h>
+
 #include "asn1-src/Ieee1609Dot2Data.h"
 #include "asn1-src/Ieee1609Dot2Content.h"
 #include "asn1-src/SignedData.h"

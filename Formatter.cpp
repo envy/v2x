@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <iomanip>
+#include <arpa/inet.h>
 
 #include "BasicVehicleContainerHighFrequency.h"
 #include "BasicVehicleContainerHighFrequencyV1.h"
