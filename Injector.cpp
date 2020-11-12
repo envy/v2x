@@ -82,6 +82,13 @@ void Injector::pcap_loop_callback(u_char *userData, const struct pcap_pkthdr *pk
 			sleeptime = args->i->get_max_usleep_time();
 		usleep(sleeptime);
 	}
+
+	auto *e = (ethernet_t *)buf;
+	if (ntohs(e->type) != ETHERTYPE_GEONET)
+	{
+		return;
+	}
+
 	args->last = pkthdr->ts;
 	args->ms->add_msg(buf, pkthdr->len);
 	args->i->inc_counter();

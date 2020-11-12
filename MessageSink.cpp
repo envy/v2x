@@ -77,7 +77,6 @@ void MessageSink::process_msg(Array &arr)
 				msgs[id]->cam_version = 1;
 				msgs[id]->cam.v1 = cam;
 				parse_cam(msgs[id]);
-				std::cout << "got a CAMv1!" << std::endl;
 				return;
 			}
 		}
@@ -95,8 +94,6 @@ void MessageSink::process_msg(Array &arr)
 				msgs[id]->cam_version = 2;
 				msgs[id]->cam.v2 = cam;
 				parse_cam(msgs[id]);
-				if (msgs[id]->cam.v2->header.stationID != 14235)
-					std::cout << "got a CAMv2!" << std::endl;
 				return;
 			}
 		}
@@ -137,7 +134,6 @@ void MessageSink::process_msg(Array &arr)
 				msgs[id]->denm_version = 1;
 				msgs[id]->denm.v1 = denm;
 				//parse_denm(msgs[id]);
-				std::cout << "got a DENMv1!" << std::endl;
 				return;
 			}
 		}
@@ -155,7 +151,6 @@ void MessageSink::process_msg(Array &arr)
 				msgs[id]->denm_version = 2;
 				msgs[id]->denm.v2 = denm;
 				//parse_denm(msgs[id]);
-				std::cout << "got a DENMv2!" << std::endl;
 				return;
 			}
 			else
